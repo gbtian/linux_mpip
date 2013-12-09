@@ -1358,12 +1358,8 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	}
 	else
 	{
-		unsigned char *mpip_options = form_mpip_options(skb);
-		if (mpip_options != NULL)
-		{
-			iph->ihl += ETH_ALEN * 2;
-			ip_options_build_1(skb, mpip_options);
-		}
+		mpip_options_build(skb);
+		iph->ihl += ETH_ALEN * 2;
 	}
 
 	skb->priority = sk->sk_priority;

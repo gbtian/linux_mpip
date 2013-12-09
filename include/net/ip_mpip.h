@@ -32,6 +32,7 @@ extern int sysctl_mpip_enabled;
 
 
 struct mpip_options {
+	unsigned char	optlen;
 	unsigned char	node_id[ETH_ALEN];
 	unsigned char	session_id;
 	unsigned char	path_id;
@@ -42,6 +43,8 @@ struct mpip_options {
 
 extern int		mpip_rcv(struct sk_buff *skb);
 extern int		mpip_xmit(struct sk_buff *skb);
+extern void mpip_options_build(struct sk_buff *skb);
+extern bool mpip_rcv_options(struct sk_buff *skb);
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
