@@ -79,6 +79,7 @@
 #include <linux/mroute.h>
 #include <linux/netlink.h>
 #include <linux/tcp.h>
+#include <linux/ip_mpip.h>
 
 int sysctl_ip_default_ttl __read_mostly = IPDEFTTL;
 EXPORT_SYMBOL(sysctl_ip_default_ttl);
@@ -133,8 +134,14 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct rtable *rt = skb_rtable(skb);
 	struct iphdr *iph;
 
+	if (opt)
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	else
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+
 	/* Build the IP header. */
 	skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
+	//skb_push(skb, sizeof(struct iphdr) + (sysctl_mpip_enabled ? 8 : 0));
 	skb_reset_network_header(skb);
 	iph = ip_hdr(skb);
 	iph->version  = 4;
@@ -150,18 +157,17 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
 
-	if (opt && opt->opt.optlen) {
+	//if (opt && opt->opt.optlen) {
+	if (false){
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &opt->opt, daddr, rt, 0);
 	}
-	else
+	else if (sysctl_mpip_enabled)
 	{
-		unsigned char *mpip_options = form_mpip_options(skb);
-		if (mpip_options != NULL)
-		{
-			iph->ihl += ETH_ALEN * 2;
-			ip_options_build_1(skb, mpip_options);
-		}
+		unsigned char l = 8;
+		//iph->ihl += l>>2;
+		//mpip_options_build(skb);
+
 	}
 
 
@@ -330,16 +336,44 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct sock *sk = skb->sk;
 	struct inet_sock *inet = inet_sk(sk);
 	struct ip_options_rcu *inet_opt;
+	struct ip_options_rcu *tmp_opt;
 	struct flowi4 *fl4;
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
+	char options[3 + 4 + 1];
+
+	bool origin = true;
+
+	if (inet->inet_opt)
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	else if (sysctl_mpip_enabled)
+	{
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+
+		origin = false;
+
+		memset(options, 0, sizeof(options));
+		options[0] = IPOPT_NOP;
+		options[1+IPOPT_OPTVAL] = IPOPT_MPIP;
+		options[1+IPOPT_OLEN] = sizeof(options)-1;
+		options[1+IPOPT_OFFSET] = IPOPT_MINOFF;
+		options[4] = 8; //session id
+		options[5] = 3; //path id
+		options[6] = 4; //stat path id
+		options[7] = 50; //packet count
+
+		res = ip_options_get(sock_net(skb->sk), &tmp_opt, options, 8);
+		rcu_assign_pointer(inet->inet_opt, tmp_opt);
+	}
+
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.
 	 */
 	rcu_read_lock();
 	inet_opt = rcu_dereference(inet->inet_opt);
+
 	fl4 = &fl->u.ip4;
 	rt = skb_rtable(skb);
 	if (rt != NULL)
@@ -378,6 +412,7 @@ packet_routed:
 
 	/* OK, we know where to send it, allocate and build IP header. */
 	skb_push(skb, sizeof(struct iphdr) + (inet_opt ? inet_opt->opt.optlen : 0));
+	//skb_push(skb, sizeof(struct iphdr) + (sysctl_mpip_enabled ? 8 : 0));
 	skb_reset_network_header(skb);
 	iph = ip_hdr(skb);
 	*((__be16 *)iph) = htons((4 << 12) | (5 << 8) | (inet->tos & 0xff));
@@ -391,21 +426,15 @@ packet_routed:
 
 	/* Transport layer set skb->h.foo itself. */
 
-	if (inet_opt && inet_opt->opt.optlen) {
+	if (inet_opt && inet_opt->opt.optlen && origin) {
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else
+	else if (sysctl_mpip_enabled && !origin)
 	{
-		unsigned char *mpip_options = form_mpip_options(skb);
-		if (mpip_options != NULL)
-		{
-			iph->ihl += ETH_ALEN * 2;
-			ip_options_build_1(skb, mpip_options);
-		}
+		iph->ihl += inet_opt->opt.optlen >> 2;
+		mpip_options_build(skb, &inet_opt->opt);
 	}
-
-
 
 	ip_select_ident_more(skb, &rt->dst, sk,
 			     (skb_shinfo(skb)->gso_segs ?: 1) - 1);
@@ -1352,15 +1381,18 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	ip_copy_addrs(iph, fl4);
 	ip_select_ident(skb, &rt->dst, sk);
 
-	if (opt) {
+	//if (opt) {
+	if (false){
 		iph->ihl += opt->optlen>>2;
 		ip_options_build(skb, opt, cork->addr, rt, 0);
 	}
-	else
+	else if (sysctl_mpip_enabled)
 	{
-		mpip_options_build(skb);
-		iph->ihl += ETH_ALEN * 2;
+		unsigned char l = 8;
+		//iph->ihl += l>>2;
+		//mpip_options_build(skb);
 	}
+
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;

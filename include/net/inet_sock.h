@@ -59,6 +59,10 @@ struct ip_options {
 			ts_needaddr:1;
 	unsigned char	router_alert;
 	unsigned char	cipso;
+	unsigned char	session_id;
+	unsigned char	path_id;
+	unsigned char	stat_path_id;
+	unsigned char	packetcount;
 	unsigned char	__pad2;
 	unsigned char	__data[0];
 };

@@ -148,6 +148,7 @@
 #include <linux/netlink.h>
 #include <linux/ip_mpip.h>
 
+
 /*
  *	Process Router Attention IP option (RFC 2113)
  */
@@ -355,7 +356,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
-	if (!mpip_rcv_options(skb))
+	if (sysctl_mpip_enabled && !mpip_rcv_options(skb))
 		goto drop;
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))

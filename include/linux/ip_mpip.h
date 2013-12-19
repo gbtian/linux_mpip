@@ -29,7 +29,7 @@
 #include <net/flow.h>
 
 extern int sysctl_mpip_enabled;
-
+int mpip_init(void);
 
 struct mpip_options {
 	unsigned char	optlen;
@@ -37,13 +37,12 @@ struct mpip_options {
 	unsigned char	session_id;
 	unsigned char	path_id;
 	unsigned char	stat_path_id;
-	u32		packetcount;
-	unsigned char	__data[0];
+	unsigned char	packetcount;
 };
 
 extern int		mpip_rcv(struct sk_buff *skb);
 extern int		mpip_xmit(struct sk_buff *skb);
-extern void mpip_options_build(struct sk_buff *skb);
+extern void mpip_options_build(struct sk_buff *skb, struct ip_options *opt);
 extern bool mpip_rcv_options(struct sk_buff *skb);
 
 static LIST_HEAD(wi_head);
