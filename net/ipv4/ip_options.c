@@ -606,11 +606,11 @@ static int ip_options_get_finish(struct net *net, struct ip_options_rcu **optp,
 	}
 	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
-	if (*optp)
-	{
-		kfree(*optp);
-		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-	}
+	//if (*optp)
+	//{
+		//kfree(*optp);
+	//	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	//}
 	*optp = opt;
 	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	return 0;
