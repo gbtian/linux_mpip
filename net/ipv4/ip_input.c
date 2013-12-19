@@ -162,6 +162,7 @@ bool ip_call_ra_chain(struct sk_buff *skb)
 	for (ra = rcu_dereference(ip_ra_chain); ra; ra = rcu_dereference(ra->next)) {
 		struct sock *sk = ra->sk;
 
+
 		/* If socket is bound to an interface, only report
 		 * the packet if it came  from that interface.
 		 */

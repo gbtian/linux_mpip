@@ -367,6 +367,7 @@ int ip_options_compile(struct net *net,
 					opt->packetcount = optptr[6];
 					//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 				}
+
 				//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		    	break;
 		    case IPOPT_RR:

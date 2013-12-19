@@ -65,6 +65,7 @@ struct ip_options {
 	unsigned char	packetcount;
 	unsigned char	__pad2;
 	unsigned char	__data[0];
+
 };
 
 struct ip_options_rcu {
