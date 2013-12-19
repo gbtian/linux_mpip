@@ -134,11 +134,33 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct inet_sock *inet = inet_sk(sk);
 	struct rtable *rt = skb_rtable(skb);
 	struct iphdr *iph;
+	char options[3 + 4 + 1];
+	bool origin = true;
+	int res;
+	struct ip_options_rcu *tmp_opt;
+
 
 	if (opt)
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-	else
+	else if (sysctl_mpip_enabled)
+	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+
+		origin = false;
+
+		memset(options, 0, sizeof(options));
+		options[0] = IPOPT_NOP;
+		options[1+IPOPT_OPTVAL] = IPOPT_MPIP;
+		options[1+IPOPT_OLEN] = sizeof(options)-1;
+		options[1+IPOPT_OFFSET] = IPOPT_MINOFF;
+		options[4] = 8; //session id
+		options[5] = 3; //path id
+		options[6] = 4; //stat path id
+		options[7] = 50; //packet count
+
+		res = ip_options_get(sock_net(skb->sk), &tmp_opt, options, 8);
+		rcu_assign_pointer(opt, tmp_opt);
+	}
 
 	/* Build the IP header. */
 	skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
@@ -158,17 +180,15 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
 
-	//if (opt && opt->opt.optlen) {
-	if (false){
-		iph->ihl += opt->opt.optlen>>2;
-		ip_options_build(skb, &opt->opt, daddr, rt, 0);
-	}
-	else if (sysctl_mpip_enabled)
+	if (opt && opt->opt.optlen && origin)
 	{
-		unsigned char l = 8;
-		//iph->ihl += l>>2;
-		//mpip_options_build(skb);
-
+		iph->ihl += opt->opt.optlen>>2;
+		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
+	}
+	else if (sysctl_mpip_enabled && !origin)
+	{
+		iph->ihl += opt->opt.optlen >> 2;
+		mpip_options_build(skb, &(opt->opt));
 	}
 
 
