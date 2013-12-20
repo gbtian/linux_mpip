@@ -135,7 +135,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct rtable *rt = skb_rtable(skb);
 	struct iphdr *iph;
 	char options[3 + 4 + 1];
-	bool origin = true;
+	//bool origin = true;
 	int res;
 	struct ip_options_rcu *tmp_opt;
 
@@ -146,7 +146,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
-		origin = false;
+		//origin = false;
 
 		memset(options, 0, sizeof(options));
 		options[0] = IPOPT_NOP;
@@ -180,16 +180,16 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
 
-	if (opt && opt->opt.optlen && origin)
+	if (opt && opt->opt.optlen)
 	{
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && !origin)
-	{
-		iph->ihl += opt->opt.optlen >> 2;
-		mpip_options_build(skb, &(opt->opt));
-	}
+	//else if (sysctl_mpip_enabled && !origin)
+	//{
+	//	iph->ihl += opt->opt.optlen >> 2;
+	//	mpip_options_build(skb, &(opt->opt));
+	//}
 
 
 	skb->priority = sk->sk_priority;
@@ -447,15 +447,15 @@ packet_routed:
 
 	/* Transport layer set skb->h.foo itself. */
 
-	if (inet_opt && inet_opt->opt.optlen && origin) {
+	if (inet_opt && inet_opt->opt.optlen) {
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && !origin)
-	{
-		iph->ihl += inet_opt->opt.optlen >> 2;
-		mpip_options_build(skb, &inet_opt->opt);
-	}
+	//else if (sysctl_mpip_enabled && !origin)
+	//{
+	//	iph->ihl += inet_opt->opt.optlen >> 2;
+	//	mpip_options_build(skb, &inet_opt->opt);
+	//}
 
 	ip_select_ident_more(skb, &rt->dst, sk,
 			     (skb_shinfo(skb)->gso_segs ?: 1) - 1);
@@ -1402,16 +1402,9 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	ip_copy_addrs(iph, fl4);
 	ip_select_ident(skb, &rt->dst, sk);
 
-	//if (opt) {
-	if (false){
+	if (opt) {
 		iph->ihl += opt->optlen>>2;
 		ip_options_build(skb, opt, cork->addr, rt, 0);
-	}
-	else if (sysctl_mpip_enabled)
-	{
-		unsigned char l = 8;
-		//iph->ihl += l>>2;
-		//mpip_options_build(skb);
 	}
 
 

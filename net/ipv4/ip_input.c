@@ -267,7 +267,7 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 	struct ip_options *opt;
 	const struct iphdr *iph;
 	struct net_device *dev = skb->dev;
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	/* It looks as overkill, because not all
 	   IP options require packet mangling.
 	   But it is the easiest for now, especially taking
@@ -279,15 +279,22 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INDISCARDS);
 		goto drop;
 	}
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	iph = ip_hdr(skb);
 	opt = &(IPCB(skb)->opt);
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (ip_options_compile(dev_net(dev), opt, skb)) {
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 		goto drop;
 	}
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	if (opt->session_id)
+	{
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+		print_mpip_options(opt);
+	}
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
@@ -305,9 +312,10 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		if (ip_options_rcv_srr(skb))
 			goto drop;
 	}
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	return false;
 drop:
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	return true;
 }
 
@@ -318,7 +326,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 {
 	const struct iphdr *iph = ip_hdr(skb);
 	struct rtable *rt;
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
 		int protocol = iph->protocol;
@@ -356,13 +364,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		st[(idx>>16)&0xFF].i_bytes += skb->len;
 	}
 #endif
-
-	if (sysctl_mpip_enabled && !mpip_rcv_options(skb))
-		goto drop;
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
-
+	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	rt = skb_rtable(skb);
 	if (rt->rt_type == RTN_MULTICAST) {
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,

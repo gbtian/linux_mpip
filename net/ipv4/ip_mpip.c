@@ -72,19 +72,14 @@ int mpip_rcv(struct sk_buff *skb)
 	return 0;
 }
 
-void print_mpip_options(struct mpip_options opt)
+void print_mpip_options(struct ip_options *opt)
 {
-	int i;
-	printk("node_id:\n");
-	for(i = 0; i < ETH_ALEN; i++)
-		printk("%02x", opt.node_id[i]);
-	printk("\nsession_id: %d\n", opt.session_id);
-	printk("path_id: %d\n", opt.path_id);
-	printk("stat_path_id: %d\n", opt.stat_path_id);
-	printk("packetcount: %d\n", opt.packetcount);
-
+	printk("\nsession_id: %d\n", opt->session_id);
+	printk("path_id: %d\n", opt->path_id);
+	printk("stat_path_id: %d\n", opt->stat_path_id);
+	printk("packetcount: %d\n", opt->packetcount);
 }
-
+EXPORT_SYMBOL(print_mpip_options);
 
 void mpip_options_build(struct sk_buff *skb, struct ip_options *opt)
 {

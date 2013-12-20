@@ -45,6 +45,8 @@ extern int		mpip_rcv(struct sk_buff *skb);
 extern int		mpip_xmit(struct sk_buff *skb);
 extern void mpip_options_build(struct sk_buff *skb, struct ip_options *opt);
 extern bool mpip_rcv_options(struct sk_buff *skb);
+extern void print_mpip_options(struct ip_options *opt);
+
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
