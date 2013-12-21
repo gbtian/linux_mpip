@@ -292,9 +292,13 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 	if (opt->session_id)
 	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-		print_mpip_options(opt);
+		//print_mpip_options(opt);
 	}
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	else
+	{
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+		//print_mpip_options(opt);
+	}
 
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);

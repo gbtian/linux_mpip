@@ -74,6 +74,19 @@ int mpip_rcv(struct sk_buff *skb)
 
 void print_mpip_options(struct ip_options *opt)
 {
+	printk("optlen: %d\n", opt->optlen);
+	printk("srr: %d\n", opt->srr);
+	printk("rr: %d\n", opt->rr);
+	printk("ts: %d\n", opt->ts);
+	printk("is_strictroute: %d\n", opt->is_strictroute);
+	printk("srr_is_hit: %d\n", opt->srr_is_hit);
+	printk("is_changed: %d\n", opt->is_changed);
+	printk("rr_needaddr: %d\n", opt->rr_needaddr);
+	printk("ts_needtime: %d\n", opt->ts_needtime);
+	printk("ts_needaddr: %d\n", opt->ts_needaddr);
+	printk("router_alert: %d\n", opt->router_alert);
+	printk("cipso: %d\n", opt->cipso);
+
 	printk("\nsession_id: %d\n", opt->session_id);
 	printk("path_id: %d\n", opt->path_id);
 	printk("stat_path_id: %d\n", opt->stat_path_id);

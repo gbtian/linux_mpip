@@ -140,8 +140,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct ip_options_rcu *tmp_opt;
 
 
-	if (opt)
+	if (opt && opt->opt.optlen)
+	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+		print_mpip_options(&(opt->opt));
+	}
 	else if (sysctl_mpip_enabled)
 	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
@@ -367,7 +370,10 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	bool origin = true;
 
 	if (inet->inet_opt)
+	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+		//print_mpip_options(&(inet->inet_opt->opt));
+	}
 	else if (sysctl_mpip_enabled)
 	{
 		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
@@ -1346,6 +1352,9 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	struct inet_sock *inet = inet_sk(sk);
 	struct net *net = sock_net(sk);
 	struct ip_options *opt = NULL;
+	char options[3 + 4 + 1];
+	int res;
+	struct ip_options_rcu *tmp_opt;
 	struct rtable *rt = (struct rtable *)cork->dst;
 	struct iphdr *iph;
 	__be16 df = 0;
@@ -1386,6 +1395,26 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 
 	if (cork->flags & IPCORK_OPT)
 		opt = cork->opt;
+	else if (sysctl_mpip_enabled)
+	{
+		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+
+		//origin = false;
+
+		memset(options, 0, sizeof(options));
+		options[0] = IPOPT_NOP;
+		options[1+IPOPT_OPTVAL] = IPOPT_MPIP;
+		options[1+IPOPT_OLEN] = sizeof(options)-1;
+		options[1+IPOPT_OFFSET] = IPOPT_MINOFF;
+		options[4] = 8; //session id
+		options[5] = 3; //path id
+		options[6] = 4; //stat path id
+		options[7] = 50; //packet count
+
+		res = ip_options_get(sock_net(skb->sk), &tmp_opt, options, 8);
+		opt = &(tmp_opt->opt);
+	}
+
 
 	if (rt->rt_type == RTN_MULTICAST)
 		ttl = inet->mc_ttl;
