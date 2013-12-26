@@ -32,6 +32,9 @@
 extern int sysctl_mpip_enabled;
 int mpip_init(void);
 
+
+#define MPIPCB(skb) ((struct mpip_skb_parm*)((skb)->cb))
+
 struct mpip_options {
 	unsigned char	optlen;
 	unsigned char	node_id[ETH_ALEN];
@@ -39,14 +42,28 @@ struct mpip_options {
 	unsigned char	path_id;
 	unsigned char	stat_path_id;
 	unsigned char	packetcount;
+	unsigned char	__data[0];
+};
+
+struct mpip_options_rcu {
+	struct rcu_head rcu;
+	struct mpip_options opt;
+};
+
+
+struct mpip_skb_parm {
+	struct mpip_options	opt;		/* Compiled IP options		*/
 };
 
 extern int		mpip_rcv(struct sk_buff *skb);
 extern int		mpip_xmit(struct sk_buff *skb);
-extern void mpip_options_build(struct sk_buff *skb, struct ip_options *opt);
+extern void get_mpip_options(struct sk_buff *skb, char *options);
 extern bool mpip_rcv_options(struct sk_buff *skb);
-extern void print_mpip_options(struct ip_options *opt);
-
+extern void print_mpip_options(struct mpip_options *opt);
+extern int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
+		   unsigned char *data, int optlen);
+extern void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
+extern void mpip_log(char *file, int line, char *func);
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);

@@ -265,21 +265,17 @@ int ip_options_compile(struct net *net,
 	unsigned char *optptr;
 	unsigned char *iph;
 	int optlen, l;
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (skb != NULL) {
 		rt = skb_rtable(skb);
 		optptr = (unsigned char *)&(ip_hdr(skb)[1]);
 	} else
 		optptr = opt->__data;
 	iph = optptr - sizeof(struct iphdr);
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	for (l = opt->optlen; l > 0; )
 	{
-		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		switch (*optptr)
 		{
 			case IPOPT_END:
-				printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 				for (optptr++, l--; l>0; optptr++, l--)
 				{
 					if (*optptr != IPOPT_END)
@@ -290,7 +286,6 @@ int ip_options_compile(struct net *net,
 				}
 				goto eol;
 		    case IPOPT_NOOP:
-		    	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		    	l--;
 		    	optptr++;
 		    	continue;
@@ -298,7 +293,6 @@ int ip_options_compile(struct net *net,
 		optlen = optptr[1];
 		if (optlen<2 || optlen>l)
 		{
-			printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 			pp_ptr = optptr;
 			goto error;
 		}
@@ -306,7 +300,6 @@ int ip_options_compile(struct net *net,
 		{
 			case IPOPT_SSRR:
 		    case IPOPT_LSRR:
-		    	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		    	if (optlen < 3)
 		    	{
 		    		pp_ptr = optptr + 1;
@@ -336,39 +329,6 @@ int ip_options_compile(struct net *net,
 		    	}
 		    	opt->is_strictroute = (optptr[0] == IPOPT_SSRR);
 		    	opt->srr = optptr - iph;
-		    	break;
-		    case IPOPT_MPIP:
-		    	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-		    	if (optlen < 3)
-				{
-					pp_ptr = optptr + 1;
-					goto error;
-				}
-		    	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-				if (optptr[2] < 4)
-				{
-					pp_ptr = optptr + 2;
-					goto error;
-				}
-				printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-				//if (!skb)
-				{
-					printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-					if (optptr[2] != 4 || optlen < 7 || ((optlen-3) & 3))
-					{
-						printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-						pp_ptr = optptr + 1;
-						goto error;
-					}
-					printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-					opt->session_id = optptr[3];
-					opt->path_id = optptr[4];
-					opt->stat_path_id = optptr[5];
-					opt->packetcount = optptr[6];
-					printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-				}
-
-				printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		    	break;
 		    case IPOPT_RR:
 		    	if (opt->rr)
@@ -528,7 +488,6 @@ int ip_options_compile(struct net *net,
 		    case IPOPT_SEC:
 		    case IPOPT_SID:
 		    default:
-		    	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		    	if (!skb && !ns_capable(net->user_ns, CAP_NET_RAW))
 		    	{
 		    		pp_ptr = optptr;
@@ -593,26 +552,18 @@ static struct ip_options_rcu *ip_options_get_alloc(const int optlen)
 static int ip_options_get_finish(struct net *net, struct ip_options_rcu **optp,
 				 struct ip_options_rcu *opt, int optlen)
 {
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	while (optlen & 3)
 		opt->opt.__data[optlen++] = IPOPT_END;
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	opt->opt.optlen = optlen;
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (optlen && ip_options_compile(net, &opt->opt, NULL)) {
-		printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 		kfree(opt);
 		return -EINVAL;
 	}
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-
-	//if (*optp)
-	//{
-		//kfree(*optp);
-	//	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-	//}
+	if (*optp)
+	{
+		kfree(*optp);
+	}
 	*optp = opt;
-	printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	return 0;
 }
 

@@ -28,11 +28,6 @@
 #include <net/request_sock.h>
 #include <net/netns/hash.h>
 
-struct ip_options_1 {
-	unsigned char	mpip[12];
-	unsigned char	__data[0];
-};
-
 /** struct ip_options - IP Options
  *
  * @faddr - Saved first hop address
@@ -59,10 +54,11 @@ struct ip_options {
 			ts_needaddr:1;
 	unsigned char	router_alert;
 	unsigned char	cipso;
-	unsigned char	session_id;
-	unsigned char	path_id;
-	unsigned char	stat_path_id;
-	unsigned char	packetcount;
+//	unsigned char	node_id;
+//	unsigned char	session_id:4;
+//	unsigned char	path_id:2;
+//	unsigned char	stat_path_id:2;
+//	u16	packetcount;
 	unsigned char	__pad2;
 	unsigned char	__data[0];
 
