@@ -41,7 +41,8 @@ struct mpip_options {
 	unsigned char	session_id;
 	unsigned char	path_id;
 	unsigned char	stat_path_id;
-	unsigned char	packetcount;
+	u16	packet_count;
+	//unsigned char   packet_count;
 	unsigned char	__data[0];
 };
 
@@ -61,9 +62,14 @@ extern void get_mpip_options(struct sk_buff *skb, char *options);
 extern bool mpip_rcv_options(struct sk_buff *skb);
 extern void print_mpip_options(struct mpip_options *opt);
 extern int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
-		   unsigned char *data, int optlen);
+			unsigned char *data, int optlen);
 extern void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
 extern void mpip_log(char *file, int line, char *func);
+extern bool mpip_rcv_options(struct sk_buff *skb);
+extern int mpip_options_compile(struct net *net,
+		    struct mpip_options *opt, struct sk_buff *skb);
+extern int mpip_options_compile_1(struct net *net,
+		    struct mpip_options *opt, struct sk_buff *skb);
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);

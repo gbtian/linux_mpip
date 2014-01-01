@@ -134,27 +134,19 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct inet_sock *inet = inet_sk(sk);
 	struct rtable *rt = skb_rtable(skb);
 	struct iphdr *iph;
-	char options[16];
+	char options[12];
 	unsigned int optlen = 0;
 	//bool origin = true;
 	int res;
 	struct mpip_options_rcu *mp_opt = NULL;
 
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-
 	if (opt && opt->opt.optlen)
 	{
-		//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-		//print_mpip_options(&(opt->opt));
-		//rcu_assign_pointer(inet->inet_opt, opt);
 	}
 	else if (sysctl_mpip_enabled)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		get_mpip_options(skb, options);
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
-		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, 16);
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, 12);
 	}
 
 	/* Build the IP header. */
@@ -185,9 +177,9 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && mp_opt)
 	{
-		iph->ihl += mp_opt->opt.optlen>>2;
+		iph->ihl += (mp_opt->opt.optlen)>>2;
 		mpip_options_build(skb, &(mp_opt->opt));
 	}
 
@@ -376,21 +368,15 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
-	char options[16];
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	char options[12];
 
 	if (inet->inet_opt && inet_opt->opt.optlen)
 	{
-		//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-		//print_mpip_options(&(inet->inet_opt->opt));
 	}
 	else if (sysctl_mpip_enabled)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		get_mpip_options(skb, options);
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
-		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, 16);
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, 12);
 	}
 
 
@@ -461,9 +447,9 @@ packet_routed:
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && mp_opt)
 	{
-		iph->ihl += mp_opt->opt.optlen >> 2;
+		iph->ihl += (mp_opt->opt.optlen)>>2;
 		mpip_options_build(skb, &(mp_opt->opt));
 	}
 
