@@ -75,6 +75,70 @@ extern int mpip_options_compile(struct net *net,
 		    struct mpip_options *opt, struct sk_buff *skb);
 extern int process_mpip_options(struct sk_buff *skb);
 
+
+struct working_ip_table {
+	unsigned char	node_id[ETH_ALEN]; /*receiver's node id. */
+									   /*the node id is defined as the MAC*/
+	__be32	addr_1; /* receiver' ip seen by sender */
+	__be32	addr_2;
+	__be32	addr_3; /* maximumly support three interfaces*/
+	struct list_head list;
+};
+
+int add_working_ip_table(struct working_ip_table *item, struct list_head *head);
+int del_working_ip_table(unsigned char *node_id, struct list_head *head);
+struct working_ip_table * find_working_ip_table(unsigned char *node_id,
+												struct list_head *head);
+
+struct path_info_table {
+	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
+	__be32	saddr; /* source ip address*/
+	__be32	daddr; /* destination ip address*/
+	unsigned char	bw;  /* bandwidth */
+	__u16   sent;  /* number of pkt sent on this path */
+	__u16   rcv;  /* number of pkt received on this path */
+	struct list_head list;
+};
+
+int add_path_info_table(struct path_info_table *item, struct list_head *head);
+int del_path_info_table(__be32 saddr, __be32 daddr, struct list_head *head);
+struct path_info_table * find_path_info_table(__be32 saddr, __be32 daddr,
+										      struct list_head *head);
+
+struct sender_session_table {
+	unsigned char	session_id; /* session id*/
+
+	/* socket information seen at the sender side*/
+	__be32	saddr; /* source ip address*/
+	__be32	daddr; /* destination ip address*/
+	__be16	sport; /* source port*/
+	__be16	dport; /* destination port*/
+	struct list_head list;
+};
+
+struct receiver_socket_table {
+	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
+	unsigned char   session_id; /* sender's session id*/
+
+	/* socket information seen at the receiver side*/
+	__be32	saddr; /* source ip address*/
+	__be32	daddr; /* destination ip address*/
+	__be16	sport; /* source port*/
+	__be16	dport; /* destination port*/
+	struct list_head list;
+};
+
+struct path_stat_table {
+	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
+	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
+	u16   rcv;  /* number of pkt received on this path */
+	struct timeval fbtime; /* last feedback time of this path's stat */
+	struct list_head list;
+};
+
+
+
+
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
 static LIST_HEAD(ss_head);

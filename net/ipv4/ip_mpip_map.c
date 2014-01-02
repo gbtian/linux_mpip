@@ -1,4 +1,4 @@
-#include <linux/mpip_map.h>
+#include <linux/ip_mpip.h>
 
 int add_working_ip_table(struct working_ip_table *item, struct list_head *head)
 {
@@ -10,7 +10,7 @@ int add_working_ip_table(struct working_ip_table *item, struct list_head *head)
 	return 1;
 }
 
-int del_working_ip_table(unsigned char *node_id,	struct list_head *head)
+int del_working_ip_table(unsigned char *node_id, struct list_head *head)
 {
 	/* todo: need locks */
 	struct working_ip_table *node_ip, *tmp;
