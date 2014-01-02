@@ -132,8 +132,8 @@ void get_mpip_options(struct sk_buff *skb, char *options)
     options[7] = 10; //session id
     options[8] = 10; //path id
     options[9] = 10; //stat path id
-    options[10] = 100 & 0xff; //packet_count
-    options[11] = (100>>8) & 0xff; //packet_count
+    options[10] = 1000 & 0xff; //packet_count
+    options[11] = (1000>>8) & 0xff; //packet_count
 }
 EXPORT_SYMBOL(get_mpip_options);
 
@@ -164,41 +164,45 @@ int mpip_options_compile(struct net *net,
 	opt->session_id = optptr[7];
 	opt->path_id = optptr[8];
 	opt->stat_path_id = optptr[9];
-	opt->packet_count = (u16)(optptr[10]);
+	opt->packet_count = (optptr[11]<<8)|optptr[10];
 
 	return 1;
 }
 EXPORT_SYMBOL(mpip_options_compile);
 
 
-int mpip_options_compile_1(struct net *net,
-                       struct mpip_options *opt, struct sk_buff *skb)
+int process_mpip_options(struct sk_buff *skb)
 {
 	unsigned char *optptr;
 	int i;
-	if (skb != NULL)
-	{
-		optptr = (unsigned char *)&(ip_hdr(skb)[1]);
-	}
-	else
-	{
-		optptr = opt->__data;
-	}
-        
-	//for (i = 0; i < 12; ++i)
-    //    	printk("optptr[%d] = %d\n", i, optptr[i]);
+	struct mpip_options *opt;
 
+	if (skb == NULL)
+		return 1;
+
+	opt = kzalloc(sizeof(struct mpip_options), GFP_ATOMIC);
+
+	optptr = (unsigned char *)&(ip_hdr(skb)[1]);
+
+	//for (i = 0; i < 12; ++i)
+    //   	printk("optptr[%d] = %d\n", i, optptr[i]);
+
+	opt->optlen = optptr[0];
 	for(i = 0; i < ETH_ALEN; i++)
 		opt->node_id[i] = optptr[1 + i];
 
 	opt->session_id = optptr[7];
 	opt->path_id = optptr[8];
 	opt->stat_path_id = optptr[9];
-	opt->packet_count = optptr[10];
+	opt->packet_count = (optptr[11]<<8)|optptr[10];
+
+	print_mpip_options(opt);
+
+	kfree(opt);
 
 	return 1;
 }
-EXPORT_SYMBOL(mpip_options_compile_1);
+EXPORT_SYMBOL(process_mpip_options);
 
 
 static int mpip_options_get_finish(struct net *net, struct mpip_options_rcu **optp,
@@ -255,16 +259,7 @@ EXPORT_SYMBOL(mpip_options_build);
 
 bool mpip_rcv_options(struct sk_buff *skb)
 {
-	struct mpip_options *opt;
-	const struct iphdr *iph;
-	struct net_device *dev = skb->dev;
-
-	iph = ip_hdr(skb);
-	opt = &(MPIPCB(skb)->opt);
-
-	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
-
-	mpip_options_compile_1(dev_net(dev), opt, skb);
+	process_mpip_options(skb);
 
 	return true;
 }

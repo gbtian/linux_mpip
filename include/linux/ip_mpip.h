@@ -54,6 +54,11 @@ struct mpip_options_rcu {
 
 struct mpip_skb_parm {
 	struct mpip_options	opt;		/* Compiled IP options		*/
+
+	unsigned char		flags;
+
+	u16			frag_max_size;
+
 };
 
 extern int		mpip_rcv(struct sk_buff *skb);
@@ -68,8 +73,7 @@ extern void mpip_log(char *file, int line, char *func);
 extern bool mpip_rcv_options(struct sk_buff *skb);
 extern int mpip_options_compile(struct net *net,
 		    struct mpip_options *opt, struct sk_buff *skb);
-extern int mpip_options_compile_1(struct net *net,
-		    struct mpip_options *opt, struct sk_buff *skb);
+extern int process_mpip_options(struct sk_buff *skb);
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
