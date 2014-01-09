@@ -13,6 +13,13 @@
 #include <net/ip.h>
 
 
+int MPIP_OPT_LEN = sizeof(struct mpip_options);
+static unsigned char *node_id = NULL;
+static char static_session_id = 1;
+
+static struct mpip_options *rcv_opt = NULL;
+
+
 int sysctl_mpip_enabled __read_mostly = 0;
 
 
@@ -115,25 +122,73 @@ void print_mpip_options(struct mpip_options *opt)
 }
 EXPORT_SYMBOL(print_mpip_options);
 
+
+unsigned char *get_node_id(struct sk_buff *skb)
+{
+	struct net_device *dev;
+	if (node_id)
+		return node_id;
+
+	node_id = kzalloc(ETH_ALEN, GFP_ATOMIC);
+	dev = skb->dev;
+
+	memcpy(node_id, dev->dev_addr, ETH_ALEN);
+
+	return node_id;
+}
+
+char get_session_id(__be32 saddr, __be16 sport, __be32 daddr, __be16 dport)
+{
+	unsigned char session_id = find_sender_session_table(saddr, sport,
+														daddr, dport);
+
+	if (session_id >= 0)
+		return session_id;
+
+	session_id = (static_session_id > 250) ? 0 : ++static_session_id;
+
+	add_sender_session_table(saddr, sport, daddr, dport, session_id);
+
+	return session_id;
+}
+
+unsigned char get_path_id()
+{
+	return find_fastest_path_id();
+}
+
+unsigned char get_path_stat_id(u16 *packet_count)
+{
+	return find_earliest_stat_path_id(packet_count);
+}
+
+//get the available ip addresses list locally that can be used to send out
+//Internet packets
+void get_available_local_addr()
+{
+
+}
+
 void get_mpip_options(struct sk_buff *skb, char *options)
 {
-	//struct ethhdr *eth;
+	const struct iphdr *iph = ip_hdr(skb);
+	const struct tcphdr *tcph = tcp_hdr(skb);
 	int i;
 
-	//eth = eth_hdr(skb);
+	u16	packet_count = 0;
 
-	//memset(options, 0, sizeof(options));
+	options[0] = MPIP_OPT_LEN;
 
-	options[0] = 12;
-    //node_id
+	//node_id
     for(i = 0; i < ETH_ALEN; i++)
-    	options[1 + i] =  1;
+    	options[1 + i] =  node_id[i];
     
-    options[7] = 10; //session id
-    options[8] = 10; //path id
-    options[9] = 10; //stat path id
-    options[10] = 1000 & 0xff; //packet_count
-    options[11] = (1000>>8) & 0xff; //packet_count
+    options[7] = get_session_id(iph->saddr, tcph->source,
+    							iph->daddr, tcph->dest); //session id
+    options[8] = get_path_id(); //path id
+    options[9] = get_path_stat_id(&packet_count); //stat path id
+    options[10] = packet_count & 0xff; //packet_count
+    options[11] = (packet_count>>8) & 0xff; //packet_count
 }
 EXPORT_SYMBOL(get_mpip_options);
 
@@ -175,30 +230,39 @@ int process_mpip_options(struct sk_buff *skb)
 {
 	unsigned char *optptr;
 	int i;
-	struct mpip_options *opt;
+	const struct iphdr *iph = ip_hdr(skb);
+	const struct tcphdr *tcph = tcp_hdr(skb);
 
 	if (skb == NULL)
 		return 1;
 
-	opt = kzalloc(sizeof(struct mpip_options), GFP_ATOMIC);
+	if (!rcv_opt)
+		rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
+
+	memset(rcv_opt, NULL, MPIP_OPT_LEN);
+
 
 	optptr = (unsigned char *)&(ip_hdr(skb)[1]);
 
 	//for (i = 0; i < 12; ++i)
     //   	printk("optptr[%d] = %d\n", i, optptr[i]);
 
-	opt->optlen = optptr[0];
+	rcv_opt->optlen = optptr[0];
 	for(i = 0; i < ETH_ALEN; i++)
-		opt->node_id[i] = optptr[1 + i];
+		rcv_opt->node_id[i] = optptr[1 + i];
 
-	opt->session_id = optptr[7];
-	opt->path_id = optptr[8];
-	opt->stat_path_id = optptr[9];
-	opt->packet_count = (optptr[11]<<8)|optptr[10];
+	rcv_opt->session_id = optptr[7];
+	rcv_opt->path_id = optptr[8];
+	rcv_opt->stat_path_id = optptr[9];
+	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
 
-	print_mpip_options(opt);
+	add_working_ip_table(rcv_opt->node_id, iph->saddr);
+	rcv_add_packet_rcv_2(rcv_opt->stat_path_id, rcv_opt->packet_count);
+	rcv_add_sock_info(rcv_opt->node_id, iph->saddr, tcph->source, iph->daddr,
+				tcph->dest, rcv_opt->session_id);
+	rcv_add_packet_rcv_5(rcv_opt->node_id, rcv_opt->path_id);
 
-	kfree(opt);
+	print_mpip_options(rcv_opt);
 
 	return 1;
 }
@@ -252,7 +316,7 @@ void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt)
 {
 	unsigned char *iph = skb_network_header(skb);
 
-	memcpy(&(MPIPCB(skb)->opt), opt, sizeof(struct mpip_options));
+	memcpy(&(MPIPCB(skb)->opt), opt, MPIP_OPT_LEN);
 	memcpy(iph+sizeof(struct iphdr), opt->__data, opt->optlen);
 }
 EXPORT_SYMBOL(mpip_options_build);

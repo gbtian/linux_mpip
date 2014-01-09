@@ -134,7 +134,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct inet_sock *inet = inet_sk(sk);
 	struct rtable *rt = skb_rtable(skb);
 	struct iphdr *iph;
-	char options[12];
+	char options[MPIP_OPT_LEN];
 	unsigned int optlen = 0;
 	//bool origin = true;
 	int res;
@@ -146,7 +146,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	else if (sysctl_mpip_enabled)
 	{
 		get_mpip_options(skb, options);
-		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, 12);
+		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	}
 
 	/* Build the IP header. */
@@ -368,7 +368,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
-	char options[12];
+	char options[MPIP_OPT_LEN];
 
 	if (inet->inet_opt && inet_opt->opt.optlen)
 	{
@@ -376,7 +376,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	else if (sysctl_mpip_enabled)
 	{
 		get_mpip_options(skb, options);
-		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, 12);
+		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	}
 
 

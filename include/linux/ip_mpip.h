@@ -29,6 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
+extern int MPIP_OPT_LEN;
 extern int sysctl_mpip_enabled;
 int mpip_init(void);
 
@@ -79,16 +80,10 @@ extern int process_mpip_options(struct sk_buff *skb);
 struct working_ip_table {
 	unsigned char	node_id[ETH_ALEN]; /*receiver's node id. */
 									   /*the node id is defined as the MAC*/
-	__be32	addr_1; /* receiver' ip seen by sender */
-	__be32	addr_2;
-	__be32	addr_3; /* maximumly support three interfaces*/
+	__be32	addr; /* receiver' ip seen by sender */
 	struct list_head list;
 };
 
-int add_working_ip_table(struct working_ip_table *item, struct list_head *head);
-int del_working_ip_table(unsigned char *node_id, struct list_head *head);
-struct working_ip_table * find_working_ip_table(unsigned char *node_id,
-												struct list_head *head);
 
 struct path_info_table {
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
@@ -100,10 +95,6 @@ struct path_info_table {
 	struct list_head list;
 };
 
-int add_path_info_table(struct path_info_table *item, struct list_head *head);
-int del_path_info_table(__be32 saddr, __be32 daddr, struct list_head *head);
-struct path_info_table * find_path_info_table(__be32 saddr, __be32 daddr,
-										      struct list_head *head);
 
 struct sender_session_table {
 	unsigned char	session_id; /* session id*/
@@ -132,12 +123,28 @@ struct path_stat_table {
 	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	u16   rcv;  /* number of pkt received on this path */
-	struct timeval fbtime; /* last feedback time of this path's stat */
+	unsigned long fbjiffies; /* last feedback time of this path's stat */
 	struct list_head list;
 };
 
 
 
+int add_working_ip_table(unsigned char *node_id, __be32 addr);
+int del_working_ip_table(unsigned char *node_id, __be32 addr);
+struct working_ip_table * find_working_ip_table(unsigned char *node_id,
+												__be32 addr);
+int rcv_add_packet_rcv_2(unsigned char path_id, u16 packet_count);
+int rcv_add_packet_rcv_5(unsigned char *node_id, unsigned char path_id);
+int rcv_add_sock_info(unsigned char *node_id, __be32 saddr, __be16 sport,
+		 	 __be32 daddr, __be16 dport, unsigned char session_id);
+unsigned char find_fastest_path_id(void);
+unsigned char find_earliest_stat_path_id(u16 *packet_count);
+unsigned char find_sender_session_table(__be32 saddr, __be16 sport,
+										__be32 daddr, __be16 dport);
+
+int add_sender_session_table(__be32 saddr, __be16 sport,
+							 __be32 daddr, __be16 dport,
+							 unsigned char session_id);
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
