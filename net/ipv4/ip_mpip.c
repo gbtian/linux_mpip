@@ -151,12 +151,12 @@ char get_session_id(__be32 saddr, __be16 sport, __be32 daddr, __be16 dport)
 	return session_id;
 }
 
-unsigned char get_path_id(unsigned char *node_id)
+unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr)
 {
 	if (node_id == NULL)
 		return 0;
 
-	return find_fastest_path_id(node_id);
+	return find_fastest_path_id(node_id, saddr, daddr);
 }
 
 unsigned char get_path_stat_id(u16 *packet_count)
@@ -167,10 +167,10 @@ unsigned char get_path_stat_id(u16 *packet_count)
 
 void get_mpip_options(struct sk_buff *skb, char *options)
 {
-	const struct iphdr *iph = ip_hdr(skb);
+	struct iphdr *iph = ip_hdr(skb);
 	const struct tcphdr *tcph = tcp_hdr(skb);
 	int i;
-
+	__be32 saddr = 0, daddr = 0;
 	u16	packet_count = 0;
 
 	options[0] = MPIP_OPT_LEN;
@@ -179,14 +179,67 @@ void get_mpip_options(struct sk_buff *skb, char *options)
     for(i = 0; i < ETH_ALEN; i++)
     	options[1 + i] =  node_id[i];
     
-    options[7] = get_session_id(iph->saddr, tcph->source,
-    							iph->daddr, tcph->dest); //session id
-    options[8] = get_path_id(find_node_id_in_working_ip_table(iph->daddr)); //path id
+    options[7] = get_path_id(find_node_id_in_working_ip_table(iph->daddr),
+    						 &saddr, &daddr); //path id
+    options[8] = get_session_id(iph->saddr, tcph->source,
+        							iph->daddr, tcph->dest); //session id
     options[9] = get_path_stat_id(&packet_count); //stat path id
     options[10] = packet_count & 0xff; //packet_count
     options[11] = (packet_count>>8) & 0xff; //packet_count
+
+    if (options[7] > 0)
+    {
+    	iph->saddr = saddr;
+    	iph->daddr = daddr;
+    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    }
+
 }
 EXPORT_SYMBOL(get_mpip_options);
+
+
+int process_mpip_options(struct sk_buff *skb)
+{
+	unsigned char *optptr;
+	int i;
+	const struct iphdr *iph = ip_hdr(skb);
+	const struct tcphdr *tcph = tcp_hdr(skb);
+
+	if (skb == NULL)
+		return 1;
+
+	if (!rcv_opt)
+		rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
+
+	memset(rcv_opt, NULL, MPIP_OPT_LEN);
+
+
+	optptr = (unsigned char *)&(ip_hdr(skb)[1]);
+
+	//for (i = 0; i < 12; ++i)
+    //   	printk("optptr[%d] = %d\n", i, optptr[i]);
+
+	rcv_opt->optlen = optptr[0];
+	for(i = 0; i < ETH_ALEN; i++)
+		rcv_opt->node_id[i] = optptr[1 + i];
+
+	rcv_opt->path_id = optptr[7];
+	rcv_opt->session_id = optptr[8];
+	rcv_opt->stat_path_id = optptr[9];
+	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
+
+	add_working_ip_table(rcv_opt->node_id, iph->saddr);
+	rcv_add_packet_rcv_2(rcv_opt->stat_path_id, rcv_opt->packet_count);
+	rcv_add_sock_info(rcv_opt->node_id, iph->saddr, tcph->source, iph->daddr,
+				tcph->dest, rcv_opt->session_id);
+	rcv_add_packet_rcv_5(rcv_opt->node_id, rcv_opt->path_id);
+
+	print_mpip_options(rcv_opt);
+
+	return 1;
+}
+EXPORT_SYMBOL(process_mpip_options);
+
 
 static struct mpip_options_rcu *mpip_options_get_alloc(const int optlen)
 {
@@ -221,48 +274,6 @@ int mpip_options_compile(struct net *net,
 }
 EXPORT_SYMBOL(mpip_options_compile);
 
-
-int process_mpip_options(struct sk_buff *skb)
-{
-	unsigned char *optptr;
-	int i;
-	const struct iphdr *iph = ip_hdr(skb);
-	const struct tcphdr *tcph = tcp_hdr(skb);
-
-	if (skb == NULL)
-		return 1;
-
-	if (!rcv_opt)
-		rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
-
-	memset(rcv_opt, NULL, MPIP_OPT_LEN);
-
-
-	optptr = (unsigned char *)&(ip_hdr(skb)[1]);
-
-	//for (i = 0; i < 12; ++i)
-    //   	printk("optptr[%d] = %d\n", i, optptr[i]);
-
-	rcv_opt->optlen = optptr[0];
-	for(i = 0; i < ETH_ALEN; i++)
-		rcv_opt->node_id[i] = optptr[1 + i];
-
-	rcv_opt->session_id = optptr[7];
-	rcv_opt->path_id = optptr[8];
-	rcv_opt->stat_path_id = optptr[9];
-	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
-
-	add_working_ip_table(rcv_opt->node_id, iph->saddr);
-	rcv_add_packet_rcv_2(rcv_opt->stat_path_id, rcv_opt->packet_count);
-	rcv_add_sock_info(rcv_opt->node_id, iph->saddr, tcph->source, iph->daddr,
-				tcph->dest, rcv_opt->session_id);
-	rcv_add_packet_rcv_5(rcv_opt->node_id, rcv_opt->path_id);
-
-	print_mpip_options(rcv_opt);
-
-	return 1;
-}
-EXPORT_SYMBOL(process_mpip_options);
 
 
 static int mpip_options_get_finish(struct net *net, struct mpip_options_rcu **optp,

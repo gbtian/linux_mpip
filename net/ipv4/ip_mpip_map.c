@@ -182,7 +182,8 @@ int add_path_info_table(unsigned char *node_id, __be32 daddr)
 	return 1;
 }
 
-unsigned char find_fastest_path_id(unsigned char *node_id)
+unsigned char find_fastest_path_id(unsigned char *node_id,
+								__be32 *saddr, __be32 *daddr)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -204,6 +205,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id)
 	if (f_path_id > 0)
 	{
 		f_path->sent += 1;
+		*saddr = f_path->saddr;
+		*daddr = f_path->daddr;
 	}
 	return f_path_id;
 }

@@ -39,8 +39,8 @@ int mpip_init(void);
 struct mpip_options {
 	unsigned char	optlen;
 	unsigned char	node_id[ETH_ALEN];
-	unsigned char	session_id;
 	unsigned char	path_id;
+	unsigned char	session_id;
 	unsigned char	stat_path_id;
 	u16	packet_count;
 	//unsigned char   packet_count;
@@ -141,7 +141,8 @@ int rcv_add_packet_rcv_2(unsigned char path_id, u16 packet_count);
 int rcv_add_packet_rcv_5(unsigned char *node_id, unsigned char path_id);
 int rcv_add_sock_info(unsigned char *node_id, __be32 saddr, __be16 sport,
 		 	 __be32 daddr, __be16 dport, unsigned char session_id);
-unsigned char find_fastest_path_id(unsigned char *node_id);
+unsigned char find_fastest_path_id(unsigned char *node_id,
+								  __be32 *saddr, __be32 *daddr);
 unsigned char find_earliest_stat_path_id(u16 *packet_count);
 unsigned char find_sender_session_table(__be32 saddr, __be16 sport,
 										__be32 daddr, __be16 dport);
