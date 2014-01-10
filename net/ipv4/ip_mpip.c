@@ -15,8 +15,6 @@
 
 int MPIP_OPT_LEN = sizeof(struct mpip_options);
 static unsigned char *node_id = NULL;
-static char static_session_id = 1;
-
 static struct mpip_options *rcv_opt = NULL;
 
 
@@ -45,11 +43,13 @@ int mpip_init(void)
 
     //In kernel, __MPIP__ will be checked to decide which functions to call.
 	mptcp_sysctl = register_net_sysctl(&init_net, "net/mpip", mpip_table);
-	if (!mptcp_sysctl)
-		goto register_sysctl_failed;
+	//if (!mptcp_sysctl)
+	//	goto register_sysctl_failed;
 
-	register_sysctl_failed:
-		mpip_undo();
+	//register_sysctl_failed:
+	//	mpip_undo();
+
+	get_available_local_addr();
 
     return 0;
 }
@@ -142,19 +142,21 @@ char get_session_id(__be32 saddr, __be16 sport, __be32 daddr, __be16 dport)
 	unsigned char session_id = find_sender_session_table(saddr, sport,
 														daddr, dport);
 
-	if (session_id >= 0)
-		return session_id;
-
-	session_id = (static_session_id > 250) ? 0 : ++static_session_id;
-
-	add_sender_session_table(saddr, sport, daddr, dport, session_id);
+	if (session_id == 0)
+	{
+		add_sender_session_table(saddr, sport, daddr, dport, session_id);
+		session_id = find_sender_session_table(saddr, sport, daddr, dport);
+	}
 
 	return session_id;
 }
 
-unsigned char get_path_id()
+unsigned char get_path_id(unsigned char *node_id)
 {
-	return find_fastest_path_id();
+	if (node_id == NULL)
+		return 0;
+
+	return find_fastest_path_id(node_id);
 }
 
 unsigned char get_path_stat_id(u16 *packet_count)
@@ -162,12 +164,6 @@ unsigned char get_path_stat_id(u16 *packet_count)
 	return find_earliest_stat_path_id(packet_count);
 }
 
-//get the available ip addresses list locally that can be used to send out
-//Internet packets
-void get_available_local_addr()
-{
-
-}
 
 void get_mpip_options(struct sk_buff *skb, char *options)
 {
@@ -185,7 +181,7 @@ void get_mpip_options(struct sk_buff *skb, char *options)
     
     options[7] = get_session_id(iph->saddr, tcph->source,
     							iph->daddr, tcph->dest); //session id
-    options[8] = get_path_id(); //path id
+    options[8] = get_path_id(find_node_id_in_working_ip_table(iph->daddr)); //path id
     options[9] = get_path_stat_id(&packet_count); //stat path id
     options[10] = packet_count & 0xff; //packet_count
     options[11] = (packet_count>>8) & 0xff; //packet_count

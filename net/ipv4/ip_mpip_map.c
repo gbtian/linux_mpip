@@ -1,4 +1,10 @@
+#include <linux/netdevice.h>
+#include <linux/inetdevice.h>
 #include <linux/ip_mpip.h>
+
+static unsigned char static_session_id = 1;
+static unsigned char static_path_id = 1;
+
 
 int add_working_ip_table(unsigned char *node_id, __be32 addr)
 {
@@ -15,6 +21,8 @@ int add_working_ip_table(unsigned char *node_id, __be32 addr)
 	item->addr = addr;
 	INIT_LIST_HEAD(&item->list);
 	list_add(&(item->list), &wi_head);
+
+	add_path_info_table(node_id, addr);
 
 	return 1;
 }
@@ -49,6 +57,21 @@ struct working_ip_table * find_working_ip_table(unsigned char *node_id,
 				(addr == working_ip->addr))
 		{
 			return working_ip;
+		}
+	}
+
+	return NULL;
+}
+
+unsigned char * find_node_id_in_working_ip_table(__be32 addr)
+{
+	struct working_ip_table *working_ip;
+
+	list_for_each_entry(working_ip, &wi_head, list)
+	{
+		if (addr == working_ip->addr)
+		{
+			return working_ip->node_id;
 		}
 	}
 
@@ -135,15 +158,41 @@ int rcv_add_sock_info(unsigned char *node_id, __be32 saddr, __be16 sport,
 	return 1;
 }
 
+int add_path_info_table(unsigned char *node_id, __be32 daddr)
+{
+	struct local_addr_table *local_addr;
 
-unsigned char find_fastest_path_id(void)
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+		struct path_info_table *item = NULL;
+
+		item = kzalloc(sizeof(struct local_addr_table),	GFP_ATOMIC);
+
+		memcpy(item->node_id, node_id, ETH_ALEN);
+		item->saddr = local_addr->addr;
+		item->daddr = daddr;
+		item->sent = 0;
+		item->rcv = 0;
+		item->bw = 0;
+		item->path_id = (static_path_id > 250) ? 0 : ++static_path_id;
+		INIT_LIST_HEAD(&item->list);
+		list_add(&(item->list), &pi_head);
+	}
+
+	return 1;
+}
+
+unsigned char find_fastest_path_id(unsigned char *node_id)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
-	unsigned char f_path_id = -1;
-	unsigned char f_bw = -1;
+	unsigned char f_path_id = 0;
+	unsigned char f_bw = 0;
 	list_for_each_entry(path, &pi_head, list)
 	{
+		if (strcmp(path->node_id, node_id) != 0)
+			continue;
+
 		if (path->bw > f_bw)
 		{
 			f_path_id = path->path_id;
@@ -164,7 +213,7 @@ unsigned char find_earliest_stat_path_id(u16 *packet_count)
 {
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
-	unsigned char e_path_stat_id = -1;
+	unsigned char e_path_stat_id = 0;
 	unsigned long e_fbtime = jiffies;
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
@@ -218,9 +267,52 @@ int add_sender_session_table(__be32 saddr, __be16 sport,
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	item->session_id = session_id;
+	item->session_id = (static_session_id > 250) ? 0 : ++static_session_id;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
 	return 1;
+}
+
+
+__be32 find_local_addr_table(__be32 addr)
+{
+	struct local_addr_table *local_addr;
+
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+		if (local_addr->addr == addr)
+		{
+			return local_addr->addr;
+		}
+	}
+
+	return 0;
+}
+
+//get the available ip addresses list locally that can be used to send out
+//Internet packets
+void get_available_local_addr()
+{
+	struct net_device *dev;
+	struct local_addr_table *item = NULL;
+
+	for_each_netdev(&init_net, dev)
+	{
+		//printk("dev = %s\n", dev->name);
+		if (strstr(dev->name, "lo"))
+			continue;
+
+		if (dev->ip_ptr && dev->ip_ptr->ifa_list)
+		{
+			if (find_local_addr_table(dev->ip_ptr->ifa_list->ifa_address))
+				continue;
+
+			item = kzalloc(sizeof(struct local_addr_table),	GFP_ATOMIC);
+			item->addr = dev->ip_ptr->ifa_list->ifa_address;
+			INIT_LIST_HEAD(&item->list);
+			list_add(&(item->list), &wi_head);
+			//printk("my ip: %s\n", in_ntoa(dev->ip_ptr->ifa_list->ifa_address));
+		}
+	}
 }

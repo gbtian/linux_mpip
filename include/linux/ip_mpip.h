@@ -87,6 +87,7 @@ struct working_ip_table {
 
 struct path_info_table {
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
+	unsigned char node_id[ETH_ALEN]; /*node id*/
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
 	unsigned char	bw;  /* bandwidth */
@@ -127,7 +128,10 @@ struct path_stat_table {
 	struct list_head list;
 };
 
-
+struct local_addr_table {
+	__be32	addr;
+	struct list_head list;
+};
 
 int add_working_ip_table(unsigned char *node_id, __be32 addr);
 int del_working_ip_table(unsigned char *node_id, __be32 addr);
@@ -137,19 +141,23 @@ int rcv_add_packet_rcv_2(unsigned char path_id, u16 packet_count);
 int rcv_add_packet_rcv_5(unsigned char *node_id, unsigned char path_id);
 int rcv_add_sock_info(unsigned char *node_id, __be32 saddr, __be16 sport,
 		 	 __be32 daddr, __be16 dport, unsigned char session_id);
-unsigned char find_fastest_path_id(void);
+unsigned char find_fastest_path_id(unsigned char *node_id);
 unsigned char find_earliest_stat_path_id(u16 *packet_count);
 unsigned char find_sender_session_table(__be32 saddr, __be16 sport,
 										__be32 daddr, __be16 dport);
-
 int add_sender_session_table(__be32 saddr, __be16 sport,
 							 __be32 daddr, __be16 dport,
 							 unsigned char session_id);
+__be32 find_local_addr_table(__be32 addr);
+void get_available_local_addr();
+unsigned char * find_node_id_in_working_ip_table(__be32 addr);
+int add_path_info_table(unsigned char *node_id, __be32 daddr);
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
 static LIST_HEAD(ss_head);
 static LIST_HEAD(rs_head);
 static LIST_HEAD(ps_head);
+static LIST_HEAD(la_head);
 
 #endif	/* _IP_MPIP_H */
