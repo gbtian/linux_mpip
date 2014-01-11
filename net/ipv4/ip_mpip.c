@@ -14,6 +14,7 @@
 
 
 int MPIP_OPT_LEN = sizeof(struct mpip_options);
+//int MPIP_OPT_LEN = 12;
 static unsigned char *static_node_id = NULL;
 static struct mpip_options *static_rcv_opt = NULL;
 
@@ -178,27 +179,38 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 	__be16 sport = 0, dport = 0;
 	u16	packet_count = 0;
 
+	get_node_id(skb);
+
 	options[0] = MPIP_OPT_LEN;
 
 	//node_id
     for(i = 0; i < ETH_ALEN; i++)
-    	options[1 + i] =  static_node_id[i];
+   	 options[1 + i] =  static_node_id[i];
     
     options[7] = get_session_id(iph->saddr, tcph->source,
-            					iph->daddr, tcph->dest);
-
+            					iph->daddr, tcph->dest);//
     options[8] = get_path_id(dest_node_id, &saddr, &daddr); //path id
     options[9] = get_path_stat_id(dest_node_id, &packet_count); //stat path id
     options[10] = packet_count & 0xff; //packet_count
     options[11] = (packet_count>>8) & 0xff; //packet_count
 
-    if (options[8] > 0)
-    {
-    	iph->saddr = saddr;
-    	iph->daddr = daddr;
+//	for(i = 0; i < ETH_ALEN; i++)
+//		options[1 + i] =  0;
+//
+//    options[7] = 10;
+//	options[8] = 10;
+//	options[9] = 10;
+//	options[10] = 1000 & 0xff; //packet_count
+//	options[11] = (1000>>8) & 0xff; //packet_count
 
-    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-    }
+
+    //if (options[8] > 0)
+    //{
+    //	iph->saddr = saddr;
+    //	iph->daddr = daddr;
+
+    //	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    //}
 
 }
 EXPORT_SYMBOL(get_mpip_options);
@@ -209,19 +221,19 @@ int process_mpip_options(struct sk_buff *skb)
 	unsigned char *optptr;
 	int i, res;
 	struct iphdr *iph = ip_hdr(skb);
-	struct tcphdr *tcph = tcp_hdr(skb);
+	//struct tcphdr *tcph = tcp_hdr(skb);
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
-
+	struct mpip_options *rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);;
 
 
 	if (skb == NULL)
 		return 1;
 
-	if (!static_rcv_opt)
-		static_rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
+	//if (!static_rcv_opt)
+	//	static_rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
-	memset(static_rcv_opt, NULL, MPIP_OPT_LEN);
+	//memset(static_rcv_opt, NULL, MPIP_OPT_LEN);
 
 
 	optptr = (unsigned char *)&(ip_hdr(skb)[1]);
@@ -229,38 +241,40 @@ int process_mpip_options(struct sk_buff *skb)
 	//for (i = 0; i < 12; ++i)
     //   	printk("optptr[%d] = %d\n", i, optptr[i]);
 
-	static_rcv_opt->optlen = optptr[0];
+	rcv_opt->optlen = optptr[0];
 	for(i = 0; i < ETH_ALEN; i++)
-		static_rcv_opt->node_id[i] = optptr[1 + i];
+		rcv_opt->node_id[i] = optptr[1 + i];
 
-	static_rcv_opt->session_id = optptr[7];
-	static_rcv_opt->path_id = optptr[8];
-	static_rcv_opt->stat_path_id = optptr[9];
-	static_rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
+	rcv_opt->session_id = optptr[7];
+	rcv_opt->path_id = optptr[8];
+	rcv_opt->stat_path_id = optptr[9];
+	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
 
-	add_working_ip(static_rcv_opt->node_id, iph->saddr);
-	add_path_info(static_rcv_opt->node_id, iph->saddr);
+//	add_working_ip(static_rcv_opt->node_id, iph->saddr);
+//	add_path_info(static_rcv_opt->node_id, iph->saddr);
+//
+//	update_packet_rcv(static_rcv_opt->stat_path_id, static_rcv_opt->packet_count);
+//	inc_sender_packet_rcv(static_rcv_opt->node_id, static_rcv_opt->path_id);
+//
+//	add_receiver_socket(static_rcv_opt->node_id,  static_rcv_opt->session_id,
+//						iph->saddr, tcph->source, iph->daddr, tcph->dest);
+//
+//	res = get_receiver_socket(static_rcv_opt->node_id, static_rcv_opt->session_id,
+//							  &saddr, &sport, &daddr, &dport);
+//	if (res)
+//	{
+//    	iph->saddr = saddr;
+//    	iph->daddr = daddr;
+//    	tcph->source = sport;
+//    	tcph->dest = dport;
+//    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+//    	//tcph->check = tcp_fast_csum()
+//	}
+//
+//
+	print_mpip_options(rcv_opt);
+	kfree(rcv_opt);
 
-	update_packet_rcv(static_rcv_opt->stat_path_id, static_rcv_opt->packet_count);
-	inc_sender_packet_rcv(static_rcv_opt->node_id, static_rcv_opt->path_id);
-
-	add_receiver_socket(static_rcv_opt->node_id,  static_rcv_opt->session_id,
-						iph->saddr, tcph->source, iph->daddr, tcph->dest);
-
-	res = get_receiver_socket(static_rcv_opt->node_id, static_rcv_opt->session_id,
-							  &saddr, &sport, &daddr, &dport);
-	if (res)
-	{
-    	iph->saddr = saddr;
-    	iph->daddr = daddr;
-    	tcph->source = sport;
-    	tcph->dest = dport;
-    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-    	//tcph->check = tcp_fast_csum()
-	}
-
-
-	print_mpip_options(static_rcv_opt);
 
 	return 1;
 }

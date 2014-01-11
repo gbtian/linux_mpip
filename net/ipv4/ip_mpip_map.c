@@ -261,7 +261,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id, __be32 *saddr, __be32
 	struct path_info_table *path;
 	struct path_info_table *f_path;
 	unsigned char f_path_id = 0;
-	unsigned char f_bw = 0;
+	unsigned char f_bw = -1;
 	list_for_each_entry(path, &pi_head, list)
 	{
 		if (strcmp(path->node_id, node_id) != 0)
