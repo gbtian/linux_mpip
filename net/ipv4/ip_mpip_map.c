@@ -6,13 +6,13 @@ static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
 
 
-int add_working_ip_table(unsigned char *node_id, __be32 addr)
+int add_working_ip(unsigned char *node_id, __be32 addr)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct working_ip_table *item = NULL;
 
-	if (find_working_ip_table(node_id, addr))
+	if (find_working_ip(node_id, addr))
 		return 0;
 
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
@@ -22,12 +22,10 @@ int add_working_ip_table(unsigned char *node_id, __be32 addr)
 	INIT_LIST_HEAD(&item->list);
 	list_add(&(item->list), &wi_head);
 
-	add_path_info_table(node_id, addr);
-
 	return 1;
 }
 
-int del_working_ip_table(unsigned char *node_id, __be32 addr)
+int del_working_ip(unsigned char *node_id, __be32 addr)
 {
 	/* todo: need locks */
 	struct working_ip_table *working_ip, *tmp;
@@ -46,8 +44,7 @@ int del_working_ip_table(unsigned char *node_id, __be32 addr)
 	return 1;
 }
 
-struct working_ip_table * find_working_ip_table(unsigned char *node_id,
-												__be32 addr)
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr)
 {
 	struct working_ip_table *working_ip;
 
@@ -63,7 +60,7 @@ struct working_ip_table * find_working_ip_table(unsigned char *node_id,
 	return NULL;
 }
 
-unsigned char * find_node_id_in_working_ip_table(__be32 addr)
+unsigned char * find_node_id_in_working_ip(__be32 addr)
 {
 	struct working_ip_table *working_ip;
 
@@ -79,7 +76,7 @@ unsigned char * find_node_id_in_working_ip_table(__be32 addr)
 }
 
 
-int rcv_add_packet_rcv_2(unsigned char path_id, u16 packet_count)
+int update_packet_rcv(unsigned char path_id, u16 packet_count)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -97,16 +94,56 @@ int rcv_add_packet_rcv_2(unsigned char path_id, u16 packet_count)
 	return 1;
 }
 
-int rcv_add_packet_rcv_5(unsigned char *node_id, unsigned char path_id)
+unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
+{
+	struct path_stat_table *path_stat;
+
+	list_for_each_entry(path_stat, &la_head, list)
+	{
+		if ((strcmp(node_id, path_stat->node_id)  == 0) &&
+			(path_stat->path_id == path_id))
+		{
+			return path_stat->path_id;
+		}
+	}
+
+	return 0;
+}
+
+int add_path_stat(unsigned char *node_id, unsigned char path_id)
+{
+	struct path_stat_table *item = NULL;
+
+	if (find_path_stat(node_id, path_id) > 0)
+		return 0;
+
+	item = kzalloc(sizeof(struct path_stat_table),	GFP_ATOMIC);
+
+	memcpy(item->node_id, node_id, ETH_ALEN);
+	item->path_id = path_id;
+	item->rcv = 0;
+	item->fbjiffies = jiffies;
+	INIT_LIST_HEAD(&item->list);
+	list_add(&(item->list), &ps_head);
+
+	return 1;
+}
+
+int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_stat_table *path_stat;
 
+	if (find_path_stat(node_id, path_id) == 0)
+	{
+		add_path_stat(node_id, path_id);
+	}
+
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		if ((strcmp(node_id, path_stat->node_id)  == 0) &&
-				(path_stat->path_id == path_id))
+			(path_stat->path_id == path_id))
 		{
 			path_stat->rcv += 1;
 			break;
@@ -116,18 +153,14 @@ int rcv_add_packet_rcv_5(unsigned char *node_id, unsigned char path_id)
 	return 1;
 }
 
-unsigned char find_receiver_socket_table(unsigned char *node_id, __be32 saddr,
-										__be16 sport, __be32 daddr, __be16 dport)
+unsigned char find_receiver_socket(unsigned char *node_id, unsigned char session_id)
 {
 	struct receiver_socket_table *receiver_socket;
 
 	list_for_each_entry(receiver_socket, &rs_head, list)
 	{
 		if ((strcmp(receiver_socket->node_id, node_id) == 0) &&
-			(receiver_socket->saddr == saddr) &&
-			(receiver_socket->sport == sport) &&
-			(receiver_socket->daddr == daddr) &&
-			(receiver_socket->dport == dport))
+			(receiver_socket->session_id == session_id))
 		{
 			return receiver_socket->session_id;
 		}
@@ -136,15 +169,16 @@ unsigned char find_receiver_socket_table(unsigned char *node_id, __be32 saddr,
 	return 0;
 }
 
-int rcv_add_sock_info(unsigned char *node_id, __be32 saddr, __be16 sport,
-		 	 __be32 daddr, __be16 dport, unsigned char session_id)
+int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
+						__be32 saddr, __be16 sport,
+		 	 	 	 	__be32 daddr, __be16 dport)
 {
 	struct receiver_socket_table *item = NULL;
 
-	if (find_receiver_socket_table(node_id, saddr, sport, daddr, dport) > 0)
+	if (find_receiver_socket(node_id, session_id) > 0)
 		return 0;
 
-	item = kzalloc(sizeof(struct receiver_socket_table),	GFP_ATOMIC);
+	item = kzalloc(sizeof(struct receiver_socket_table), GFP_ATOMIC);
 
 	memcpy(item->node_id, node_id, ETH_ALEN);
 	item->saddr = saddr;
@@ -158,9 +192,49 @@ int rcv_add_sock_info(unsigned char *node_id, __be32 saddr, __be16 sport,
 	return 1;
 }
 
-int add_path_info_table(unsigned char *node_id, __be32 daddr)
+int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
+						__be32 *saddr, __be16 *sport,
+						__be32 *daddr, __be16 *dport)
+{
+	struct receiver_socket_table *receiver_socket;
+	list_for_each_entry(receiver_socket, &rs_head, list)
+	{
+		if ((strcmp(receiver_socket->node_id, node_id) == 0) &&
+				(receiver_socket->session_id == session_id))
+		{
+			*saddr = receiver_socket->saddr;
+			*daddr = receiver_socket->daddr;
+			*sport = receiver_socket->sport;
+			*dport = receiver_socket->dport;
+
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+unsigned char find_path_info(unsigned char *node_id, __be32 addr)
+{
+	struct path_info_table *path_info;
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if ((strcmp(path_info->node_id, node_id) == 0) &&
+			(path_info->daddr == addr))
+		{
+			return path_info->path_id;
+		}
+	}
+	return 0;
+}
+
+int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
+
+	if (find_path_info(node_id, addr))
+		return 0;
 
 	list_for_each_entry(local_addr, &la_head, list)
 	{
@@ -170,11 +244,11 @@ int add_path_info_table(unsigned char *node_id, __be32 daddr)
 
 		memcpy(item->node_id, node_id, ETH_ALEN);
 		item->saddr = local_addr->addr;
-		item->daddr = daddr;
+		item->daddr = addr;
 		item->sent = 0;
 		item->rcv = 0;
 		item->bw = 0;
-		item->path_id = (static_path_id > 250) ? 0 : ++static_path_id;
+		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&item->list);
 		list_add(&(item->list), &pi_head);
 	}
@@ -182,8 +256,7 @@ int add_path_info_table(unsigned char *node_id, __be32 daddr)
 	return 1;
 }
 
-unsigned char find_fastest_path_id(unsigned char *node_id,
-								__be32 *saddr, __be32 *daddr)
+unsigned char find_fastest_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -212,7 +285,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 }
 
 
-unsigned char find_earliest_stat_path_id(u16 *packet_count)
+unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packet_count)
 {
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
@@ -220,6 +293,10 @@ unsigned char find_earliest_stat_path_id(u16 *packet_count)
 	unsigned long e_fbtime = jiffies;
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
+		if (strcmp(path_stat->node_id, dest_node_id) != 0)
+			continue;
+
+
 		if (path_stat->fbjiffies < e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
@@ -237,40 +314,40 @@ unsigned char find_earliest_stat_path_id(u16 *packet_count)
 	return e_path_stat_id;
 }
 
-unsigned char find_sender_session_table(__be32 saddr, __be16 sport,
-										__be32 daddr, __be16 dport)
+unsigned char find_sender_socket(__be32 saddr, __be16 sport,
+								 __be32 daddr, __be16 dport)
 {
-	struct sender_session_table *sender_session;
+	struct sender_socket_table *sender_socket;
 
-	list_for_each_entry(sender_session, &ss_head, list)
+	list_for_each_entry(sender_socket, &ss_head, list)
 	{
-		if ((sender_session->saddr == saddr) &&
-			(sender_session->sport == sport) &&
-			(sender_session->daddr == daddr) &&
-			(sender_session->dport == dport))
+		if ((sender_socket->saddr == saddr) &&
+			(sender_socket->sport == sport) &&
+			(sender_socket->daddr == daddr) &&
+			(sender_socket->dport == dport))
 		{
-			return sender_session->session_id;
+			return sender_socket->session_id;
 		}
 	}
 
 	return 0;
 }
 
-int add_sender_session_table(__be32 saddr, __be16 sport,
-							 __be32 daddr, __be16 dport, unsigned char session_id)
+int add_sender_socket(__be32 saddr, __be16 sport,
+					  __be32 daddr, __be16 dport)
 {
-	struct sender_session_table *item = NULL;
+	struct sender_socket_table *item = NULL;
 
-	if (find_sender_session_table(saddr, sport, daddr, dport) > 0)
+	if (find_sender_socket(saddr, sport, daddr, dport) > 0)
 		return 0;
 
-	item = kzalloc(sizeof(struct sender_session_table),	GFP_ATOMIC);
+	item = kzalloc(sizeof(struct sender_socket_table),	GFP_ATOMIC);
 
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	item->session_id = (static_session_id > 250) ? 0 : ++static_session_id;
+	item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
@@ -278,7 +355,7 @@ int add_sender_session_table(__be32 saddr, __be16 sport,
 }
 
 
-__be32 find_local_addr_table(__be32 addr)
+__be32 find_local_addr(__be32 addr)
 {
 	struct local_addr_table *local_addr;
 
@@ -295,7 +372,7 @@ __be32 find_local_addr_table(__be32 addr)
 
 //get the available ip addresses list locally that can be used to send out
 //Internet packets
-void get_available_local_addr()
+void get_available_local_addr(void)
 {
 	struct net_device *dev;
 	struct local_addr_table *item = NULL;
@@ -308,7 +385,7 @@ void get_available_local_addr()
 
 		if (dev->ip_ptr && dev->ip_ptr->ifa_list)
 		{
-			if (find_local_addr_table(dev->ip_ptr->ifa_list->ifa_address))
+			if (find_local_addr(dev->ip_ptr->ifa_list->ifa_address))
 				continue;
 
 			item = kzalloc(sizeof(struct local_addr_table),	GFP_ATOMIC);
