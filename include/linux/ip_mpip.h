@@ -62,19 +62,32 @@ struct mpip_skb_parm {
 
 };
 
-extern int		mpip_rcv(struct sk_buff *skb);
-extern int		mpip_xmit(struct sk_buff *skb);
-extern void get_mpip_options(struct sk_buff *skb, char *options);
-extern bool mpip_rcv_options(struct sk_buff *skb);
-extern void print_mpip_options(struct mpip_options *opt);
-extern int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
-			unsigned char *data, int optlen);
-extern void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
-extern void mpip_log(char *file, int line, char *func);
-extern bool mpip_rcv_options(struct sk_buff *skb);
-extern int mpip_options_compile(struct net *net,
-		    struct mpip_options *opt, struct sk_buff *skb);
-extern int process_mpip_options(struct sk_buff *skb);
+
+bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2);
+
+int		mpip_rcv(struct sk_buff *skb);
+
+int		mpip_xmit(struct sk_buff *skb);
+
+void get_mpip_options(struct sk_buff *skb, char *options);
+
+bool mpip_rcv_options(struct sk_buff *skb);
+
+void print_mpip_options(struct mpip_options *opt);
+
+int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
+					 unsigned char *data, int optlen);
+
+void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
+
+void mpip_log(char *file, int line, char *func);
+
+bool mpip_rcv_options(struct sk_buff *skb);
+
+int mpip_options_compile(struct net *net,
+						 struct mpip_options *opt, struct sk_buff *skb);
+
+int process_mpip_options(struct sk_buff *skb);
 
 
 struct working_ip_table {
@@ -158,10 +171,15 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id);
 
 int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id);
 
-unsigned char find_receiver_socket(unsigned char *node_id,
-								   unsigned char session_id);
+unsigned char find_receiver_socket_by_session(unsigned char *node_id,
+								   	   	   	  unsigned char session_id);
 
-int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
+unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
+											 __be32 saddr, __be16 sport,
+											 __be32 daddr, __be16 dport);
+
+int add_receiver_socket(unsigned char *node_id,
+						unsigned char session_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport);
 

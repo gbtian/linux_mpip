@@ -50,7 +50,7 @@ int mpip_init(void)
 	//register_sysctl_failed:
 	//	mpip_undo();
 
-	get_available_local_addr();
+	//get_available_local_addr();
 
     return 0;
 }
@@ -81,7 +81,7 @@ int mpip_rcv(struct sk_buff *skb)
 
 void mpip_log(char *file, int line, char *func)
 {
-    //printk("%s, %d, %s \n", file, line, func);
+    printk("%s, %d, %s \n", file, line, func);
     return;
 
 	struct file *fp;
@@ -114,8 +114,11 @@ EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(struct mpip_options *opt)
 {
+	int i;
 	printk("optlen: %d\n", opt->optlen);
-	//printk("node_id: %d\n", opt->node_id);
+	printk("node_id: ");
+	for(i = 0; i < ETH_ALEN; i++)
+		printk(KERN_ALERT "%02x", opt->node_id[i]);
 	printk("\nsession_id: %d\n", opt->session_id);
 	printk("path_id: %d\n", opt->path_id);
 	printk("stat_path_id: %d\n", opt->stat_path_id);
@@ -124,25 +127,41 @@ void print_mpip_options(struct mpip_options *opt)
 EXPORT_SYMBOL(print_mpip_options);
 
 
-unsigned char *get_node_id(struct sk_buff *skb)
+unsigned char *get_node_id()
 {
 	struct net_device *dev;
+
 	if (static_node_id)
 		return static_node_id;
 
-	static_node_id = kzalloc(ETH_ALEN, GFP_ATOMIC);
-	dev = skb->dev;
 
-	memcpy(static_node_id, dev->dev_addr, ETH_ALEN);
+	for_each_netdev(&init_net, dev)
+	{
+		//printk("dev = %s\n", dev->name);
+		if (strstr(dev->name, "lo"))
+			continue;
 
-	return static_node_id;
+		static_node_id = kzalloc(ETH_ALEN, GFP_ATOMIC);
+		memcpy(static_node_id, dev->perm_addr, ETH_ALEN);
+		return static_node_id;
+	}
+
+	return NULL;
 }
 
-char get_session_id(__be32 saddr, __be16 sport, __be32 daddr, __be16 dport)
+char get_session_id(unsigned char *dest_node_id,
+					__be32 saddr, __be16 sport,
+					__be32 daddr, __be16 dport)
 {
 	unsigned char session_id = find_sender_socket(saddr, sport,
 										  		  daddr, dport);
 
+	if (session_id == 0)
+	{
+		session_id = find_receiver_socket_by_socket(dest_node_id,
+										  	  	  	saddr, sport,
+										  	  	  	daddr, dport);
+	}
 	if (session_id == 0)
 	{
 		add_sender_socket(saddr, sport, daddr, dport);
@@ -168,6 +187,12 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
 	return find_earliest_stat_path_id(dest_node_id, packet_count);
 }
 
+void print_addr_1(__be32 addr)
+{
+	char *p = (char *) &addr;
+	printk(KERN_EMERG "%d.%d.%d.%d\n",
+		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+}
 
 void get_mpip_options(struct sk_buff *skb, char *options)
 {
@@ -175,11 +200,17 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 	const struct tcphdr *tcph = tcp_hdr(skb);
 	int i;
 	unsigned char *dest_node_id = find_node_id_in_working_ip(iph->daddr);
+
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	u16	packet_count = 0;
 
-	get_node_id(skb);
+	get_node_id();
+	get_available_local_addr();
+	printk(KERN_EMERG "daddr:");
+	print_addr_1(iph->daddr);
+	printk(KERN_EMERG "saddr:");
+	print_addr_1(iph->saddr);
 
 	options[0] = MPIP_OPT_LEN;
 
@@ -187,7 +218,8 @@ void get_mpip_options(struct sk_buff *skb, char *options)
     for(i = 0; i < ETH_ALEN; i++)
    	 options[1 + i] =  static_node_id[i];
     
-    options[7] = get_session_id(iph->saddr, tcph->source,
+    options[7] = get_session_id(dest_node_id,
+    							iph->saddr, tcph->source,
             					iph->daddr, tcph->dest);//
     options[8] = get_path_id(dest_node_id, &saddr, &daddr); //path id
     options[9] = get_path_stat_id(dest_node_id, &packet_count); //stat path id
@@ -221,7 +253,7 @@ int process_mpip_options(struct sk_buff *skb)
 	unsigned char *optptr;
 	int i, res;
 	struct iphdr *iph = ip_hdr(skb);
-	//struct tcphdr *tcph = tcp_hdr(skb);
+	struct tcphdr *tcph = tcp_hdr(skb);
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	struct mpip_options *rcv_opt = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);;
@@ -250,17 +282,18 @@ int process_mpip_options(struct sk_buff *skb)
 	rcv_opt->stat_path_id = optptr[9];
 	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
 
-//	add_working_ip(static_rcv_opt->node_id, iph->saddr);
-//	add_path_info(static_rcv_opt->node_id, iph->saddr);
-//
-//	update_packet_rcv(static_rcv_opt->stat_path_id, static_rcv_opt->packet_count);
-//	inc_sender_packet_rcv(static_rcv_opt->node_id, static_rcv_opt->path_id);
-//
-//	add_receiver_socket(static_rcv_opt->node_id,  static_rcv_opt->session_id,
-//						iph->saddr, tcph->source, iph->daddr, tcph->dest);
-//
-//	res = get_receiver_socket(static_rcv_opt->node_id, static_rcv_opt->session_id,
-//							  &saddr, &sport, &daddr, &dport);
+	add_working_ip(rcv_opt->node_id, iph->saddr);
+	add_path_info(rcv_opt->node_id, iph->saddr);
+
+	update_packet_rcv(rcv_opt->stat_path_id, rcv_opt->packet_count);
+	inc_sender_packet_rcv(rcv_opt->node_id, rcv_opt->path_id);
+
+	add_receiver_socket(rcv_opt->node_id,  rcv_opt->session_id,
+						iph->saddr, tcph->source, iph->daddr, tcph->dest);
+
+	res = get_receiver_socket(rcv_opt->node_id, rcv_opt->session_id,
+							  &saddr, &sport, &daddr, &dport);
+
 //	if (res)
 //	{
 //    	iph->saddr = saddr;
@@ -272,7 +305,7 @@ int process_mpip_options(struct sk_buff *skb)
 //	}
 //
 //
-	print_mpip_options(rcv_opt);
+	//print_mpip_options(rcv_opt);
 	kfree(rcv_opt);
 
 
