@@ -171,6 +171,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id);
 
 int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id);
 
+int update_path_info();
+
 unsigned char find_receiver_socket_by_session(unsigned char *node_id,
 								   	   	   	  unsigned char session_id);
 

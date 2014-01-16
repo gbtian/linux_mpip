@@ -88,7 +88,7 @@ void mpip_log(char *file, int line, char *func)
     struct inode *inode = NULL;
 	mm_segment_t fs;
 	loff_t pos;
-	char *buf = kmalloc(1024, GFP_ATOMIC);
+	char *buf = kzalloc(1024, GFP_ATOMIC);
 	sprintf(buf, "%s:%d - %s\n", file, line, func);
 
 	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
@@ -200,7 +200,6 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 	const struct tcphdr *tcph = tcp_hdr(skb);
 	int i;
 	unsigned char *dest_node_id = find_node_id_in_working_ip(iph->daddr);
-
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	u16	packet_count = 0;
@@ -287,6 +286,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	update_packet_rcv(rcv_opt->stat_path_id, rcv_opt->packet_count);
 	inc_sender_packet_rcv(rcv_opt->node_id, rcv_opt->path_id);
+	//update_path_info();
 
 	add_receiver_socket(rcv_opt->node_id,  rcv_opt->session_id,
 						iph->saddr, tcph->source, iph->daddr, tcph->dest);

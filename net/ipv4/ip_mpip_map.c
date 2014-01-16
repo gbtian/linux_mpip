@@ -66,12 +66,15 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	if (find_working_ip(node_id, addr))
 		return 0;
 
+
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
 
 	memcpy(item->node_id, node_id, ETH_ALEN);
 	item->addr = addr;
 	INIT_LIST_HEAD(&item->list);
 	list_add(&(item->list), &wi_head);
+
+
 
 	//printk(KERN_EMERG "wi: %s, %s\n", print_node_id(node_id), in_ntoa(addr));
 	//printk(KERN_EMERG "wi:", node_id, addr);
@@ -88,13 +91,16 @@ int del_working_ip(unsigned char *node_id, __be32 addr)
 	/* todo: need locks */
 	struct working_ip_table *working_ip, *tmp;
 
+
 	list_for_each_entry_safe(working_ip, tmp, &wi_head, list)
 	{
 		if (is_equal_node_id(node_id, working_ip->node_id) &&
 				(addr == working_ip->addr))
 		{
+
 			list_del(&(working_ip->list));
 			kfree(working_ip);
+
 			break;
 		}
 	}
@@ -139,6 +145,39 @@ unsigned char * find_node_id_in_working_ip(__be32 addr)
 	return NULL;
 }
 
+int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
+{
+	/* todo: need sanity checks, leave it for now */
+	/* todo: need locks */
+	struct path_stat_table *path_stat;
+
+	if (!node_id)
+	{
+		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		return 0;
+	}
+
+	if (find_path_stat(node_id, path_id) == 0)
+	{
+		add_path_stat(node_id, path_id);
+	}
+
+	list_for_each_entry(path_stat, &ps_head, list)
+	{
+		if (is_equal_node_id(node_id, path_stat->node_id) &&
+			(path_stat->path_id == path_id))
+		{
+			if (path_stat->rcv >= 60000)
+				path_stat->rcv = 0;
+
+			path_stat->rcv += 1;
+
+			break;
+		}
+	}
+
+	return 1;
+}
 
 int update_packet_rcv(unsigned char path_id, u16 packet_count)
 {
@@ -157,6 +196,27 @@ int update_packet_rcv(unsigned char path_id, u16 packet_count)
 
 	return 1;
 }
+
+int update_path_info()
+{
+	/* todo: need sanity checks, leave it for now */
+	/* todo: need locks */
+	struct path_info_table *path_info;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if ((path_info->rcv == 1) && (path_info->sent >= 60000))
+			path_info->sent = 1;
+
+		if (path_info->sent > 0)
+		{
+			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
+		}
+	}
+
+	return 1;
+}
+
 
 unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
 {
@@ -203,41 +263,13 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	INIT_LIST_HEAD(&item->list);
 	list_add(&(item->list), &ps_head);
 
+
 	printk(KERN_EMERG "ps: %d", path_id);
 	print_node_id(node_id);
 
 	return 1;
 }
 
-int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
-{
-	/* todo: need sanity checks, leave it for now */
-	/* todo: need locks */
-	struct path_stat_table *path_stat;
-
-	if (!node_id)
-	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
-		return 0;
-	}
-
-	if (find_path_stat(node_id, path_id) == 0)
-	{
-		add_path_stat(node_id, path_id);
-	}
-
-	list_for_each_entry(path_stat, &ps_head, list)
-	{
-		if (is_equal_node_id(node_id, path_stat->node_id) &&
-			(path_stat->path_id == path_id))
-		{
-			path_stat->rcv += 1;
-			break;
-		}
-	}
-
-	return 1;
-}
 
 unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 											 __be32 saddr, __be16 sport,
@@ -394,14 +426,14 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	{
 		struct path_info_table *item = NULL;
 
-		item = kzalloc(sizeof(struct local_addr_table),	GFP_ATOMIC);
+		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
 		memcpy(item->node_id, node_id, ETH_ALEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
 		item->sent = 0;
 		item->rcv = 0;
-		item->bw = 0;
+		item->bw = 100;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&item->list);
 		list_add(&(item->list), &pi_head);
@@ -419,7 +451,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id, __be32 *saddr, __be32
 	struct path_info_table *path;
 	struct path_info_table *f_path;
 	unsigned char f_path_id = 0;
-	unsigned char f_bw = -1;
+	unsigned char f_bw = 0;
 
 	if (!node_id)
 	{
