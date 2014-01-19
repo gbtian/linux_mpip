@@ -48,6 +48,7 @@
 #include <linux/inet.h>
 #include <linux/netfilter_ipv4.h>
 #include <net/inet_ecn.h>
+#include <linux/ip_mpip.h>
 
 /* NOTE. Logic of IP defragmentation is parallel to corresponding IPv6
  * code now. If you change something here, _PLEASE_ update ipv6/reassembly.c
@@ -620,7 +621,11 @@ static int ip_frag_reasm(struct ipq *qp, struct sk_buff *prev,
 	head->next = NULL;
 	head->dev = dev;
 	head->tstamp = qp->q.stamp;
-	IPCB(head)->frag_max_size = qp->q.max_size;
+
+	if (!sysctl_mpip_enabled)
+		IPCB(head)->frag_max_size = qp->q.max_size;
+	else
+		MPIPCB(head)->frag_max_size = qp->q.max_size;
 
 	iph = ip_hdr(head);
 	/* max_size != 0 implies at least one fragment had IP_DF set */

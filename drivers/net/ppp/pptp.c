@@ -264,10 +264,11 @@ static int pptp_xmit(struct ppp_channel *chan, struct sk_buff *skb)
 	iph =	ip_hdr(skb);
 	iph->version =	4;
 	iph->ihl =	sizeof(struct iphdr) >> 2;
-	if (ip_dont_fragment(sk, &rt->dst))
-		iph->frag_off	=	htons(IP_DF);
-	else
-		iph->frag_off	=	0;
+	//if (ip_dont_fragment(sk, &rt->dst))
+	//	iph->frag_off	=	htons(IP_DF);
+	//else
+	//	iph->frag_off	=	0;
+	iph->frag_off = 0;
 	iph->protocol = IPPROTO_GRE;
 	iph->tos      = 0;
 	iph->daddr    = fl4.daddr;

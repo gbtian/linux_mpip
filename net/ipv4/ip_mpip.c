@@ -117,9 +117,8 @@ void print_mpip_options(struct mpip_options *opt)
 	int i;
 	printk("optlen: %d\n", opt->optlen);
 	printk("node_id: ");
-	for(i = 0; i < ETH_ALEN; i++)
-		printk(KERN_ALERT "%02x", opt->node_id[i]);
-	printk("\nsession_id: %d\n", opt->session_id);
+	print_node_id(opt->node_id);
+	printk("session_id: %d\n", opt->session_id);
 	printk("path_id: %d\n", opt->path_id);
 	printk("stat_path_id: %d\n", opt->stat_path_id);
 	printk("packet_count: %d\n", opt->packet_count);
@@ -171,12 +170,14 @@ char get_session_id(unsigned char *dest_node_id,
 	return session_id;
 }
 
-unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr)
+unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
+						  __be32 origin_saddr, __be32 origin_daddr)
 {
 	if (node_id == NULL)
 		return 0;
 
-	return find_fastest_path_id(node_id, saddr, daddr);
+	return find_fastest_path_id(node_id, saddr, daddr,
+								origin_saddr, origin_daddr);
 }
 
 unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
@@ -187,12 +188,37 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
 	return find_earliest_stat_path_id(dest_node_id, packet_count);
 }
 
-void print_addr_1(__be32 addr)
+int mpip_options_echo(struct mpip_options *dopt, struct sk_buff *skb)
 {
-	char *p = (char *) &addr;
-	printk(KERN_EMERG "%d.%d.%d.%d\n",
-		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	const struct mpip_options *sopt;
+	unsigned char *sptr, *dptr;
+
+	memset(dopt, 0, sizeof(struct mpip_options));
+
+	sopt = &(MPIPCB(skb)->opt);
+
+	if (sopt->optlen == 0)
+		return 0;
+
+	sptr = skb_network_header(skb);
+	dptr = dopt->__data;
+
+	memcpy(dptr, sptr, MPIP_OPT_LEN);
+
+	while (dopt->optlen & 3) {
+		*dptr++ = IPOPT_END;
+		dopt->optlen++;
+	}
+	return 0;
 }
+
+
+void mpip_options_fragment(struct sk_buff *skb)
+{
+	unsigned char *optptr = skb_network_header(skb) + sizeof(struct iphdr);
+	memset(optptr, IPOPT_NOOP, MPIP_OPT_LEN);
+}
+
 
 void get_mpip_options(struct sk_buff *skb, char *options)
 {
@@ -206,10 +232,10 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 
 	get_node_id();
 	get_available_local_addr();
-	printk(KERN_EMERG "daddr:");
-	print_addr_1(iph->daddr);
-	printk(KERN_EMERG "saddr:");
-	print_addr_1(iph->saddr);
+	//printk(KERN_EMERG "saddr:");
+	//print_addr(iph->saddr);
+	//printk(KERN_EMERG "daddr:");
+	//print_addr(iph->daddr);
 
 	options[0] = MPIP_OPT_LEN;
 
@@ -220,7 +246,8 @@ void get_mpip_options(struct sk_buff *skb, char *options)
     options[7] = get_session_id(dest_node_id,
     							iph->saddr, tcph->source,
             					iph->daddr, tcph->dest);//
-    options[8] = get_path_id(dest_node_id, &saddr, &daddr); //path id
+    options[8] = get_path_id(dest_node_id, &saddr, &daddr,
+    						 iph->saddr, iph->daddr); //path id
     options[9] = get_path_stat_id(dest_node_id, &packet_count); //stat path id
     options[10] = packet_count & 0xff; //packet_count
     options[11] = (packet_count>>8) & 0xff; //packet_count
@@ -236,12 +263,13 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 
 
     //if (options[8] > 0)
-    //{
-    //	iph->saddr = saddr;
-    //	iph->daddr = daddr;
+    if (false)
+    {
+    	iph->saddr = saddr;
+    	iph->daddr = daddr;
 
-    //	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-    //}
+    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    }
 
 }
 EXPORT_SYMBOL(get_mpip_options);
@@ -286,7 +314,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	update_packet_rcv(rcv_opt->stat_path_id, rcv_opt->packet_count);
 	inc_sender_packet_rcv(rcv_opt->node_id, rcv_opt->path_id);
-	//update_path_info();
+	update_path_info();
 
 	add_receiver_socket(rcv_opt->node_id,  rcv_opt->session_id,
 						iph->saddr, tcph->source, iph->daddr, tcph->dest);
@@ -294,15 +322,16 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_socket(rcv_opt->node_id, rcv_opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-//	if (res)
-//	{
-//    	iph->saddr = saddr;
-//    	iph->daddr = daddr;
-//    	tcph->source = sport;
-//    	tcph->dest = dport;
-//    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-//    	//tcph->check = tcp_fast_csum()
-//	}
+	//if (res)
+	if (false)
+	{
+    	iph->saddr = saddr;
+    	iph->daddr = daddr;
+    	tcph->source = sport;
+    	tcph->dest = dport;
+    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    	//tcph->check = tcp_fast_csum()
+	}
 //
 //
 	//print_mpip_options(rcv_opt);
@@ -373,6 +402,26 @@ static int mpip_options_get_finish(struct net *net, struct mpip_options_rcu **op
 	return 0;
 }
 
+int insert_mpip_options(struct sk_buff *skb)
+{
+	char options[MPIP_OPT_LEN];
+	unsigned int optlen = 0;
+	struct mpip_options_rcu *mp_opt = NULL;
+	struct iphdr *iph;
+	int res;
+
+	iph = ip_hdr(skb);
+	if (iph->ihl > 5)
+		return 0;
+
+	get_mpip_options(skb, options);
+	res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
+	iph->ihl += (mp_opt->opt.optlen)>>2;
+	mpip_options_build(skb, &(mp_opt->opt));
+
+	return 1;
+}
+
 int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
 		   unsigned char *data, int optlen)
 {
@@ -409,4 +458,3 @@ bool mpip_rcv_options(struct sk_buff *skb)
 }
 
 EXPORT_SYMBOL(mpip_rcv_options);
-

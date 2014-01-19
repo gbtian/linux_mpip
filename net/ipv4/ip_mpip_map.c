@@ -38,7 +38,7 @@ void print_addr(__be32 addr)
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 }
 
-static char *in_ntoa(unsigned long in)
+char *in_ntoa(unsigned long in)
 {
 	char *buff = kzalloc(18, GFP_ATOMIC);
 	char *p;
@@ -78,9 +78,9 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	//printk(KERN_EMERG "wi: %s, %s\n", print_node_id(node_id), in_ntoa(addr));
 	//printk(KERN_EMERG "wi:", node_id, addr);
-	printk(KERN_EMERG "wi:");
-	print_node_id(node_id);
-	print_addr(addr);
+	//printk(KERN_EMERG "wi:");
+	//print_node_id(node_id);
+	//print_addr(addr);
 
 
 	return 1;
@@ -151,7 +151,7 @@ int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
 	/* todo: need locks */
 	struct path_stat_table *path_stat;
 
-	if (!node_id)
+	if (!node_id || (path_id == 0))
 	{
 		mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
@@ -212,6 +212,12 @@ int update_path_info()
 		{
 			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
 		}
+
+		printk("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
+				path_info->sent, path_info->rcv, path_info->bw);
+
+		print_addr(path_info->saddr);
+		print_addr(path_info->daddr);
 	}
 
 	return 1;
@@ -228,7 +234,7 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
 		return 0;
 	}
 
-	list_for_each_entry(path_stat, &la_head, list)
+	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		if (is_equal_node_id(node_id, path_stat->node_id) &&
 			(path_stat->path_id == path_id))
@@ -264,8 +270,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	list_add(&(item->list), &ps_head);
 
 
-	printk(KERN_EMERG "ps: %d", path_id);
-	print_node_id(node_id);
+	//printk(KERN_EMERG "ps: %d", path_id);
+	//print_node_id(node_id);
 
 	return 1;
 }
@@ -347,12 +353,12 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 	INIT_LIST_HEAD(&item->list);
 	list_add(&(item->list), &rs_head);
 
-	printk(KERN_EMERG "rs: %d,%d,%d\n", session_id,
-					sport, dport);
+	//printk(KERN_EMERG "rs: %d,%d,%d\n", session_id,
+	//				sport, dport);
 
-	print_node_id(node_id);
-	print_addr(saddr);
-	print_addr(daddr);
+	//print_node_id(node_id);
+	//print_addr(saddr);
+	//print_addr(daddr);
 
 	return 1;
 }
@@ -387,7 +393,22 @@ int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
 }
 
 
-unsigned char find_path_info(unsigned char *node_id, __be32 addr)
+struct path_info_table *find_path_info(__be32 saddr, __be32 daddr)
+{
+	struct path_info_table *path_info;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if ((path_info->saddr == saddr) &&
+			(path_info->daddr == daddr))
+		{
+			return path_info;
+		}
+	}
+	return NULL;
+}
+
+bool is_dest_added(unsigned char *node_id)
 {
 	struct path_info_table *path_info;
 
@@ -399,13 +420,12 @@ unsigned char find_path_info(unsigned char *node_id, __be32 addr)
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (is_equal_node_id(path_info->node_id, node_id) &&
-			(path_info->daddr == addr))
+		if (is_equal_node_id(path_info->node_id, node_id))
 		{
-			return path_info->path_id;
+			return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 int add_path_info(unsigned char *node_id, __be32 addr)
@@ -418,7 +438,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		return 0;
 	}
 
-	if (find_path_info(node_id, addr))
+	if (is_dest_added(node_id))
 		return 0;
 
 
@@ -437,16 +457,18 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&item->list);
 		list_add(&(item->list), &pi_head);
-		printk(KERN_EMERG "pi: %d\n", item->path_id);
+		//printk(KERN_EMERG "pi: %d\n", item->path_id);
 
-		print_node_id(node_id);
-		print_addr(addr);
+		//print_node_id(node_id);
+		//print_addr(addr);
 	}
 
 	return 1;
 }
 
-unsigned char find_fastest_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr)
+unsigned char find_fastest_path_id(unsigned char *node_id,
+								   __be32 *saddr, __be32 *daddr,
+								   __be32 origin_saddr, __be32 origin_daddr)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -478,6 +500,17 @@ unsigned char find_fastest_path_id(unsigned char *node_id, __be32 *saddr, __be32
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 	}
+	else
+	{
+		f_path = find_path_info(origin_saddr, origin_daddr);
+		if (f_path)
+		{
+			f_path->sent += 1;
+			*saddr = f_path->saddr;
+			*daddr = f_path->daddr;
+			f_path_id = f_path->path_id;
+		}
+	}
 	return f_path_id;
 }
 
@@ -495,15 +528,29 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		return 0;
 	}
 
+	//mpip_log(__FILE__, __LINE__, __FUNCTION__);
+
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		if (!is_equal_node_id(path_stat->node_id, dest_node_id))
+		{
+			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
+			//print_node_id(path_stat->node_id);
+			//print_node_id(dest_node_id);
 			continue;
+		}
 
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
+
+		//printk("id = %d, fb = %d, eb = %d\n", path_stat->path_id,
+		//		path_stat->fbjiffies, e_fbtime);
 
 		if (path_stat->fbjiffies < e_fbtime)
 		{
+			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
+			
 			e_path_stat_id = path_stat->path_id;
+			//printk("epathstatid = %d\n", e_path_stat_id);
 			e_fbtime = path_stat->fbjiffies;
 			e_path_stat = path_stat;
 		}
@@ -556,11 +603,11 @@ int add_sender_socket(__be32 saddr, __be16 sport,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	printk(KERN_EMERG "ss: %d,%d,%d\n", item->session_id,
-			sport, dport);
+	//printk(KERN_EMERG "ss: %d,%d,%d\n", item->session_id,
+	//		sport, dport);
 
-	print_addr(saddr);
-	print_addr(daddr);
+	//print_addr(saddr);
+	//print_addr(daddr);
 
 	return 1;
 }
@@ -605,9 +652,9 @@ void get_available_local_addr(void)
 			INIT_LIST_HEAD(&item->list);
 			list_add(&(item->list), &la_head);
 
-			printk(KERN_EMERG "local addr:");
-			__be32 addr = dev->ip_ptr->ifa_list->ifa_address;
-			print_addr(addr);
+			//printk(KERN_EMERG "local addr:");
+			//__be32 addr = dev->ip_ptr->ifa_list->ifa_address;
+			//print_addr(addr);
 
 			//printk("my ip: %s\n", in_ntoa(dev->ip_ptr->ifa_list->ifa_address));
 		}

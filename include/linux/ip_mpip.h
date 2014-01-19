@@ -33,7 +33,6 @@ extern int MPIP_OPT_LEN;
 extern int sysctl_mpip_enabled;
 int mpip_init(void);
 
-
 #define MPIPCB(skb) ((struct mpip_skb_parm*)((skb)->cb))
 
 struct mpip_options {
@@ -63,6 +62,13 @@ struct mpip_skb_parm {
 };
 
 
+
+void print_node_id(unsigned char *node_id);
+
+void print_addr(__be32 addr);
+
+char *in_ntoa(unsigned long in);
+
 bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2);
 
 int		mpip_rcv(struct sk_buff *skb);
@@ -74,6 +80,10 @@ void get_mpip_options(struct sk_buff *skb, char *options);
 bool mpip_rcv_options(struct sk_buff *skb);
 
 void print_mpip_options(struct mpip_options *opt);
+
+void mpip_options_fragment(struct sk_buff *skb);
+
+int insert_mpip_options(struct sk_buff *skb);
 
 int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
 					 unsigned char *data, int optlen);
@@ -189,12 +199,15 @@ int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport);
 
-unsigned char find_path_info(unsigned char *node_id, __be32 addr);
+struct path_info_table *find_path_info(__be32 saddr, __be32 daddr);
+
+bool is_dest_added(unsigned char *node_id);
 
 int add_path_info(unsigned char *node_id, __be32 addr);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
-								   __be32 *saddr, __be32 *daddr);
+								   __be32 *saddr, __be32 *daddr,
+								   __be32 origin_saddr, __be32 origin_daddr);
 
 unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id,
 										 u16 *packet_count);

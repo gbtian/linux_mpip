@@ -134,11 +134,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct inet_sock *inet = inet_sk(sk);
 	struct rtable *rt = skb_rtable(skb);
 	struct iphdr *iph;
-	char options[MPIP_OPT_LEN];
+	//char options[MPIP_OPT_LEN];
 	unsigned int optlen = 0;
 	//bool origin = true;
-	int res;
-	struct mpip_options_rcu *mp_opt = NULL;
+	//int res;
+	//struct mpip_options_rcu *mp_opt = NULL;
 
 
 	/* Build the IP header. */
@@ -158,17 +158,13 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->frag_off = htons(IP_DF);
 	else
 		iph->frag_off = 0;
+
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
 	iph->saddr    = saddr;
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
 
-	if (sysctl_mpip_enabled)
-	{
-		get_mpip_options(skb, options);
-		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
-	}
 
 
 	if (opt && opt->opt.optlen)
@@ -176,11 +172,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && mp_opt)
-	{
-		iph->ihl += (mp_opt->opt.optlen)>>2;
-		mpip_options_build(skb, &(mp_opt->opt));
-	}
+	else if (sysctl_mpip_enabled)
+		insert_mpip_options(skb);
 
 
 	skb->priority = sk->sk_priority;
@@ -366,6 +359,9 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct iphdr *iph;
 	int res;
 
+//	char options[MPIP_OPT_LEN];
+	unsigned int optlen = 0;
+//	struct mpip_options_rcu *mp_opt = NULL;
 
 
 	/* Skip all of this if the packet is already routed,
@@ -411,8 +407,16 @@ packet_routed:
 		goto no_route;
 
 	/* OK, we know where to send it, allocate and build IP header. */
+	if (inet_opt && inet_opt->opt.optlen)
+	{
+		optlen = inet_opt->opt.optlen;
+	}
+	else if (sysctl_mpip_enabled)
+	{
+		optlen = MPIP_OPT_LEN;
+	}
 
-	skb_push(skb, sizeof(struct iphdr) + (inet_opt ? inet_opt->opt.optlen : 0));
+	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
 	iph = ip_hdr(skb);
 	*((__be16 *)iph) = htons((4 << 12) | (5 << 8) | (inet->tos & 0xff));
@@ -420,16 +424,20 @@ packet_routed:
 		iph->frag_off = htons(IP_DF);
 	else
 		iph->frag_off = 0;
+
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
 	ip_copy_addrs(iph, fl4);
 
 	/* Transport layer set skb->h.foo itself. */
 
-	if (inet_opt && inet_opt->opt.optlen) {
+	if (inet_opt && inet_opt->opt.optlen)
+	{
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
+	else if (sysctl_mpip_enabled)
+		insert_mpip_options(skb);
 
 
 	ip_select_ident_more(skb, &rt->dst, sk,
@@ -507,15 +515,43 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 
 	iph = ip_hdr(skb);
 
-	if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
-		     (IPCB(skb)->frag_max_size &&
-		      IPCB(skb)->frag_max_size > dst_mtu(&rt->dst)))) {
-		IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
-		icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
-			  htonl(ip_skb_dst_mtu(skb)));
-		kfree_skb(skb);
-		return -EMSGSIZE;
+	printk("111: %d, %d, %d\n", iph->frag_off,
+			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+
+
+	if (!sysctl_mpip_enabled)
+	{
+		if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
+				 (IPCB(skb)->frag_max_size &&
+				  IPCB(skb)->frag_max_size > dst_mtu(&rt->dst))))
+		{
+			IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
+			icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
+				  htonl(ip_skb_dst_mtu(skb)));
+
+			kfree_skb(skb);
+			return -EMSGSIZE;
+		}
 	}
+	else
+	{
+		if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
+						 (MPIPCB(skb)->frag_max_size &&
+						  MPIPCB(skb)->frag_max_size > dst_mtu(&rt->dst))))
+		{
+			IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
+			icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
+				  htonl(ip_skb_dst_mtu(skb)));
+			printk("222: %d, %d, %d\n", iph->frag_off,
+					MPIPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+			kfree_skb(skb);
+			return -EMSGSIZE;
+		}
+	}
+
+	printk("333: %d, %d, %d\n", iph->frag_off,
+			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+
 
 	/*
 	 *	Setup starting values.
@@ -590,7 +626,12 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 				iph->tot_len = htons(frag->len);
 				ip_copy_metadata(frag, skb);
 				if (offset == 0)
-					ip_options_fragment(frag);
+				{
+					if (!sysctl_mpip_enabled)
+						ip_options_fragment(frag);
+					else
+						mpip_options_fragment(frag);
+				}
 				offset += skb->len - hlen;
 				iph->frag_off = htons(offset>>3);
 				if (frag->next != NULL)
@@ -722,6 +763,9 @@ slow_path:
 		 * on the initial skb, so that all the following fragments
 		 * will inherit fixed options.
 		 */
+		//if (offset == 0)
+		//	ip_options_fragment(skb);
+
 		if (offset == 0)
 			ip_options_fragment(skb);
 
@@ -1324,13 +1368,15 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	struct inet_sock *inet = inet_sk(sk);
 	struct net *net = sock_net(sk);
 	struct ip_options *opt = NULL;
-	char options[10];
-	int res;
-	struct ip_options_rcu *tmp_opt;
 	struct rtable *rt = (struct rtable *)cork->dst;
 	struct iphdr *iph;
 	__be16 df = 0;
 	__u8 ttl;
+	int optlen = 0;
+
+//	char options[MPIP_OPT_LEN];
+//	int res;
+//	struct mpip_options_rcu *mp_opt = NULL;
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
@@ -1369,23 +1415,28 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 
 	if (cork->flags & IPCORK_OPT)
 		opt = cork->opt;
-	else if (sysctl_mpip_enabled)
-	{
-		//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-
-		//origin = false;
-
-		//mpip_options_build(skb, options);
-
-		//res = ip_options_get(sock_net(skb->sk), &tmp_opt, options, 8);
-		//opt = &(tmp_opt->opt);
-	}
+//	else if (sysctl_mpip_enabled)
+//	{
+//		//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+//
+//		//origin = false;
+//
+//		//mpip_options_build(skb, options);
+//
+//		//res = ip_options_get(sock_net(skb->sk), &tmp_opt, options, 8);
+//		//opt = &(tmp_opt->opt);
+//	}
 
 
 	if (rt->rt_type == RTN_MULTICAST)
 		ttl = inet->mc_ttl;
 	else
 		ttl = ip_select_ttl(inet, &rt->dst);
+
+	if (opt)
+		optlen = opt->optlen;
+//	else if (sysctl_mpip_enabled)
+//		optlen = MPIP_OPT_LEN;
 
 	iph = ip_hdr(skb);
 	iph->version = 4;
@@ -1397,11 +1448,18 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	ip_copy_addrs(iph, fl4);
 	ip_select_ident(skb, &rt->dst, sk);
 
-	if (opt) {
+	if (opt)
+	{
 		iph->ihl += opt->optlen>>2;
 		ip_options_build(skb, opt, cork->addr, rt, 0);
 	}
-
+//	else if (sysctl_mpip_enabled)
+//	{
+//		get_mpip_options(skb, options);
+//		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
+//		iph->ihl += (mp_opt->opt.optlen)>>2;
+//		mpip_options_build(skb, &(mp_opt->opt));
+//	}
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
