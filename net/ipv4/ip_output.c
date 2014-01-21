@@ -254,6 +254,8 @@ static int ip_finish_output(struct sk_buff *skb)
 		return dst_output(skb);
 	}
 #endif
+
+	//printk("skb->len = %d, mtu = %d\n", skb->len, ip_skb_dst_mtu(skb));
 	if (skb->len > ip_skb_dst_mtu(skb) && !skb_is_gso(skb))
 		return ip_fragment(skb, ip_finish_output2);
 	else
@@ -515,8 +517,8 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 
 	iph = ip_hdr(skb);
 
-	printk("111: %d, %d, %d\n", iph->frag_off,
-			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+	//printk("111: %d, %d, %d\n", iph->frag_off,
+	//		IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 
 
 	if (!sysctl_mpip_enabled)
@@ -542,15 +544,15 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 			IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
 			icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
 				  htonl(ip_skb_dst_mtu(skb)));
-			printk("222: %d, %d, %d\n", iph->frag_off,
-					MPIPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+			//printk("222: %d, %d, %d\n", iph->frag_off,
+			//		MPIPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 			kfree_skb(skb);
 			return -EMSGSIZE;
 		}
 	}
 
-	printk("333: %d, %d, %d\n", iph->frag_off,
-			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+	//printk("333: %d, %d, %d\n", iph->frag_off,
+	//		IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 
 
 	/*

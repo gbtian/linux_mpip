@@ -59,7 +59,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -71,7 +71,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	memcpy(item->node_id, node_id, ETH_ALEN);
 	item->addr = addr;
-	INIT_LIST_HEAD(&item->list);
+	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
 
 
@@ -89,10 +89,11 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 int del_working_ip(unsigned char *node_id, __be32 addr)
 {
 	/* todo: need locks */
-	struct working_ip_table *working_ip, *tmp;
+	struct working_ip_table *working_ip;
+	struct working_ip_table *tmp_ip;
 
 
-	list_for_each_entry_safe(working_ip, tmp, &wi_head, list)
+	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
 	{
 		if (is_equal_node_id(node_id, working_ip->node_id) &&
 				(addr == working_ip->addr))
@@ -114,7 +115,7 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr)
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return NULL;
 	}
 
@@ -145,24 +146,20 @@ unsigned char * find_node_id_in_working_ip(__be32 addr)
 	return NULL;
 }
 
-int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
+int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_stat_table *path_stat;
+	struct path_stat_table *tmp_stat;
 
 	if (!node_id || (path_id == 0))
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
-	if (find_path_stat(node_id, path_id) == 0)
-	{
-		add_path_stat(node_id, path_id);
-	}
-
-	list_for_each_entry(path_stat, &ps_head, list)
+	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
 	{
 		if (is_equal_node_id(node_id, path_stat->node_id) &&
 			(path_stat->path_id == path_id))
@@ -184,8 +181,9 @@ int update_packet_rcv(unsigned char path_id, u16 packet_count)
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
 
-	list_for_each_entry(path_info, &pi_head, list)
+	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
 		if (path_info->path_id == path_id)
 		{
@@ -202,8 +200,9 @@ int update_path_info()
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
 
-	list_for_each_entry(path_info, &pi_head, list)
+	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
 		if ((path_info->rcv == 1) && (path_info->sent >= 60000))
 			path_info->sent = 1;
@@ -228,9 +227,9 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
 {
 	struct path_stat_table *path_stat;
 
-	if (!node_id)
+	if (!node_id || (path_id == 0))
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -250,9 +249,9 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 {
 	struct path_stat_table *item = NULL;
 
-	if (!node_id)
+	if (!node_id || (path_id == 0))
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -266,12 +265,11 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	item->path_id = path_id;
 	item->rcv = 0;
 	item->fbjiffies = jiffies;
-	INIT_LIST_HEAD(&item->list);
+	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
 
-
-	//printk(KERN_EMERG "ps: %d", path_id);
-	//print_node_id(node_id);
+	printk(KERN_EMERG "ps: %d", path_id);
+	print_node_id(node_id);
 
 	return 1;
 }
@@ -285,7 +283,7 @@ unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -310,7 +308,7 @@ unsigned char find_receiver_socket_by_session(unsigned char *node_id, unsigned c
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -334,7 +332,7 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -350,7 +348,7 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 	item->daddr = daddr;
 	item->dport = dport;
 	item->session_id = session_id;
-	INIT_LIST_HEAD(&item->list);
+	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &rs_head);
 
 	//printk(KERN_EMERG "rs: %d,%d,%d\n", session_id,
@@ -371,7 +369,7 @@ int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -414,7 +412,7 @@ bool is_dest_added(unsigned char *node_id)
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -432,9 +430,11 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
 
+	struct path_info_table *item = NULL;
+
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -444,10 +444,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 	list_for_each_entry(local_addr, &la_head, list)
 	{
-		struct path_info_table *item = NULL;
 
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
-
 		memcpy(item->node_id, node_id, ETH_ALEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
@@ -455,7 +453,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->rcv = 0;
 		item->bw = 100;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
-		INIT_LIST_HEAD(&item->list);
+		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
 		//printk(KERN_EMERG "pi: %d\n", item->path_id);
 
@@ -477,7 +475,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (!node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -524,7 +522,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 
 	if (!dest_node_id)
 	{
-		mpip_log(__FILE__, __LINE__, __FUNCTION__);
+		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
 	}
 
@@ -535,22 +533,22 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		if (!is_equal_node_id(path_stat->node_id, dest_node_id))
 		{
 			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
-			//print_node_id(path_stat->node_id);
-			//print_node_id(dest_node_id);
+			print_node_id(path_stat->node_id);
+			print_node_id(dest_node_id);
 			continue;
 		}
 
 		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 
-		//printk("id = %d, fb = %d, eb = %d\n", path_stat->path_id,
-		//		path_stat->fbjiffies, e_fbtime);
+		printk("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
+				path_stat->fbjiffies, e_fbtime);
 
 		if (path_stat->fbjiffies < e_fbtime)
 		{
 			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 			
 			e_path_stat_id = path_stat->path_id;
-			//printk("epathstatid = %d\n", e_path_stat_id);
+			printk("epathstatid = %d\n", e_path_stat_id);
 			e_fbtime = path_stat->fbjiffies;
 			e_path_stat = path_stat;
 		}
@@ -562,6 +560,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		*packet_count = e_path_stat->rcv;
 	}
 
+	printk("final epathstatid = %d\n", e_path_stat_id);
 	return e_path_stat_id;
 }
 
@@ -649,7 +648,7 @@ void get_available_local_addr(void)
 
 			item = kzalloc(sizeof(struct local_addr_table),	GFP_ATOMIC);
 			item->addr = dev->ip_ptr->ifa_list->ifa_address;
-			INIT_LIST_HEAD(&item->list);
+			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &la_head);
 
 			//printk(KERN_EMERG "local addr:");

@@ -79,42 +79,41 @@ int mpip_rcv(struct sk_buff *skb)
 	return 0;
 }
 
-void mpip_log(char *file, int line, char *func)
-{
-    printk("%s, %d, %s \n", file, line, func);
-    return;
-
-	struct file *fp;
-    struct inode *inode = NULL;
-	mm_segment_t fs;
-	loff_t pos;
-	char *buf = kzalloc(1024, GFP_ATOMIC);
-	sprintf(buf, "%s:%d - %s\n", file, line, func);
-
-	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
-	if (IS_ERR(fp))
-	{
-		printk("create file error\n");
-		kfree(buf);
-		return;
-	}
-
-	fs = get_fs();
-	set_fs(KERNEL_DS);
-	pos = fp->f_dentry->d_inode->i_size;
-	//pos = 0;
-	vfs_write(fp, buf, strlen(buf), &pos);
-	vfs_fsync(fp, 0);
-	filp_close(fp, NULL);
-	set_fs(fs);
-	kfree(buf);
-	return;
-}
-EXPORT_SYMBOL(mpip_log);
+//void mpip_log(char *file, int line, char *func)
+//{
+//    printk("%s, %d, %s \n", file, line, func);
+//    return;
+//
+//	struct file *fp;
+//    struct inode *inode = NULL;
+//	mm_segment_t fs;
+//	loff_t pos;
+//	char *buf = kzalloc(1024, GFP_ATOMIC);
+//	sprintf(buf, "%s:%d - %s\n", file, line, func);
+//
+//	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
+//	if (IS_ERR(fp))
+//	{
+//		printk("create file error\n");
+//		kfree(buf);
+//		return;
+//	}
+//
+//	fs = get_fs();
+//	set_fs(KERNEL_DS);
+//	pos = fp->f_dentry->d_inode->i_size;
+//	//pos = 0;
+//	vfs_write(fp, buf, strlen(buf), &pos);
+//	vfs_fsync(fp, 0);
+//	filp_close(fp, NULL);
+//	set_fs(fs);
+//	kfree(buf);
+//	return;
+//}
+//EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(struct mpip_options *opt)
 {
-	int i;
 	printk("optlen: %d\n", opt->optlen);
 	printk("node_id: ");
 	print_node_id(opt->node_id);
@@ -126,7 +125,7 @@ void print_mpip_options(struct mpip_options *opt)
 EXPORT_SYMBOL(print_mpip_options);
 
 
-unsigned char *get_node_id()
+unsigned char *get_node_id(void)
 {
 	struct net_device *dev;
 
@@ -309,11 +308,14 @@ int process_mpip_options(struct sk_buff *skb)
 	rcv_opt->stat_path_id = optptr[9];
 	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
 
+	print_mpip_options(rcv_opt);
+
 	add_working_ip(rcv_opt->node_id, iph->saddr);
 	add_path_info(rcv_opt->node_id, iph->saddr);
+	add_path_stat(rcv_opt->node_id, rcv_opt->path_id);
 
 	update_packet_rcv(rcv_opt->stat_path_id, rcv_opt->packet_count);
-	inc_sender_packet_rcv(rcv_opt->node_id, rcv_opt->path_id);
+	update_sender_packet_rcv(rcv_opt->node_id, rcv_opt->path_id);
 	update_path_info();
 
 	add_receiver_socket(rcv_opt->node_id,  rcv_opt->session_id,

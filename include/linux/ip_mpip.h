@@ -90,7 +90,7 @@ int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
 
 void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
 
-void mpip_log(char *file, int line, char *func);
+//void mpip_log(char *file, int line, char *func);
 
 bool mpip_rcv_options(struct sk_buff *skb);
 
@@ -179,9 +179,9 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id);
 
 int add_path_stat(unsigned char *node_id, unsigned char path_id);
 
-int inc_sender_packet_rcv(unsigned char *node_id, unsigned char path_id);
+int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id);
 
-int update_path_info();
+int update_path_info(void);
 
 unsigned char find_receiver_socket_by_session(unsigned char *node_id,
 								   	   	   	  unsigned char session_id);
