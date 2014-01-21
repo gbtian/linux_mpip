@@ -212,11 +212,11 @@ int update_path_info()
 			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
 		}
 
-		printk("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
-				path_info->sent, path_info->rcv, path_info->bw);
+		//printk("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
+		//		path_info->sent, path_info->rcv, path_info->bw);
 
-		print_addr(path_info->saddr);
-		print_addr(path_info->daddr);
+		//print_addr(path_info->saddr);
+		//print_addr(path_info->daddr);
 	}
 
 	return 1;
@@ -268,8 +268,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
 
-	printk(KERN_EMERG "ps: %d", path_id);
-	print_node_id(node_id);
+	//printk(KERN_EMERG "ps: %d", path_id);
+	//print_node_id(node_id);
 
 	return 1;
 }
@@ -533,22 +533,22 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		if (!is_equal_node_id(path_stat->node_id, dest_node_id))
 		{
 			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
-			print_node_id(path_stat->node_id);
-			print_node_id(dest_node_id);
+			//print_node_id(path_stat->node_id);
+			//print_node_id(dest_node_id);
 			continue;
 		}
 
 		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 
-		printk("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
-				path_stat->fbjiffies, e_fbtime);
+		//printk("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
+		//		path_stat->fbjiffies, e_fbtime);
 
 		if (path_stat->fbjiffies < e_fbtime)
 		{
 			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 			
 			e_path_stat_id = path_stat->path_id;
-			printk("epathstatid = %d\n", e_path_stat_id);
+			//printk("epathstatid = %d\n", e_path_stat_id);
 			e_fbtime = path_stat->fbjiffies;
 			e_path_stat = path_stat;
 		}
@@ -560,7 +560,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		*packet_count = e_path_stat->rcv;
 	}
 
-	printk("final epathstatid = %d\n", e_path_stat_id);
+	//printk("final epathstatid = %d\n", e_path_stat_id);
 	return e_path_stat_id;
 }
 
@@ -638,8 +638,8 @@ void get_available_local_addr(void)
 	for_each_netdev(&init_net, dev)
 	{
 		//printk("dev = %s\n", dev->name);
-		//if (strstr(dev->name, "lo"))
-		//	continue;
+		if (strstr(dev->name, "lo"))
+			continue;
 
 		if (dev->ip_ptr && dev->ip_ptr->ifa_list)
 		{

@@ -34,10 +34,6 @@ static struct ctl_table mpip_table[] =
  	{ }
 };
 
-void mpip_undo(void)
-{
-}
-
 int mpip_init(void)
 {
 	struct ctl_table_header *mptcp_sysctl;
@@ -56,28 +52,6 @@ int mpip_init(void)
 }
 
 
-
-/*
- * 	Process ingress packets with mpip mechanism
- */
-int mpip_rcv(struct sk_buff *skb)
-{
-	int i;
-	struct ethhdr *eth;
-
-	eth = eth_hdr(skb);
-
-	printk("src mac:");
-	for(i = 0; i < ETH_ALEN; i++)
-		printk(KERN_ALERT "%02x", eth->h_source[i]);
-	printk("\n");
-
-	printk("dest mac:");
-	for(i = 0; i < ETH_ALEN; i++)
-		printk(KERN_ALERT "%02x", eth->h_dest[i]);
-
-	return 0;
-}
 
 //void mpip_log(char *file, int line, char *func)
 //{
@@ -261,9 +235,20 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 //	options[11] = (1000>>8) & 0xff; //packet_count
 
 
-    //if (options[8] > 0)
-    if (false)
+    if (options[8] > 0)
     {
+    	printk("iph->saddr=");
+    	print_addr(iph->saddr);
+
+    	printk("saddr=");
+    	print_addr(saddr);
+
+    	printk("iph->daddr=");
+    	print_addr(iph->daddr);
+
+    	printk("daddr=");
+    	print_addr(daddr);
+
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 
@@ -308,7 +293,7 @@ int process_mpip_options(struct sk_buff *skb)
 	rcv_opt->stat_path_id = optptr[9];
 	rcv_opt->packet_count = (optptr[11]<<8)|optptr[10];
 
-	print_mpip_options(rcv_opt);
+	//print_mpip_options(rcv_opt);
 
 	add_working_ip(rcv_opt->node_id, iph->saddr);
 	add_path_info(rcv_opt->node_id, iph->saddr);
@@ -324,9 +309,23 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_socket(rcv_opt->node_id, rcv_opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	//if (res)
-	if (false)
+	if (res)
 	{
+    	printk("11iph->saddr=");
+    	print_addr(iph->saddr);
+
+    	printk("11saddr=");
+    	print_addr(saddr);
+
+    	printk("11iph->daddr=");
+    	print_addr(iph->daddr);
+
+    	printk("11daddr=");
+    	print_addr(daddr);
+
+    	printk("tcph->source= %d, sport=%d\n", tcph->source, sport);
+    	printk("tcph->dest= %d, dport=%d\n", tcph->dest, dport);
+
     	iph->saddr = saddr;
     	iph->daddr = daddr;
     	tcph->source = sport;

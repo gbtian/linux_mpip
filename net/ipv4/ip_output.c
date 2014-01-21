@@ -144,7 +144,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && (skb->len < 1000) )
 		optlen = MPIP_OPT_LEN;
 
 	//skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
@@ -172,7 +172,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && (skb->len < 1000))
 		insert_mpip_options(skb);
 
 
@@ -413,7 +413,7 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && (skb->len < 1000))
 	{
 		optlen = MPIP_OPT_LEN;
 	}
@@ -438,7 +438,7 @@ packet_routed:
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && (skb->len < 1000))
 		insert_mpip_options(skb);
 
 
@@ -535,7 +535,7 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 			return -EMSGSIZE;
 		}
 	}
-	else
+	else if (skb->len < 1000)
 	{
 		if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
 						 (MPIPCB(skb)->frag_max_size &&
