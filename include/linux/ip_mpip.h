@@ -124,19 +124,19 @@ struct path_info_table {
 };
 static LIST_HEAD(pi_head);
 
+//
+//struct sender_socket_table {
+//	unsigned char	session_id; /* session id*/
+//	/* socket information seen at the sender side*/
+//	__be32	saddr; /* source ip address*/
+//	__be32	daddr; /* destination ip address*/
+//	__be16	sport; /* source port*/
+//	__be16	dport; /* destination port*/
+//	struct list_head list;
+//};
+//static LIST_HEAD(ss_head);
 
-struct sender_socket_table {
-	unsigned char	session_id; /* session id*/
-	/* socket information seen at the sender side*/
-	__be32	saddr; /* source ip address*/
-	__be32	daddr; /* destination ip address*/
-	__be16	sport; /* source port*/
-	__be16	dport; /* destination port*/
-	struct list_head list;
-};
-static LIST_HEAD(ss_head);
-
-struct receiver_socket_table {
+struct socket_session_table {
 	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
 	unsigned char   session_id; /* sender's session id*/
 
@@ -147,7 +147,7 @@ struct receiver_socket_table {
 	__be16	dport; /* destination port*/
 	struct list_head list;
 };
-static LIST_HEAD(rs_head);
+static LIST_HEAD(ss_head);
 
 struct path_stat_table {
 	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
@@ -190,12 +190,12 @@ unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 											 __be32 saddr, __be16 sport,
 											 __be32 daddr, __be16 dport);
 
-int add_receiver_socket(unsigned char *node_id,
+int add_receiver_session(unsigned char *node_id,
 						unsigned char session_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport);
 
-int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
+int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport);
 
@@ -212,10 +212,10 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id,
 										 u16 *packet_count);
 
-unsigned char find_sender_socket(__be32 saddr, __be16 sport,
+unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);
 
-int add_sender_socket(__be32 saddr, __be16 sport,
+int add_sender_session(__be32 saddr, __be16 sport,
 					  __be32 daddr, __be16 dport);
 
 __be32 find_local_addr(__be32 addr);

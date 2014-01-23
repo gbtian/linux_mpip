@@ -65,22 +65,13 @@ static void reset_mpip(void)
 			kfree(path_info);
 	}
 
-	struct sender_socket_table *sender_socket;
-	struct sender_socket_table *tmp_socket;
+	struct socket_session_table *socket_session;
+	struct socket_session_table *tmp_session;
 
-	list_for_each_entry_safe(sender_socket, tmp_socket, &ss_head, list)
+	list_for_each_entry_safe(socket_session, tmp_session, &ss_head, list)
 	{
-			list_del(&(sender_socket->list));
-			kfree(sender_socket);
-	}
-
-	struct receiver_socket_table *receiver_socket;
-	struct receiver_socket_table *tmp_receiver;
-
-	list_for_each_entry_safe(receiver_socket, tmp_receiver, &rs_head, list)
-	{
-			list_del(&(receiver_socket->list));
-			kfree(receiver_socket);
+			list_del(&(socket_session->list));
+			kfree(socket_session);
 	}
 
 	struct path_stat_table *path_stat;
@@ -158,6 +149,9 @@ void mpip_log(const char *fmt, ...)
 
     printk(log_buf);
 
+    return;
+
+
 	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
 	if (IS_ERR(fp))
 	{
@@ -212,23 +206,23 @@ unsigned char *get_node_id(void)
 	return NULL;
 }
 
-char get_session_id(unsigned char *dest_node_id,
-					__be32 saddr, __be16 sport,
+char get_session_id(__be32 saddr, __be16 sport,
 					__be32 daddr, __be16 dport)
 {
-	unsigned char session_id = find_sender_socket(saddr, sport,
+	unsigned char session_id = get_sender_session(saddr, sport,
 										  		  daddr, dport);
+
+//	if (session_id == 0)
+//	{
+//		session_id = find_receiver_socket_by_socket(dest_node_id,
+//										  	  	  	daddr, dport,
+//										  	  	  	saddr, sport);
+//	}
 
 	if (session_id == 0)
 	{
-		session_id = find_receiver_socket_by_socket(dest_node_id,
-										  	  	  	saddr, sport,
-										  	  	  	daddr, dport);
-	}
-	if (session_id == 0)
-	{
-		add_sender_socket(saddr, sport, daddr, dport);
-		session_id = find_sender_socket(saddr, sport, daddr, dport);
+		add_sender_session(saddr, sport, daddr, dport);
+		session_id = get_sender_session(saddr, sport, daddr, dport);
 	}
 
 	return session_id;
@@ -307,8 +301,7 @@ void get_mpip_options(struct sk_buff *skb, char *options)
     for(i = 0; i < ETH_ALEN; i++)
    	 options[1 + i] =  static_node_id[i];
     
-    options[7] = get_session_id(dest_node_id,
-    							iph->saddr, tcph->source,
+    options[7] = get_session_id(iph->saddr, tcph->source,
             					iph->daddr, tcph->dest);//
     options[8] = get_path_id(dest_node_id, &saddr, &daddr,
     						 iph->saddr, iph->daddr); //path id
@@ -328,16 +321,16 @@ void get_mpip_options(struct sk_buff *skb, char *options)
 
     if (options[8] > 0)
     {
-    	printk("iph->saddr=");
+    	mpip_log("iph->saddr=");
     	print_addr(iph->saddr);
 
-    	printk("saddr=");
+    	mpip_log("saddr=");
     	print_addr(saddr);
 
-    	printk("iph->daddr=");
+    	mpip_log("iph->daddr=");
     	print_addr(iph->daddr);
 
-    	printk("daddr=");
+    	mpip_log("daddr=");
     	print_addr(daddr);
 
     	iph->saddr = saddr;
@@ -394,39 +387,39 @@ int process_mpip_options(struct sk_buff *skb)
 	update_sender_packet_rcv(rcv_opt->node_id, rcv_opt->path_id);
 	update_path_info();
 
-	add_receiver_socket(rcv_opt->node_id,  rcv_opt->session_id,
-						iph->saddr, tcph->source, iph->daddr, tcph->dest);
+	add_receiver_session(rcv_opt->node_id,  rcv_opt->session_id,
+						iph->daddr, tcph->dest, iph->saddr, tcph->source);
 
-	res = get_receiver_socket(rcv_opt->node_id, rcv_opt->session_id,
+	res = get_receiver_session(rcv_opt->node_id, rcv_opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
 	if (res)
 	{
-    	printk("11iph->saddr=");
+		mpip_log("11iph->saddr=");
     	print_addr(iph->saddr);
 
-    	printk("11saddr=");
-    	print_addr(saddr);
-
-    	printk("11iph->daddr=");
-    	print_addr(iph->daddr);
-
-    	printk("11daddr=");
+    	mpip_log("11daddr=");
     	print_addr(daddr);
 
-    	printk("tcph->source= %d, sport=%d\n", tcph->source, sport);
-    	printk("tcph->dest= %d, dport=%d\n", tcph->dest, dport);
+    	mpip_log("11iph->daddr=");
+    	print_addr(iph->daddr);
 
-    	iph->saddr = saddr;
-    	iph->daddr = daddr;
-    	tcph->source = sport;
-    	tcph->dest = dport;
+    	mpip_log("11saddr=");
+    	print_addr(saddr);
+
+    	mpip_log("tcph->source= %d, dport=%d\n", tcph->source, dport);
+    	mpip_log("tcph->dest= %d, sport=%d\n", tcph->dest, sport);
+
+    	iph->saddr = daddr;
+    	iph->daddr = saddr;
+    	tcph->source = dport;
+    	tcph->dest = sport;
     	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
     	//tcph->check = tcp_fast_csum()
 	}
 //
 //
-	//print_mpip_options(rcv_opt);
+	print_mpip_options(rcv_opt);
 	kfree(rcv_opt);
 
 

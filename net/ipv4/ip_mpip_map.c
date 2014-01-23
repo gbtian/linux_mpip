@@ -26,7 +26,7 @@ void print_node_id(unsigned char *node_id)
 	if (!node_id)
 		return;
 
-	mpip_log(KERN_EMERG "%02x-%02x-%02x-%02x-%02x-%02x\n",
+	mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\n",
 			node_id[0], node_id[1], node_id[2],
 			node_id[3], node_id[4], node_id[5]);
 }
@@ -34,7 +34,7 @@ void print_node_id(unsigned char *node_id)
 void print_addr(__be32 addr)
 {
 	char *p = (char *) &addr;
-	mpip_log(KERN_EMERG "%d.%d.%d.%d\n",
+	mpip_log( "%d.%d.%d.%d\n",
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 }
 
@@ -71,7 +71,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
 
-	mpip_log(KERN_EMERG "wi:");
+	mpip_log( "wi:");
 
 	print_node_id(node_id);
 	print_addr(addr);
@@ -200,11 +200,11 @@ int update_path_info()
 			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
 		}
 
-		mpip_log("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
-				path_info->sent, path_info->rcv, path_info->bw);
+		//mpip_log("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
+		//		path_info->sent, path_info->rcv, path_info->bw);
 
-		print_addr(path_info->saddr);
-		print_addr(path_info->daddr);
+		//print_addr(path_info->saddr);
+		//print_addr(path_info->daddr);
 	}
 
 	return 1;
@@ -250,70 +250,47 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
 
-	mpip_log(KERN_EMERG "ps: %d", path_id);
+	mpip_log( "ps: %d", path_id);
 	print_node_id(node_id);
 
 	return 1;
 }
 
 
-unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
-											 __be32 saddr, __be16 sport,
-											 __be32 daddr, __be16 dport)
+
+unsigned char find_receiver_session(unsigned char *node_id, unsigned char session_id)
 {
-	struct receiver_socket_table *receiver_socket;
+	struct socket_session_table *socket_session;
 
 	if (!node_id)
 		return 0;
 
-	list_for_each_entry(receiver_socket, &rs_head, list)
+	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if (is_equal_node_id(receiver_socket->node_id, node_id) &&
-			(receiver_socket->saddr == saddr) &&
-			(receiver_socket->sport == sport) &&
-			(receiver_socket->daddr == daddr) &&
-			(receiver_socket->dport == dport))
+		if (is_equal_node_id(socket_session->node_id, node_id) &&
+			(socket_session->session_id == session_id))
 		{
-			return receiver_socket->session_id;
+			return socket_session->session_id;
 		}
 	}
 
 	return 0;
 }
 
-unsigned char find_receiver_socket_by_session(unsigned char *node_id, unsigned char session_id)
-{
-	struct receiver_socket_table *receiver_socket;
-
-	if (!node_id)
-		return 0;
-
-	list_for_each_entry(receiver_socket, &rs_head, list)
-	{
-		if (is_equal_node_id(receiver_socket->node_id, node_id) &&
-			(receiver_socket->session_id == session_id))
-		{
-			return receiver_socket->session_id;
-		}
-	}
-
-	return 0;
-}
-
-int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
+int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport)
 {
-	struct receiver_socket_table *item = NULL;
+	struct socket_session_table *item = NULL;
 
 	if (!node_id)
 		return 0;
 
-	if (find_receiver_socket_by_session(node_id, session_id) > 0)
+	if (find_receiver_session(node_id, session_id) > 0)
 		return 0;
 
 
-	item = kzalloc(sizeof(struct receiver_socket_table), GFP_ATOMIC);
+	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
 	memcpy(item->node_id, node_id, ETH_ALEN);
 	item->saddr = saddr;
@@ -322,9 +299,9 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 	item->dport = dport;
 	item->session_id = session_id;
 	INIT_LIST_HEAD(&(item->list));
-	list_add(&(item->list), &rs_head);
+	list_add(&(item->list), &ss_head);
 
-	mpip_log(KERN_EMERG "rs: %d,%d,%d\n", session_id,
+	mpip_log( "rs: %d,%d,%d\n", session_id,
 					sport, dport);
 
 	print_node_id(node_id);
@@ -334,24 +311,24 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 	return 1;
 }
 
-int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
+int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport)
 {
-	struct receiver_socket_table *receiver_socket;
+	struct socket_session_table *socket_session;
 
 	if (!node_id)
 		return 0;
 
-	list_for_each_entry(receiver_socket, &rs_head, list)
+	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if (is_equal_node_id(receiver_socket->node_id, node_id) &&
-				(receiver_socket->session_id == session_id))
+		if (is_equal_node_id(socket_session->node_id, node_id) &&
+				(socket_session->session_id == session_id))
 		{
-			*saddr = receiver_socket->saddr;
-			*daddr = receiver_socket->daddr;
-			*sport = receiver_socket->sport;
-			*dport = receiver_socket->dport;
+			*saddr = socket_session->saddr;
+			*daddr = socket_session->daddr;
+			*sport = socket_session->sport;
+			*dport = socket_session->dport;
 
 			return 1;
 		}
@@ -420,7 +397,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
 
-		mpip_log(KERN_EMERG "pi: %d\n", item->path_id);
+		mpip_log( "pi: %d\n", item->path_id);
 
 		print_node_id(node_id);
 		print_addr(addr);
@@ -515,35 +492,35 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 	return e_path_stat_id;
 }
 
-unsigned char find_sender_socket(__be32 saddr, __be16 sport,
+unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport)
 {
-	struct sender_socket_table *sender_socket;
+	struct socket_session_table *socket_session;
 
-	list_for_each_entry(sender_socket, &ss_head, list)
+	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if ((sender_socket->saddr == saddr) &&
-			(sender_socket->sport == sport) &&
-			(sender_socket->daddr == daddr) &&
-			(sender_socket->dport == dport))
+		if ((socket_session->saddr == saddr) &&
+			(socket_session->sport == sport) &&
+			(socket_session->daddr == daddr) &&
+			(socket_session->dport == dport))
 		{
-			return sender_socket->session_id;
+			return socket_session->session_id;
 		}
 	}
 
 	return 0;
 }
 
-int add_sender_socket(__be32 saddr, __be16 sport,
+int add_sender_session(__be32 saddr, __be16 sport,
 					  __be32 daddr, __be16 dport)
 {
-	struct sender_socket_table *item = NULL;
+	struct socket_session_table *item = NULL;
 
-	if (find_sender_socket(saddr, sport, daddr, dport) > 0)
+	if (get_sender_session(saddr, sport, daddr, dport) > 0)
 		return 0;
 
 
-	item = kzalloc(sizeof(struct sender_socket_table),	GFP_ATOMIC);
+	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
 
 	item->saddr = saddr;
 	item->sport = sport;
@@ -553,7 +530,7 @@ int add_sender_socket(__be32 saddr, __be16 sport,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	mpip_log(KERN_EMERG "ss: %d,%d,%d\n", item->session_id,
+	mpip_log( "ss: %d,%d,%d\n", item->session_id,
 			sport, dport);
 
 	print_addr(saddr);
@@ -600,7 +577,7 @@ void get_available_local_addr(void)
 			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &la_head);
 
-			mpip_log(KERN_EMERG "local addr:");
+			mpip_log( "local addr:");
 			__be32 addr = dev->ip_ptr->ifa_list->ifa_address;
 			print_addr(addr);
 		}
