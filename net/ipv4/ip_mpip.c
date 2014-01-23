@@ -17,9 +17,11 @@ int MPIP_OPT_LEN = sizeof(struct mpip_options);
 //int MPIP_OPT_LEN = 12;
 static unsigned char *static_node_id = NULL;
 static struct mpip_options *static_rcv_opt = NULL;
+static char log_buf[256];
 
 
 int sysctl_mpip_enabled __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 0;
 
 
 static struct ctl_table mpip_table[] =
@@ -31,8 +33,90 @@ static struct ctl_table mpip_table[] =
  		.mode = 0644,
  		.proc_handler = &proc_dointvec
  	},
+ 	{
+ 		.procname = "mpip_log",
+ 		.data = &sysctl_mpip_log,
+ 		.maxlen = sizeof(int),
+ 		.mode = 0644,
+ 		.proc_handler = &proc_dointvec
+ 	},
  	{ }
 };
+
+
+
+static void reset_mpip(void)
+{
+	struct working_ip_table *working_ip;
+	struct working_ip_table *tmp_ip;
+
+	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
+	{
+			list_del(&(working_ip->list));
+			kfree(working_ip);
+	}
+
+	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
+
+	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+	{
+			list_del(&(path_info->list));
+			kfree(path_info);
+	}
+
+	struct sender_socket_table *sender_socket;
+	struct sender_socket_table *tmp_socket;
+
+	list_for_each_entry_safe(sender_socket, tmp_socket, &ss_head, list)
+	{
+			list_del(&(sender_socket->list));
+			kfree(sender_socket);
+	}
+
+	struct receiver_socket_table *receiver_socket;
+	struct receiver_socket_table *tmp_receiver;
+
+	list_for_each_entry_safe(receiver_socket, tmp_receiver, &rs_head, list)
+	{
+			list_del(&(receiver_socket->list));
+			kfree(receiver_socket);
+	}
+
+	struct path_stat_table *path_stat;
+	struct path_stat_table *tmp_stat;
+
+	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
+	{
+			list_del(&(path_stat->list));
+			kfree(path_stat);
+	}
+
+	struct local_addr_table *local_addr;
+	struct local_addr_table *tmp_addr;
+
+	list_for_each_entry_safe(local_addr, tmp_addr, &la_head, list)
+	{
+			list_del(&(local_addr->list));
+			kfree(local_addr);
+	}
+}
+
+/* Called only under RTNL semaphore */
+
+static int inetdev_mpip_event(struct notifier_block *this, unsigned long event,
+			 void *ptr)
+{
+
+	reset_mpip();
+
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block mpip_netdev_notifier = {
+	.notifier_call = inetdev_mpip_event,
+};
+
 
 int mpip_init(void)
 {
@@ -40,6 +124,7 @@ int mpip_init(void)
 
     //In kernel, __MPIP__ will be checked to decide which functions to call.
 	mptcp_sysctl = register_net_sysctl(&init_net, "net/mpip", mpip_table);
+	//register_netdevice_notifier(&mpip_netdev_notifier);
 	//if (!mptcp_sysctl)
 	//	goto register_sysctl_failed;
 
@@ -53,38 +138,44 @@ int mpip_init(void)
 
 
 
-//void mpip_log(char *file, int line, char *func)
-//{
-//    printk("%s, %d, %s \n", file, line, func);
-//    return;
-//
-//	struct file *fp;
-//    struct inode *inode = NULL;
-//	mm_segment_t fs;
-//	loff_t pos;
-//	char *buf = kzalloc(1024, GFP_ATOMIC);
-//	sprintf(buf, "%s:%d - %s\n", file, line, func);
-//
-//	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
-//	if (IS_ERR(fp))
-//	{
-//		printk("create file error\n");
-//		kfree(buf);
-//		return;
-//	}
-//
-//	fs = get_fs();
-//	set_fs(KERNEL_DS);
-//	pos = fp->f_dentry->d_inode->i_size;
-//	//pos = 0;
-//	vfs_write(fp, buf, strlen(buf), &pos);
-//	vfs_fsync(fp, 0);
-//	filp_close(fp, NULL);
-//	set_fs(fs);
-//	kfree(buf);
-//	return;
-//}
-//EXPORT_SYMBOL(mpip_log);
+void mpip_log(const char *fmt, ...)
+{
+	va_list args;
+	int r;
+
+	struct file *fp;
+    struct inode *inode = NULL;
+	mm_segment_t fs;
+	loff_t pos;
+
+	if (!sysctl_mpip_log)
+		return;
+
+	memset(log_buf, 0, 256);
+	va_start(args, fmt);
+	r = vsnprintf(log_buf, 256, fmt, args);
+	va_end(args);
+
+    printk(log_buf);
+
+	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
+	if (IS_ERR(fp))
+	{
+		printk("create file error\n");
+		return;
+	}
+
+	fs = get_fs();
+	set_fs(KERNEL_DS);
+	pos = fp->f_dentry->d_inode->i_size;
+	//pos = 0;
+	vfs_write(fp, log_buf, strlen(log_buf), &pos);
+	vfs_fsync(fp, 0);
+	filp_close(fp, NULL);
+	set_fs(fs);
+
+}
+EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(struct mpip_options *opt)
 {

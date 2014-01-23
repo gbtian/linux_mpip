@@ -31,6 +31,7 @@
 
 extern int MPIP_OPT_LEN;
 extern int sysctl_mpip_enabled;
+extern int sysctl_mpip_log;
 int mpip_init(void);
 
 #define MPIPCB(skb) ((struct mpip_skb_parm*)((skb)->cb))
@@ -62,6 +63,7 @@ struct mpip_skb_parm {
 };
 
 
+void mpip_log(const char *fmt, ...);
 
 void print_node_id(unsigned char *node_id);
 
@@ -161,8 +163,6 @@ struct local_addr_table {
 	struct list_head list;
 };
 static LIST_HEAD(la_head);
-
-
 
 
 int add_working_ip(unsigned char *node_id, __be32 addr);

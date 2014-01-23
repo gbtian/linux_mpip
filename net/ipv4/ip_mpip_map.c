@@ -26,7 +26,7 @@ void print_node_id(unsigned char *node_id)
 	if (!node_id)
 		return;
 
-	printk(KERN_EMERG "%02x-%02x-%02x-%02x-%02x-%02x\n",
+	mpip_log(KERN_EMERG "%02x-%02x-%02x-%02x-%02x-%02x\n",
 			node_id[0], node_id[1], node_id[2],
 			node_id[3], node_id[4], node_id[5]);
 }
@@ -34,7 +34,7 @@ void print_node_id(unsigned char *node_id)
 void print_addr(__be32 addr)
 {
 	char *p = (char *) &addr;
-	printk(KERN_EMERG "%d.%d.%d.%d\n",
+	mpip_log(KERN_EMERG "%d.%d.%d.%d\n",
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 }
 
@@ -58,10 +58,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	struct working_ip_table *item = NULL;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	if (find_working_ip(node_id, addr))
 		return 0;
@@ -74,13 +71,10 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
 
+	mpip_log(KERN_EMERG "wi:");
 
-
-	//printk(KERN_EMERG "wi: %s, %s\n", print_node_id(node_id), in_ntoa(addr));
-	//printk(KERN_EMERG "wi:", node_id, addr);
-	//printk(KERN_EMERG "wi:");
-	//print_node_id(node_id);
-	//print_addr(addr);
+	print_node_id(node_id);
+	print_addr(addr);
 
 
 	return 1;
@@ -114,10 +108,7 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr)
 	struct working_ip_table *working_ip;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return NULL;
-	}
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
@@ -154,10 +145,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
 	struct path_stat_table *tmp_stat;
 
 	if (!node_id || (path_id == 0))
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
 	{
@@ -212,11 +200,11 @@ int update_path_info()
 			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
 		}
 
-		//printk("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
-		//		path_info->sent, path_info->rcv, path_info->bw);
+		mpip_log("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
+				path_info->sent, path_info->rcv, path_info->bw);
 
-		//print_addr(path_info->saddr);
-		//print_addr(path_info->daddr);
+		print_addr(path_info->saddr);
+		print_addr(path_info->daddr);
 	}
 
 	return 1;
@@ -228,10 +216,7 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
 	struct path_stat_table *path_stat;
 
 	if (!node_id || (path_id == 0))
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
@@ -250,10 +235,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	struct path_stat_table *item = NULL;
 
 	if (!node_id || (path_id == 0))
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	if (find_path_stat(node_id, path_id) > 0)
 		return 0;
@@ -268,8 +250,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
 
-	//printk(KERN_EMERG "ps: %d", path_id);
-	//print_node_id(node_id);
+	mpip_log(KERN_EMERG "ps: %d", path_id);
+	print_node_id(node_id);
 
 	return 1;
 }
@@ -282,10 +264,7 @@ unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 	struct receiver_socket_table *receiver_socket;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry(receiver_socket, &rs_head, list)
 	{
@@ -307,10 +286,7 @@ unsigned char find_receiver_socket_by_session(unsigned char *node_id, unsigned c
 	struct receiver_socket_table *receiver_socket;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry(receiver_socket, &rs_head, list)
 	{
@@ -331,10 +307,7 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 	struct receiver_socket_table *item = NULL;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	if (find_receiver_socket_by_session(node_id, session_id) > 0)
 		return 0;
@@ -351,12 +324,12 @@ int add_receiver_socket(unsigned char *node_id, unsigned char session_id,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &rs_head);
 
-	//printk(KERN_EMERG "rs: %d,%d,%d\n", session_id,
-	//				sport, dport);
+	mpip_log(KERN_EMERG "rs: %d,%d,%d\n", session_id,
+					sport, dport);
 
-	//print_node_id(node_id);
-	//print_addr(saddr);
-	//print_addr(daddr);
+	print_node_id(node_id);
+	print_addr(saddr);
+	print_addr(daddr);
 
 	return 1;
 }
@@ -368,10 +341,7 @@ int get_receiver_socket(unsigned char *node_id,	unsigned char session_id,
 	struct receiver_socket_table *receiver_socket;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry(receiver_socket, &rs_head, list)
 	{
@@ -411,10 +381,7 @@ bool is_dest_added(unsigned char *node_id)
 	struct path_info_table *path_info;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
@@ -433,10 +400,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	struct path_info_table *item = NULL;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	if (is_dest_added(node_id))
 		return 0;
@@ -455,10 +419,11 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
-		//printk(KERN_EMERG "pi: %d\n", item->path_id);
 
-		//print_node_id(node_id);
-		//print_addr(addr);
+		mpip_log(KERN_EMERG "pi: %d\n", item->path_id);
+
+		print_node_id(node_id);
+		print_addr(addr);
 	}
 
 	return 1;
@@ -474,10 +439,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	unsigned char f_bw = 0;
 
 	if (!node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
 	list_for_each_entry(path, &pi_head, list)
 	{
@@ -521,34 +483,23 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 	unsigned long e_fbtime = jiffies;
 
 	if (!dest_node_id)
-	{
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 		return 0;
-	}
 
-	//mpip_log(__FILE__, __LINE__, __FUNCTION__);
 
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		if (!is_equal_node_id(path_stat->node_id, dest_node_id))
 		{
-			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
-			//print_node_id(path_stat->node_id);
-			//print_node_id(dest_node_id);
 			continue;
 		}
 
-		//mpip_log(__FILE__, __LINE__, __FUNCTION__);
-
-		//printk("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
-		//		path_stat->fbjiffies, e_fbtime);
+		mpip_log("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
+				path_stat->fbjiffies, e_fbtime);
 
 		if (path_stat->fbjiffies < e_fbtime)
 		{
-			//mpip_log(__FILE__, __LINE__, __FUNCTION__);
-			
 			e_path_stat_id = path_stat->path_id;
-			//printk("epathstatid = %d\n", e_path_stat_id);
+			mpip_log("epathstatid = %d\n", e_path_stat_id);
 			e_fbtime = path_stat->fbjiffies;
 			e_path_stat = path_stat;
 		}
@@ -560,7 +511,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		*packet_count = e_path_stat->rcv;
 	}
 
-	//printk("final epathstatid = %d\n", e_path_stat_id);
+	mpip_log("final epathstatid = %d\n", e_path_stat_id);
 	return e_path_stat_id;
 }
 
@@ -602,11 +553,11 @@ int add_sender_socket(__be32 saddr, __be16 sport,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	//printk(KERN_EMERG "ss: %d,%d,%d\n", item->session_id,
-	//		sport, dport);
+	mpip_log(KERN_EMERG "ss: %d,%d,%d\n", item->session_id,
+			sport, dport);
 
-	//print_addr(saddr);
-	//print_addr(daddr);
+	print_addr(saddr);
+	print_addr(daddr);
 
 	return 1;
 }
@@ -633,11 +584,9 @@ void get_available_local_addr(void)
 {
 	struct net_device *dev;
 	struct local_addr_table *item = NULL;
-	//printk(KERN_EMERG "local addr_1:");
 
 	for_each_netdev(&init_net, dev)
 	{
-		//printk("dev = %s\n", dev->name);
 		if (strstr(dev->name, "lo"))
 			continue;
 
@@ -651,11 +600,9 @@ void get_available_local_addr(void)
 			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &la_head);
 
-			//printk(KERN_EMERG "local addr:");
-			//__be32 addr = dev->ip_ptr->ifa_list->ifa_address;
-			//print_addr(addr);
-
-			//printk("my ip: %s\n", in_ntoa(dev->ip_ptr->ifa_list->ifa_address));
+			mpip_log(KERN_EMERG "local addr:");
+			__be32 addr = dev->ip_ptr->ifa_list->ifa_address;
+			print_addr(addr);
 		}
 	}
 }
