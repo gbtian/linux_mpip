@@ -7,7 +7,9 @@
 #include <linux/module.h>
 #include <linux/types.h>
 #include <linux/skbuff.h>
+#include <linux/kernel.h>
 #include <linux/sysctl.h>
+#include <linux/syscalls.h>
 
 #include <linux/ip_mpip.h>
 #include <net/ip.h>
@@ -543,3 +545,114 @@ bool mpip_rcv_options(struct sk_buff *skb)
 }
 
 EXPORT_SYMBOL(mpip_rcv_options);
+
+
+asmlinkage long sys_mpip(void)
+{
+	struct working_ip_table *working_ip;
+	char *p;
+
+	mpip_log("******************wi*************\n");
+	list_for_each_entry(working_ip, &wi_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+				working_ip->node_id[0], working_ip->node_id[1], working_ip->node_id[2],
+				working_ip->node_id[3],working_ip-> node_id[4], working_ip->node_id[5]);
+
+		p = (char *) &(working_ip->addr);
+		mpip_log( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("+++++++++\n");
+	}
+
+	mpip_log("******************pi*************\n");
+	struct path_info_table *path_info;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+				path_info->node_id[0], path_info->node_id[1], path_info->node_id[2],
+				path_info->node_id[3],path_info-> node_id[4], path_info->node_id[5]);
+
+		mpip_log("%d\t", path_info->path_id);
+
+		p = (char *) &(path_info->saddr);
+		mpip_log( "%d.%d.%d.%d\t",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		p = (char *) &(path_info->daddr);
+		mpip_log( "%d.%d.%d.%d\t",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("%d\t", path_info->sent);
+
+		mpip_log("%d\n", path_info->rcv);
+
+		mpip_log("+++++++++\n");
+	}
+
+	mpip_log("******************ss*************\n");
+	struct socket_session_table *socket_session;
+
+	list_for_each_entry(socket_session, &ss_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+				socket_session->node_id[0], socket_session->node_id[1], socket_session->node_id[2],
+				socket_session->node_id[3],socket_session-> node_id[4], socket_session->node_id[5]);
+
+		mpip_log("%d\t", socket_session->session_id);
+
+		p = (char *) &(socket_session->saddr);
+		mpip_log( "%d.%d.%d.%d\t",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		p = (char *) &(socket_session->daddr);
+		mpip_log( "%d.%d.%d.%d\t",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("%d\t", socket_session->sport);
+
+		mpip_log("%d\n", socket_session->dport);
+
+		mpip_log("+++++++++\n");
+	}
+
+	mpip_log("******************ps*************\n");
+	struct path_stat_table *path_stat;
+
+	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
+	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
+	u16   rcv;  /* number of pkt received on this path */
+	unsigned long fbjiffies; /* last feedback time of this path's stat */
+	struct list_head list;
+	list_for_each_entry(path_stat, &ps_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+				path_stat->node_id[0], path_stat->node_id[1], path_stat->node_id[2],
+				path_stat->node_id[3],path_stat-> node_id[4], path_stat->node_id[5]);
+
+		mpip_log("%d\t", path_stat->path_id);
+
+		mpip_log("%lu\n", path_stat->fbjiffies);
+
+		mpip_log("+++++++++\n");
+	}
+
+
+	mpip_log("******************la*************\n");
+	struct local_addr_table *local_addr;
+
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+
+		p = (char *) &(local_addr->addr);
+		mpip_log( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("+++++++++\n");
+	}
+
+	return 0;
+
+}
