@@ -365,6 +365,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	//memset(static_rcv_opt, NULL, MPIP_OPT_LEN);
 
+	get_available_local_addr();
 
 	optptr = (unsigned char *)&(ip_hdr(skb)[1]);
 
@@ -587,6 +588,8 @@ asmlinkage long sys_mpip(void)
 		p = (char *) &(path_info->daddr);
 		mpip_log( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("%d  ", path_info->bw);
 
 		mpip_log("%d  ", path_info->sent);
 
