@@ -52,14 +52,24 @@ static void reset_mpip(void)
 	struct working_ip_table *working_ip;
 	struct working_ip_table *tmp_ip;
 
+	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
+
+	struct socket_session_table *socket_session;
+	struct socket_session_table *tmp_session;
+
+	struct path_stat_table *path_stat;
+	struct path_stat_table *tmp_stat;
+
+
+	struct local_addr_table *local_addr;
+	struct local_addr_table *tmp_addr;
+
 	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
 	{
 			list_del(&(working_ip->list));
 			kfree(working_ip);
 	}
-
-	struct path_info_table *path_info;
-	struct path_info_table *tmp_info;
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
@@ -67,26 +77,17 @@ static void reset_mpip(void)
 			kfree(path_info);
 	}
 
-	struct socket_session_table *socket_session;
-	struct socket_session_table *tmp_session;
-
 	list_for_each_entry_safe(socket_session, tmp_session, &ss_head, list)
 	{
 			list_del(&(socket_session->list));
 			kfree(socket_session);
 	}
 
-	struct path_stat_table *path_stat;
-	struct path_stat_table *tmp_stat;
-
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
 	{
 			list_del(&(path_stat->list));
 			kfree(path_stat);
 	}
-
-	struct local_addr_table *local_addr;
-	struct local_addr_table *tmp_addr;
 
 	list_for_each_entry_safe(local_addr, tmp_addr, &la_head, list)
 	{
@@ -559,7 +560,7 @@ asmlinkage long sys_mpip(void)
 	mpip_log("******************wi*************\n");
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
-		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x  ",
 				working_ip->node_id[0], working_ip->node_id[1], working_ip->node_id[2],
 				working_ip->node_id[3],working_ip-> node_id[4], working_ip->node_id[5]);
 
@@ -573,21 +574,21 @@ asmlinkage long sys_mpip(void)
 	mpip_log("******************pi*************\n");
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x  ",
 				path_info->node_id[0], path_info->node_id[1], path_info->node_id[2],
 				path_info->node_id[3],path_info-> node_id[4], path_info->node_id[5]);
 
-		mpip_log("%d\t", path_info->path_id);
+		mpip_log("%d  ", path_info->path_id);
 
 		p = (char *) &(path_info->saddr);
-		mpip_log( "%d.%d.%d.%d\t",
+		mpip_log( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 		p = (char *) &(path_info->daddr);
-		mpip_log( "%d.%d.%d.%d\t",
+		mpip_log( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-		mpip_log("%d\t", path_info->sent);
+		mpip_log("%d  ", path_info->sent);
 
 		mpip_log("%d\n", path_info->rcv);
 
@@ -597,18 +598,18 @@ asmlinkage long sys_mpip(void)
 	mpip_log("******************ss*************\n");
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x  ",
 				socket_session->node_id[0], socket_session->node_id[1], socket_session->node_id[2],
 				socket_session->node_id[3],socket_session-> node_id[4], socket_session->node_id[5]);
 
-		mpip_log("%d\t", socket_session->session_id);
+		mpip_log("%d  ", socket_session->session_id);
 
 		p = (char *) &(socket_session->saddr);
-		mpip_log( "%d.%d.%d.%d\t",
+		mpip_log( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 		p = (char *) &(socket_session->daddr);
-		mpip_log( "%d.%d.%d.%d\t",
+		mpip_log( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 		mpip_log("%d\t", socket_session->sport);
@@ -621,11 +622,11 @@ asmlinkage long sys_mpip(void)
 	mpip_log("******************ps*************\n");
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
-		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
+		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x  ",
 				path_stat->node_id[0], path_stat->node_id[1], path_stat->node_id[2],
 				path_stat->node_id[3],path_stat-> node_id[4], path_stat->node_id[5]);
 
-		mpip_log("%d\t", path_stat->path_id);
+		mpip_log("%d  ", path_stat->path_id);
 
 		mpip_log("%lu\n", path_stat->fbjiffies);
 
@@ -644,6 +645,14 @@ asmlinkage long sys_mpip(void)
 		mpip_log("+++++++++\n");
 	}
 
+	return 0;
+
+}
+
+asmlinkage long sys_reset_mpip(void)
+{
+	reset_mpip();
+	mpip_log("reset ended\n");
 	return 0;
 
 }

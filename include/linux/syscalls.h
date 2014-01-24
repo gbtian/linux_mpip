@@ -849,4 +849,5 @@ asmlinkage long sys_kcmp(pid_t pid1, pid_t pid2, int type,
 asmlinkage long sys_finit_module(int fd, const char __user *uargs, int flags);
 
 asmlinkage long sys_mpip(void);
+asmlinkage long sys_reset_mpip(void);
 #endif
