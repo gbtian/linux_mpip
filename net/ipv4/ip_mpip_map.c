@@ -359,7 +359,7 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
-bool is_dest_added(unsigned char *node_id)
+bool is_dest_added(unsigned char *node_id, __be32 addr)
 {
 	struct path_info_table *path_info;
 
@@ -368,7 +368,8 @@ bool is_dest_added(unsigned char *node_id)
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (is_equal_node_id(path_info->node_id, node_id))
+		if (is_equal_node_id(path_info->node_id, node_id) &&
+		   (path_info->daddr == addr))
 		{
 			return true;
 		}
@@ -385,7 +386,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	if (!node_id)
 		return 0;
 
-	if (is_dest_added(node_id))
+	if (is_dest_added(node_id, addr))
 		return 0;
 
 
