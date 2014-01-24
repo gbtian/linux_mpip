@@ -32,6 +32,13 @@
 extern int MPIP_OPT_LEN;
 extern int sysctl_mpip_enabled;
 extern int sysctl_mpip_log;
+
+extern struct list_head wi_head;
+extern struct list_head pi_head;
+extern struct list_head ss_head;
+extern struct list_head la_head;
+extern struct list_head ps_head;
+
 int mpip_init(void);
 
 #define MPIPCB(skb) ((struct mpip_skb_parm*)((skb)->cb))
@@ -108,7 +115,7 @@ struct working_ip_table {
 	__be32	addr; /* receiver' ip seen by sender */
 	struct list_head list;
 };
-static LIST_HEAD(wi_head);
+
 
 struct path_info_table {
 	/*when sending pkts, check the bw to choose the fastest one*/
@@ -122,7 +129,7 @@ struct path_info_table {
 	__u16   rcv;  /* number of pkt received on this path */
 	struct list_head list;
 };
-static LIST_HEAD(pi_head);
+
 
 //
 //struct sender_socket_table {
@@ -147,7 +154,7 @@ struct socket_session_table {
 	__be16	dport; /* destination port*/
 	struct list_head list;
 };
-static LIST_HEAD(ss_head);
+
 
 struct path_stat_table {
 	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
@@ -156,14 +163,12 @@ struct path_stat_table {
 	unsigned long fbjiffies; /* last feedback time of this path's stat */
 	struct list_head list;
 };
-static LIST_HEAD(ps_head);
+
 
 struct local_addr_table {
 	__be32	addr;
 	struct list_head list;
 };
-static LIST_HEAD(la_head);
-
 
 int add_working_ip(unsigned char *node_id, __be32 addr);
 

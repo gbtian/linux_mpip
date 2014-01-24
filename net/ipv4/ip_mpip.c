@@ -571,8 +571,6 @@ asmlinkage long sys_mpip(void)
 	}
 
 	mpip_log("******************pi*************\n");
-
-
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
@@ -597,8 +595,6 @@ asmlinkage long sys_mpip(void)
 	}
 
 	mpip_log("******************ss*************\n");
-
-
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
 		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
@@ -623,8 +619,6 @@ asmlinkage long sys_mpip(void)
 	}
 
 	mpip_log("******************ps*************\n");
-
-
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
@@ -640,8 +634,6 @@ asmlinkage long sys_mpip(void)
 
 
 	mpip_log("******************la*************\n");
-
-
 	list_for_each_entry(local_addr, &la_head, list)
 	{
 

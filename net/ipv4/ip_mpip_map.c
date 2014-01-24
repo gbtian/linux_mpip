@@ -5,6 +5,12 @@
 static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
 
+LIST_HEAD(wi_head);
+LIST_HEAD(pi_head);
+LIST_HEAD(ss_head);
+LIST_HEAD(la_head);
+LIST_HEAD(ps_head);
+
 bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 {
 	int i;
