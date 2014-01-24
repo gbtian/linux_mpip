@@ -206,7 +206,7 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 
 struct path_info_table *find_path_info(__be32 saddr, __be32 daddr);
 
-bool is_dest_added(unsigned char *node_id);
+bool is_dest_added(unsigned char *node_id, __be32 add);
 
 int add_path_info(unsigned char *node_id, __be32 addr);
 
