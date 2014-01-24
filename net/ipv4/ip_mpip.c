@@ -141,8 +141,8 @@ void mpip_log(const char *fmt, ...)
 	mm_segment_t fs;
 	loff_t pos;
 
-	if (!sysctl_mpip_log)
-		return;
+	//if (!sysctl_mpip_log)
+	//	return;
 
 	memset(log_buf, 0, 256);
 	va_start(args, fmt);
@@ -154,21 +154,21 @@ void mpip_log(const char *fmt, ...)
     return;
 
 
-	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
-	if (IS_ERR(fp))
-	{
-		printk("create file error\n");
-		return;
-	}
-
-	fs = get_fs();
-	set_fs(KERNEL_DS);
-	pos = fp->f_dentry->d_inode->i_size;
-	//pos = 0;
-	vfs_write(fp, log_buf, strlen(log_buf), &pos);
-	vfs_fsync(fp, 0);
-	filp_close(fp, NULL);
-	set_fs(fs);
+//	fp = filp_open("/home/bill/log", O_RDWR | O_CREAT | O_SYNC, 0644);
+//	if (IS_ERR(fp))
+//	{
+//		printk("create file error\n");
+//		return;
+//	}
+//
+//	fs = get_fs();
+//	set_fs(KERNEL_DS);
+//	pos = fp->f_dentry->d_inode->i_size;
+//	//pos = 0;
+//	vfs_write(fp, log_buf, strlen(log_buf), &pos);
+//	vfs_fsync(fp, 0);
+//	filp_close(fp, NULL);
+//	set_fs(fs);
 
 }
 EXPORT_SYMBOL(mpip_log);
@@ -550,6 +550,10 @@ EXPORT_SYMBOL(mpip_rcv_options);
 asmlinkage long sys_mpip(void)
 {
 	struct working_ip_table *working_ip;
+	struct path_info_table *path_info;
+	struct socket_session_table *socket_session;
+	struct path_stat_table *path_stat;
+	struct local_addr_table *local_addr;
 	char *p;
 
 	mpip_log("******************wi*************\n");
@@ -567,7 +571,7 @@ asmlinkage long sys_mpip(void)
 	}
 
 	mpip_log("******************pi*************\n");
-	struct path_info_table *path_info;
+
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
@@ -593,7 +597,7 @@ asmlinkage long sys_mpip(void)
 	}
 
 	mpip_log("******************ss*************\n");
-	struct socket_session_table *socket_session;
+
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
@@ -619,13 +623,8 @@ asmlinkage long sys_mpip(void)
 	}
 
 	mpip_log("******************ps*************\n");
-	struct path_stat_table *path_stat;
 
-	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
-	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
-	u16   rcv;  /* number of pkt received on this path */
-	unsigned long fbjiffies; /* last feedback time of this path's stat */
-	struct list_head list;
+
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\t",
@@ -641,7 +640,7 @@ asmlinkage long sys_mpip(void)
 
 
 	mpip_log("******************la*************\n");
-	struct local_addr_table *local_addr;
+
 
 	list_for_each_entry(local_addr, &la_head, list)
 	{
