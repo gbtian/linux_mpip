@@ -29,6 +29,8 @@
 #include <net/cipso_ipv4.h>
 #include <net/ip_fib.h>
 
+
+
 /*
  * Write options to IP header, record destination address to
  * source route option, address of outgoing interface
@@ -48,6 +50,9 @@ void ip_options_build(struct sk_buff *skb, struct ip_options *opt,
 	memcpy(&(IPCB(skb)->opt), opt, sizeof(struct ip_options));
 	memcpy(iph+sizeof(struct iphdr), opt->__data, opt->optlen);
 	opt = &(IPCB(skb)->opt);
+
+	if (!daddr)
+		return;
 
 	if (opt->srr)
 		memcpy(iph+opt->srr+iph[opt->srr+1]-4, &daddr, 4);
@@ -291,6 +296,7 @@ int ip_options_compile(struct net *net,
 		    	continue;
 		}
 		optlen = optptr[1];
+		printk("%d, %d, %s\n", __LINE__, optlen, __FILE__);
 		if (optlen<2 || optlen>l)
 		{
 			pp_ptr = optptr;
@@ -363,6 +369,15 @@ int ip_options_compile(struct net *net,
 		    		opt->rr_needaddr = 1;
 		    	}
 		    	opt->rr = optptr - iph;
+		    	break;
+		    case IPOPT_MPIP:
+		    	opt->node_id[0] = optptr[2];
+		    	opt->node_id[1] = optptr[3];
+		    	opt->node_id[2] = optptr[4];
+		    	opt->session_id = optptr[5];
+		    	opt->path_id = (optptr[6] & 0xf0) >> 4;
+		    	opt->stat_path_id = (optptr[6] & 0x0f);
+		    	opt->packet_count = (optptr[8]<<8)|optptr[7];
 		    	break;
 		    case IPOPT_TIMESTAMP:
 		    	if (opt->ts)
@@ -488,6 +503,7 @@ int ip_options_compile(struct net *net,
 		    case IPOPT_SEC:
 		    case IPOPT_SID:
 		    default:
+		    	printk("%d, %s, %s\n", __LINE__, __FUNCTION__, __FILE__);
 		    	if (!skb && !ns_capable(net->user_ns, CAP_NET_RAW))
 		    	{
 		    		pp_ptr = optptr;
@@ -497,13 +513,16 @@ int ip_options_compile(struct net *net,
 		}
 		l -= optlen;
 		optptr += optlen;
+		printk("%d, %d, %s\n", __LINE__, l, __FILE__);
 	}
 
 eol:
+	printk("%d, %s, %s\n", __LINE__, __FUNCTION__, __FILE__);
 	if (!pp_ptr)
 		return 0;
 
 error:
+	printk("%d, %s, %s\n", __LINE__, __FUNCTION__, __FILE__);
 	if (skb)
 	{
 		icmp_send(skb, ICMP_PARAMETERPROB, 0, htonl((pp_ptr-iph)<<24));
@@ -511,6 +530,8 @@ error:
 	return -EINVAL;
 }
 EXPORT_SYMBOL(ip_options_compile);
+
+
 
 /*
  *	Undo all the changes done by ip_options_compile().
@@ -555,6 +576,7 @@ static int ip_options_get_finish(struct net *net, struct ip_options_rcu **optp,
 	while (optlen & 3)
 		opt->opt.__data[optlen++] = IPOPT_END;
 	opt->opt.optlen = optlen;
+
 	if (optlen && ip_options_compile(net, &opt->opt, NULL)) {
 		kfree(opt);
 		return -EINVAL;
@@ -584,19 +606,13 @@ int ip_options_get_from_user(struct net *net, struct ip_options_rcu **optp,
 int ip_options_get(struct net *net, struct ip_options_rcu **optp,
 		   unsigned char *data, int optlen)
 {
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	struct ip_options_rcu *opt = ip_options_get_alloc(optlen);
-
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
 	if (!opt)
 		return -ENOMEM;
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
 	if (optlen)
 		memcpy(opt->opt.__data, data, optlen);
-
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
 	return ip_options_get_finish(net, optp, opt, optlen);
 }

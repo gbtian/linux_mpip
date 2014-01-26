@@ -54,11 +54,13 @@ struct ip_options {
 			ts_needaddr:1;
 	unsigned char	router_alert;
 	unsigned char	cipso;
-//	unsigned char	node_id;
-//	unsigned char	session_id:4;
-//	unsigned char	path_id:2;
-//	unsigned char	stat_path_id:2;
-//	u16	packetcount;
+
+	unsigned char	node_id[ETH_ALEN-3];
+	unsigned char	session_id;
+	unsigned char	path_id:4;
+	unsigned char	stat_path_id:4;
+	u16	packet_count;
+
 	unsigned char	__pad2;
 	unsigned char	__data[0];
 

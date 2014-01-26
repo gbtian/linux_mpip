@@ -18,7 +18,7 @@ bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 	if (!node_id_1 || !node_id_2)
 		return false;
 
-	for(i = 0; i < ETH_ALEN; i++)
+	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
 	{
 		if (node_id_1[i] != node_id_2[i])
 			return false;
@@ -32,9 +32,8 @@ void print_node_id(unsigned char *node_id)
 	if (!node_id)
 		return;
 
-	mpip_log( "%02x-%02x-%02x-%02x-%02x-%02x\n",
-			node_id[0], node_id[1], node_id[2],
-			node_id[3], node_id[4], node_id[5]);
+	mpip_log( "%02x-%02x-%02x\n",
+			node_id[0], node_id[1], node_id[2]);
 }
 
 void print_addr(__be32 addr)
@@ -72,7 +71,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, ETH_ALEN);
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->addr = addr;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
@@ -249,7 +248,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 
 	item = kzalloc(sizeof(struct path_stat_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, ETH_ALEN);
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->path_id = path_id;
 	item->rcv = 0;
 	item->fbjiffies = jiffies;
@@ -298,7 +297,7 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, ETH_ALEN);
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -394,7 +393,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	{
 
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
-		memcpy(item->node_id, node_id, ETH_ALEN);
+		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
 		item->sent = 0;

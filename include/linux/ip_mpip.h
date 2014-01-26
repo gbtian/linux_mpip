@@ -32,6 +32,8 @@
 extern int MPIP_OPT_LEN;
 extern int sysctl_mpip_enabled;
 extern int sysctl_mpip_log;
+extern int max_pkt_len;
+extern int MPIP_OPT_NODE_ID_LEN;
 
 extern struct list_head wi_head;
 extern struct list_head pi_head;
@@ -40,35 +42,6 @@ extern struct list_head la_head;
 extern struct list_head ps_head;
 
 int mpip_init(void);
-
-#define MPIPCB(skb) ((struct mpip_skb_parm*)((skb)->cb))
-
-struct mpip_options {
-	unsigned char	optlen;
-	unsigned char	node_id[ETH_ALEN];
-	unsigned char	session_id;
-	unsigned char	path_id;
-	unsigned char	stat_path_id;
-	u16	packet_count;
-	//unsigned char   packet_count;
-	unsigned char	__data[0];
-};
-
-struct mpip_options_rcu {
-	struct rcu_head rcu;
-	struct mpip_options opt;
-};
-
-
-struct mpip_skb_parm {
-	struct mpip_options	opt;		/* Compiled IP options		*/
-
-	unsigned char		flags;
-
-	u16			frag_max_size;
-
-};
-
 
 void mpip_log(const char *fmt, ...);
 
@@ -84,33 +57,17 @@ int		mpip_rcv(struct sk_buff *skb);
 
 int		mpip_xmit(struct sk_buff *skb);
 
-void get_mpip_options(struct sk_buff *skb, char *options);
+void get_mpip_options(struct sk_buff *skb, unsigned char *options);
 
-bool mpip_rcv_options(struct sk_buff *skb);
-
-void print_mpip_options(struct mpip_options *opt);
-
-void mpip_options_fragment(struct sk_buff *skb);
+void print_mpip_options(struct ip_options *opt);
 
 int insert_mpip_options(struct sk_buff *skb);
 
-int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
-					 unsigned char *data, int optlen);
-
-void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
-
-//void mpip_log(char *file, int line, char *func);
-
-bool mpip_rcv_options(struct sk_buff *skb);
-
-int mpip_options_compile(struct net *net,
-						 struct mpip_options *opt, struct sk_buff *skb);
-
-int process_mpip_options(struct sk_buff *skb);
+int process_mpip_options(struct sk_buff *skb, struct ip_options *opt);
 
 
 struct working_ip_table {
-	unsigned char	node_id[ETH_ALEN]; /*receiver's node id. */
+	unsigned char	node_id[3]; /*receiver's node id. */
 									   /*the node id is defined as the MAC*/
 	__be32	addr; /* receiver' ip seen by sender */
 	struct list_head list;
@@ -120,7 +77,7 @@ struct working_ip_table {
 struct path_info_table {
 	/*when sending pkts, check the bw to choose the fastest one*/
 	/*update sent*/
-	unsigned char node_id[ETH_ALEN]; /*destination node id*/
+	unsigned char node_id[3]; /*destination node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
@@ -144,7 +101,7 @@ struct path_info_table {
 //static LIST_HEAD(ss_head);
 
 struct socket_session_table {
-	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
+	unsigned char	node_id[3]; /* sender's node id*/
 	unsigned char   session_id; /* sender's session id*/
 
 	/* socket information seen at the receiver side*/
@@ -157,7 +114,7 @@ struct socket_session_table {
 
 
 struct path_stat_table {
-	unsigned char	node_id[ETH_ALEN]; /* sender's node id*/
+	unsigned char	node_id[3]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	u16   rcv;  /* number of pkt received on this path */
 	unsigned long fbjiffies; /* last feedback time of this path's stat */

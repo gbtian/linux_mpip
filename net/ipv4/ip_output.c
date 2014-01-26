@@ -144,8 +144,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-	else if (sysctl_mpip_enabled && (skb->len < 1000) )
-		optlen = MPIP_OPT_LEN;
+	else if (sysctl_mpip_enabled)
+		optlen = MPIP_OPT_LEN + 3;
 
 	//skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
 	skb_push(skb, sizeof(struct iphdr) + optlen);
@@ -172,7 +172,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && (skb->len < 1000))
+	else if (sysctl_mpip_enabled)
 		insert_mpip_options(skb);
 
 
@@ -413,9 +413,9 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-	else if (sysctl_mpip_enabled && (skb->len < 1000))
+	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
 	{
-		optlen = MPIP_OPT_LEN;
+		optlen = MPIP_OPT_LEN + 3;
 	}
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
@@ -438,7 +438,7 @@ packet_routed:
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && (skb->len < 1000))
+	else if (sysctl_mpip_enabled)
 		insert_mpip_options(skb);
 
 
@@ -521,34 +521,16 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 	//		IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 
 
-	if (!sysctl_mpip_enabled)
-	{
-		if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
+	if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
 				 (IPCB(skb)->frag_max_size &&
 				  IPCB(skb)->frag_max_size > dst_mtu(&rt->dst))))
-		{
-			IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
-			icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
-				  htonl(ip_skb_dst_mtu(skb)));
-
-			kfree_skb(skb);
-			return -EMSGSIZE;
-		}
-	}
-	else if (skb->len < 1000)
 	{
-		if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
-						 (MPIPCB(skb)->frag_max_size &&
-						  MPIPCB(skb)->frag_max_size > dst_mtu(&rt->dst))))
-		{
-			IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
-			icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
-				  htonl(ip_skb_dst_mtu(skb)));
-			//printk("222: %d, %d, %d\n", iph->frag_off,
-			//		MPIPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
-			kfree_skb(skb);
-			return -EMSGSIZE;
-		}
+		IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
+		icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
+			  htonl(ip_skb_dst_mtu(skb)));
+
+		kfree_skb(skb);
+		return -EMSGSIZE;
 	}
 
 	//printk("333: %d, %d, %d\n", iph->frag_off,
@@ -628,12 +610,8 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 				iph->tot_len = htons(frag->len);
 				ip_copy_metadata(frag, skb);
 				if (offset == 0)
-				{
-					if (!sysctl_mpip_enabled)
-						ip_options_fragment(frag);
-					else
-						mpip_options_fragment(frag);
-				}
+					ip_options_fragment(frag);
+
 				offset += skb->len - hlen;
 				iph->frag_off = htons(offset>>3);
 				if (frag->next != NULL)

@@ -43,5 +43,5 @@
 0x95d7a8d6	gre_handle_offloads	net/ipv4/gre	EXPORT_SYMBOL_GPL
 0x8c54f3ba	ip_tunnel_get_stats64	net/ipv4/ip_tunnel	EXPORT_SYMBOL_GPL
 0x566884cc	ipt_do_table	net/ipv4/netfilter/ip_tables	EXPORT_SYMBOL
-0xf52daf98	inet_sk_diag_fill	net/ipv4/inet_diag	EXPORT_SYMBOL_GPL
+0x50c101ff	inet_sk_diag_fill	net/ipv4/inet_diag	EXPORT_SYMBOL_GPL
 0x7e260388	arpt_unregister_table	net/ipv4/netfilter/arp_tables	EXPORT_SYMBOL

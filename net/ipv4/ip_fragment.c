@@ -622,10 +622,7 @@ static int ip_frag_reasm(struct ipq *qp, struct sk_buff *prev,
 	head->dev = dev;
 	head->tstamp = qp->q.stamp;
 
-	if (!sysctl_mpip_enabled)
-		IPCB(head)->frag_max_size = qp->q.max_size;
-	else
-		MPIPCB(head)->frag_max_size = qp->q.max_size;
+	IPCB(head)->frag_max_size = qp->q.max_size;
 
 	iph = ip_hdr(head);
 	/* max_size != 0 implies at least one fragment had IP_DF set */

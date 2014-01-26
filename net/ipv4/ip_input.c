@@ -287,6 +287,11 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		goto drop;
 	}
 
+	if (opt->session_id > 0)
+	{
+		process_mpip_options(skb, opt);
+	}
+
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
 
@@ -356,15 +361,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
-	if (sysctl_mpip_enabled && (iph->ihl == 8))
-	{
-		mpip_rcv_options(skb);
-	}
-	else if (iph->ihl > 5 && ip_rcv_options(skb))
+
+	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
 
-	//if (iph->ihl > 5 && ip_rcv_options(skb))
-	//	goto drop;
 	rt = skb_rtable(skb);
 	if (rt->rt_type == RTN_MULTICAST) {
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
