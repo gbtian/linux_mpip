@@ -144,8 +144,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-	else if (sysctl_mpip_enabled)
-		optlen = MPIP_OPT_LEN + 3;
+	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	//skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
 	skb_push(skb, sizeof(struct iphdr) + optlen);
@@ -172,7 +172,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
 		insert_mpip_options(skb);
 
 
@@ -415,7 +415,7 @@ packet_routed:
 	}
 	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
 	{
-		optlen = MPIP_OPT_LEN + 3;
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 	}
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
@@ -438,7 +438,7 @@ packet_routed:
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
 		insert_mpip_options(skb);
 
 

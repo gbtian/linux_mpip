@@ -296,7 +296,6 @@ int ip_options_compile(struct net *net,
 		    	continue;
 		}
 		optlen = optptr[1];
-		printk("%d, %d, %s\n", __LINE__, optlen, __FILE__);
 		if (optlen<2 || optlen>l)
 		{
 			pp_ptr = optptr;
@@ -503,7 +502,6 @@ int ip_options_compile(struct net *net,
 		    case IPOPT_SEC:
 		    case IPOPT_SID:
 		    default:
-		    	printk("%d, %s, %s\n", __LINE__, __FUNCTION__, __FILE__);
 		    	if (!skb && !ns_capable(net->user_ns, CAP_NET_RAW))
 		    	{
 		    		pp_ptr = optptr;
@@ -513,16 +511,13 @@ int ip_options_compile(struct net *net,
 		}
 		l -= optlen;
 		optptr += optlen;
-		printk("%d, %d, %s\n", __LINE__, l, __FILE__);
 	}
 
 eol:
-	printk("%d, %s, %s\n", __LINE__, __FUNCTION__, __FILE__);
 	if (!pp_ptr)
 		return 0;
 
 error:
-	printk("%d, %s, %s\n", __LINE__, __FUNCTION__, __FILE__);
 	if (skb)
 	{
 		icmp_send(skb, ICMP_PARAMETERPROB, 0, htonl((pp_ptr-iph)<<24));

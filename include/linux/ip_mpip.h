@@ -29,11 +29,13 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-extern int MPIP_OPT_LEN;
+#define MPIP_OPT_LEN 9
+#define MPIP_OPT_NODE_ID_LEN 3
+
 extern int sysctl_mpip_enabled;
 extern int sysctl_mpip_log;
 extern int max_pkt_len;
-extern int MPIP_OPT_NODE_ID_LEN;
+
 
 extern struct list_head wi_head;
 extern struct list_head pi_head;
@@ -67,7 +69,7 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt);
 
 
 struct working_ip_table {
-	unsigned char	node_id[3]; /*receiver's node id. */
+	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
 									   /*the node id is defined as the MAC*/
 	__be32	addr; /* receiver' ip seen by sender */
 	struct list_head list;
@@ -77,7 +79,7 @@ struct working_ip_table {
 struct path_info_table {
 	/*when sending pkts, check the bw to choose the fastest one*/
 	/*update sent*/
-	unsigned char node_id[3]; /*destination node id*/
+	unsigned char node_id[MPIP_OPT_NODE_ID_LEN]; /*destination node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
@@ -101,7 +103,7 @@ struct path_info_table {
 //static LIST_HEAD(ss_head);
 
 struct socket_session_table {
-	unsigned char	node_id[3]; /* sender's node id*/
+	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char   session_id; /* sender's session id*/
 
 	/* socket information seen at the receiver side*/
@@ -114,7 +116,7 @@ struct socket_session_table {
 
 
 struct path_stat_table {
-	unsigned char	node_id[3]; /* sender's node id*/
+	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	u16   rcv;  /* number of pkt received on this path */
 	unsigned long fbjiffies; /* last feedback time of this path's stat */

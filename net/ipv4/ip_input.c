@@ -287,9 +287,10 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		goto drop;
 	}
 
-	if (opt->session_id > 0)
+	if (sysctl_mpip_enabled && (opt->session_id > 0))
 	{
 		process_mpip_options(skb, opt);
+		return false;
 	}
 
 	if (unlikely(opt->srr)) {

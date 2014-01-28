@@ -16,8 +16,8 @@
 
 
 //int MPIP_OPT_LEN = sizeof(struct mpip_options);
-int MPIP_OPT_LEN = 9;
-int MPIP_OPT_NODE_ID_LEN = 3;
+//int MPIP_OPT_LEN = 9;
+//int MPIP_OPT_NODE_ID_LEN = 3;
 static unsigned char *static_node_id = NULL;
 static char log_buf[256];
 
@@ -466,7 +466,7 @@ int mpip_options_get(struct net *net, struct ip_options_rcu **optp,
 
 int insert_mpip_options(struct sk_buff *skb)
 {
-	unsigned char options[MPIP_OPT_LEN];
+	unsigned char *options = NULL;
 	struct ip_options_rcu *mp_opt = NULL;
 	struct iphdr *iph;
 	int res, i;
@@ -475,11 +475,14 @@ int insert_mpip_options(struct sk_buff *skb)
 	if (iph->ihl > 5)
 		return 0;
 
+	options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
+
 	get_mpip_options(skb, options);
 	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	ip_options_build(skb, &(mp_opt->opt), 0, NULL, 0);
 
+	kfree(options);
 	return 1;
 }
 
