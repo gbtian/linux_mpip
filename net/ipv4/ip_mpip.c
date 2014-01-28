@@ -288,8 +288,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     options[8] = (packet_count>>8) & 0xff; //packet_count
 
 
-    //if (path_id > 0)
-    if (false)
+    if (path_id > 0)
     {
     	mpip_log("iph->saddr=");
     	print_addr(iph->saddr);
@@ -342,30 +341,29 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	res = get_receiver_session(opt->node_id, opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	//if (res)
-	if(false)
+	if (res)
 	{
 		mpip_log("11iph->saddr=");
-    	print_addr(iph->saddr);
+	    	print_addr(iph->saddr);
 
-    	mpip_log("11daddr=");
-    	print_addr(daddr);
+	    	mpip_log("11daddr=");
+    		print_addr(daddr);
 
-    	mpip_log("11iph->daddr=");
-    	print_addr(iph->daddr);
+	    	mpip_log("11iph->daddr=");
+    		print_addr(iph->daddr);
 
-    	mpip_log("11saddr=");
-    	print_addr(saddr);
+	    	mpip_log("11saddr=");
+    		print_addr(saddr);
 
-    	mpip_log("tcph->source= %d, dport=%d\n", tcph->source, dport);
-    	mpip_log("tcph->dest= %d, sport=%d\n", tcph->dest, sport);
+	    	mpip_log("tcph->source= %d, dport=%d\n", tcph->source, dport);
+    		mpip_log("tcph->dest= %d, sport=%d\n", tcph->dest, sport);
 
-    	iph->saddr = daddr;
-    	iph->daddr = saddr;
-    	tcph->source = dport;
-    	tcph->dest = sport;
-    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-    	//tcph->check = tcp_fast_csum()
+	    	iph->saddr = daddr;
+    		iph->daddr = saddr;
+	    	//tcph->source = dport;
+    		//tcph->dest = sport;
+	    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    		//tcph->check = tcp_fast_csum()
 	}
 
 
