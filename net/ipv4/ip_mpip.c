@@ -288,7 +288,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     options[8] = (packet_count>>8) & 0xff; //packet_count
 
 
-    if (path_id > 0)
+    //if (path_id > 0)
+    if (false)
     {
     	mpip_log("iph->saddr=");
     	print_addr(iph->saddr);
@@ -312,17 +313,29 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 EXPORT_SYMBOL(get_mpip_options);
 
 
-int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
+int process_mpip_options(struct sk_buff *skb)
 {
+	struct ip_options *opt;
+	struct iphdr *iph;
+	struct net_device *dev = skb->dev;
 	unsigned char *optptr;
 	int i, res;
-	struct iphdr *iph = ip_hdr(skb);
+	unsigned char *tmp = NULL;
+	unsigned char *iph_addr = skb_network_header(skb);
+
 	struct tcphdr *tcph = tcp_hdr(skb);
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 
-	if (skb == NULL)
+
+	iph = ip_hdr(skb);
+	opt = &(IPCB(skb)->opt);
+	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
+	if (ip_options_compile(dev_net(dev), opt, skb)) {
+		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 		return 1;
+	}
+
 
 	get_available_local_addr();
 
@@ -341,125 +354,66 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	res = get_receiver_session(opt->node_id, opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	if (res)
+	//if (res)
+	if (false)
 	{
 		mpip_log("11iph->saddr=");
-	    	print_addr(iph->saddr);
+		print_addr(iph->saddr);
 
-	    	mpip_log("11daddr=");
-    		print_addr(daddr);
+		mpip_log("11daddr=");
+		print_addr(daddr);
 
-	    	mpip_log("11iph->daddr=");
-    		print_addr(iph->daddr);
+		mpip_log("11iph->daddr=");
+		print_addr(iph->daddr);
 
-	    	mpip_log("11saddr=");
-    		print_addr(saddr);
+		mpip_log("11saddr=");
+		print_addr(saddr);
 
-	    	mpip_log("tcph->source= %d, dport=%d\n", tcph->source, dport);
-    		mpip_log("tcph->dest= %d, sport=%d\n", tcph->dest, sport);
+		mpip_log("tcph->source= %d, dport=%d\n", tcph->source, dport);
+		mpip_log("tcph->dest= %d, sport=%d\n", tcph->dest, sport);
 
-	    	iph->saddr = daddr;
-    		iph->daddr = saddr;
-	    	//tcph->source = dport;
-    		//tcph->dest = sport;
-	    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-    		//tcph->check = tcp_fast_csum()
+		iph->saddr = daddr;
+		iph->daddr = saddr;
+		//tcph->source = dport;
+		//tcph->dest = sport;
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+		//tcph->check = tcp_fast_csum()
 	}
 
 
-	print_mpip_options(opt);
+	//print_mpip_options(opt);
 
+
+	if (opt->optlen > 0)
+	{
+		mpip_log("222 ihl=%d\n", iph->ihl);
+		mpip_log("222 optlen=%d\n", opt->optlen);
+		mpip_log("222 data=%d\n", skb->data);
+		mpip_log("222 len=%d\n", skb->len);
+		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+		memcpy(tmp, iph_addr, sizeof(struct iphdr));
+		memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
+		kfree(tmp);
+
+		skb_pull(skb, opt->optlen);
+		skb_reset_network_header(skb);
+		iph = ip_hdr(skb);
+
+		mpip_log("222 new ihl=%d\n", iph->ihl);
+		mpip_log("222 new data=%d\n", skb->data);
+		mpip_log("222 new len=%d\n", skb->len);
+		iph->ihl -= opt->optlen>>2;
+		mpip_log("222 newest ihl=%d\n", iph->ihl);
+		mpip_log("222 newest data=%d\n", skb->data);
+		mpip_log("222 newest len=%d\n", skb->len);
+
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
+	}
 
 	return 1;
 }
 EXPORT_SYMBOL(process_mpip_options);
-
-int mpip_options_compile(struct net *net,
-		       struct ip_options *opt, struct sk_buff *skb)
-{
-	unsigned char *optptr;
-	int optlen, l, i;
-	optptr = opt->__data;
-
-	for (i = 0; i < MPIP_OPT_LEN; ++i)
-	{
-		printk("3333 = %d\n", optptr[i]);
-	}
-
-	//return 0;
-
-	optlen = optptr[1];
-	printk("%d, %d, %s\n", __LINE__, optlen, __FILE__);
-	for (i = 0; i < 3; ++i)
-	{
-		opt->node_id[i] = optptr[2 + i];
-		printk("%d, %d, %s\n", __LINE__, opt->node_id[i], __FILE__);
-	}
-
-	opt->session_id = optptr[5];
-	printk("%d, %d, %s\n", __LINE__, opt->session_id, __FILE__);
-	opt->path_id = ((optptr[6] & 0xf0) >> 4);
-	printk("%d, %d, %s\n", __LINE__, opt->path_id, __FILE__);
-	opt->stat_path_id = (optptr[6] & 0x0f);
-	printk("%d, %d, %s\n", __LINE__, opt->stat_path_id, __FILE__);
-	opt->packet_count = ((optptr[8]<<8)|optptr[7]);
-	printk("%d, %d, %s\n", __LINE__, opt->packet_count, __FILE__);
-
-	return 0;
-
-}
-
-
-static int mpip_options_get_finish(struct net *net, struct ip_options_rcu **optp,
-				 struct ip_options_rcu *opt, int optlen)
-{
-	while (optlen & 3)
-		opt->opt.__data[optlen++] = IPOPT_END;
-	opt->opt.optlen = optlen;
-
-	mpip_options_compile(net, &opt->opt, NULL);
-
-	return 0;
-
-
-	if (optlen && mpip_options_compile(net, &opt->opt, NULL)) {
-		kfree(opt);
-		return -EINVAL;
-	}
-	if (*optp)
-	{
-		kfree(*optp);
-	}
-	*optp = opt;
-	return 0;
-}
-
-static struct ip_options_rcu *mpip_options_get_alloc(const int optlen)
-{
-	return kzalloc(sizeof(struct ip_options_rcu) + ((optlen + 3) & ~3),
-		       GFP_KERNEL);
-}
-
-int mpip_options_get(struct net *net, struct ip_options_rcu **optp,
-		   unsigned char *data, int optlen)
-{
-	int i = 0;
-	struct ip_options_rcu *opt = mpip_options_get_alloc(optlen);
-
-	if (!opt)
-		return -ENOMEM;
-
-	if (optlen)
-		memcpy(opt->opt.__data, data, optlen);
-
-	printk("here \n");
-	for (i = 0; i < optlen; ++i)
-	{
-		printk("data =  %d\n", data[i]);
-	}
-
-	return mpip_options_get_finish(net, optp, opt, optlen);
-}
 
 
 int insert_mpip_options(struct sk_buff *skb)

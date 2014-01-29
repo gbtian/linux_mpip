@@ -536,8 +536,8 @@ int add_sender_session(__be32 saddr, __be16 sport,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	mpip_log( "ss: %d,%d,%d\n", item->session_id,
-			sport, dport);
+	//mpip_log( "ss: %d,%d,%d\n", item->session_id,
+	//		sport, dport);
 
 	print_addr(saddr);
 	print_addr(daddr);

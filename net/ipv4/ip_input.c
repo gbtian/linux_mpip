@@ -287,11 +287,6 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		goto drop;
 	}
 
-	if (sysctl_mpip_enabled && (opt->session_id > 0))
-	{
-		process_mpip_options(skb, opt);
-		return false;
-	}
 
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
@@ -321,8 +316,17 @@ EXPORT_SYMBOL(sysctl_ip_early_demux);
 
 static int ip_rcv_finish(struct sk_buff *skb)
 {
-	const struct iphdr *iph = ip_hdr(skb);
+	struct tcphdr *tcph;
+	const struct iphdr *iph;
 	struct rtable *rt;
+
+	if (sysctl_mpip_enabled)
+	{
+		process_mpip_options(skb);
+	}
+
+	iph = ip_hdr(skb);
+
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
@@ -362,6 +366,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
+
+	mpip_log("444 ihl=%d\n", iph->ihl);
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
