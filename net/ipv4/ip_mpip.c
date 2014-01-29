@@ -288,8 +288,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     options[8] = (packet_count>>8) & 0xff; //packet_count
 
 
-    //if (path_id > 0)
-    if (false)
+    if (path_id > 0)
+    //if (false)
     {
     	mpip_log("iph->saddr=");
     	print_addr(iph->saddr);
@@ -354,8 +354,8 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_session(opt->node_id, opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	//if (res)
-	if (false)
+	if (res)
+	//if (false)
 	{
 		mpip_log("11iph->saddr=");
 		print_addr(iph->saddr);
