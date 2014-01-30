@@ -367,7 +367,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 #endif
 
 
-	mpip_log("444 ihl=%d\n", iph->ihl);
+	//mpip_log("444 ihl=%d\n", iph->ihl);
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;

@@ -306,12 +306,12 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	mpip_log( "rs: %d,%d,%d\n", session_id,
-					sport, dport);
-
-	print_node_id(node_id);
-	print_addr(saddr);
-	print_addr(daddr);
+//	mpip_log( "rs: %d,%d,%d\n", session_id,
+//					sport, dport);
+//
+//	print_node_id(node_id);
+//	print_addr(saddr);
+//	print_addr(daddr);
 
 	return 1;
 }
@@ -539,8 +539,8 @@ int add_sender_session(__be32 saddr, __be16 sport,
 	//mpip_log( "ss: %d,%d,%d\n", item->session_id,
 	//		sport, dport);
 
-	print_addr(saddr);
-	print_addr(daddr);
+	//print_addr(saddr);
+	//print_addr(daddr);
 
 	return 1;
 }

@@ -327,8 +327,11 @@ int process_mpip_options(struct sk_buff *skb)
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 
-
 	iph = ip_hdr(skb);
+
+	if (iph->ihl != 8)
+		return 0;
+
 	opt = &(IPCB(skb)->opt);
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
 	if (ip_options_compile(dev_net(dev), opt, skb)) {
@@ -381,34 +384,35 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	//print_mpip_options(opt);
+	print_mpip_options(opt);
 
 
 	if (opt->optlen > 0)
 	{
-		mpip_log("222 ihl=%d\n", iph->ihl);
-		mpip_log("222 optlen=%d\n", opt->optlen);
-		mpip_log("222 data=%d\n", skb->data);
-		mpip_log("222 len=%d\n", skb->len);
+//		mpip_log("222 ihl=%d\n", iph->ihl);
+//		mpip_log("222 optlen=%d\n", opt->optlen);
+//		mpip_log("222 data=%d\n", skb->data);
+//		mpip_log("222 len=%d\n", skb->len);
 		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
 		memcpy(tmp, iph_addr, sizeof(struct iphdr));
 		memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
+		//memcpy(iph_addr + opt->optlen, iph_addr, sizeof(struct iphdr));
 		kfree(tmp);
 
 		skb_pull(skb, opt->optlen);
 		skb_reset_network_header(skb);
 		iph = ip_hdr(skb);
 
-		mpip_log("222 new ihl=%d\n", iph->ihl);
-		mpip_log("222 new data=%d\n", skb->data);
-		mpip_log("222 new len=%d\n", skb->len);
+//		mpip_log("222 new ihl=%d\n", iph->ihl);
+//		mpip_log("222 new data=%d\n", skb->data);
+//		mpip_log("222 new len=%d\n", skb->len);
 		iph->ihl -= opt->optlen>>2;
-		mpip_log("222 newest ihl=%d\n", iph->ihl);
-		mpip_log("222 newest data=%d\n", skb->data);
-		mpip_log("222 newest len=%d\n", skb->len);
-
-		print_addr(iph->saddr);
-		print_addr(iph->daddr);
+//		mpip_log("222 newest ihl=%d\n", iph->ihl);
+//		mpip_log("222 newest data=%d\n", skb->data);
+//		mpip_log("222 newest len=%d\n", skb->len);
+//
+//		print_addr(iph->saddr);
+//		print_addr(iph->daddr);
 	}
 
 	return 1;
