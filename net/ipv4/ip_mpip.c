@@ -291,7 +291,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     if (path_id > 0)
     //if (false)
     {
-    	mpip_log("iph->saddr=");
+    	mpip_log("\niph->saddr=");
     	print_addr(iph->saddr);
 
     	mpip_log("saddr=");
@@ -360,7 +360,7 @@ int process_mpip_options(struct sk_buff *skb)
 	if (res)
 	//if (false)
 	{
-		mpip_log("11iph->saddr=");
+		mpip_log("\n11iph->saddr=");
 		print_addr(iph->saddr);
 
 		mpip_log("11daddr=");
@@ -384,7 +384,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	print_mpip_options(opt);
+	//print_mpip_options(opt);
 
 
 	if (opt->optlen > 0)

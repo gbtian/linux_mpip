@@ -476,13 +476,13 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 			continue;
 		}
 
-		mpip_log("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
-				path_stat->fbjiffies, e_fbtime);
+		//mpip_log("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
+		//		path_stat->fbjiffies, e_fbtime);
 
 		if (path_stat->fbjiffies < e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
-			mpip_log("epathstatid = %d\n", e_path_stat_id);
+			//mpip_log("epathstatid = %d\n", e_path_stat_id);
 			e_fbtime = path_stat->fbjiffies;
 			e_path_stat = path_stat;
 		}
@@ -494,7 +494,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		*packet_count = e_path_stat->rcv;
 	}
 
-	mpip_log("final epathstatid = %d\n", e_path_stat_id);
+	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
 	return e_path_stat_id;
 }
 
