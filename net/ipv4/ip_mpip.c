@@ -384,7 +384,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	//print_mpip_options(opt);
+	print_mpip_options(opt);
 
 
 	if (opt->optlen > 0)
