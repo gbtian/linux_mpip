@@ -394,7 +394,8 @@ int process_mpip_options(struct sk_buff *skb)
 //	print_mpip_options(opt);
 
 
-	if (opt->optlen > 0)
+	//if (opt->optlen > 0)
+	if (false)
 	{
 //		mpip_log("222 ihl=%d\n", iph->ihl);
 //		mpip_log("222 optlen=%d\n", opt->optlen);
