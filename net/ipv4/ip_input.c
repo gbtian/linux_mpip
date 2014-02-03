@@ -324,7 +324,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	printk("before: %d\n", iph->ihl);
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && iph->ihl > 5)
 	{
 		process_mpip_options(skb);
 	}
