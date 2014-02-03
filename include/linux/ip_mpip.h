@@ -68,6 +68,9 @@ int insert_mpip_options(struct sk_buff *skb);
 
 int process_mpip_options(struct sk_buff *skb);
 
+int mpip_options_compile(struct net *net,
+		       struct ip_options *opt, struct sk_buff *skb);
+
 
 struct working_ip_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */

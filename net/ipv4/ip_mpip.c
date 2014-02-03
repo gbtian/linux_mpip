@@ -340,7 +340,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	opt = &(IPCB(skb)->opt);
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
-	if (ip_options_compile(dev_net(dev), opt, skb))
+	if (mpip_options_compile(dev_net(dev), opt, skb))
 	{
 		printk("what happened\n");
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
@@ -427,6 +427,136 @@ int process_mpip_options(struct sk_buff *skb)
 }
 EXPORT_SYMBOL(process_mpip_options);
 
+/*
+ * Verify options and fill pointers in struct options.
+ * Caller should clear *opt, and set opt->data.
+ * If opt == NULL, then skb->data should point to IP header.
+ */
+
+int mpip_options_compile(struct net *net,
+		       struct ip_options *opt, struct sk_buff *skb)
+{
+	__be32 spec_dst = htonl(INADDR_ANY);
+	unsigned char *pp_ptr = NULL;
+	unsigned char *optptr;
+	unsigned char *iph;
+	int optlen, l;
+	if (skb != NULL) {
+		optptr = (unsigned char *)&(ip_hdr(skb)[1]);
+	} else
+		optptr = opt->__data;
+	iph = optptr - sizeof(struct iphdr);
+	for (l = opt->optlen; l > 0; )
+	{
+		switch (*optptr)
+		{
+			case IPOPT_END:
+				for (optptr++, l--; l>0; optptr++, l--)
+				{
+					if (*optptr != IPOPT_END)
+					{
+						*optptr = IPOPT_END;
+						opt->is_changed = 1;
+					}
+				}
+				goto eol;
+		    case IPOPT_NOOP:
+		    	l--;
+		    	optptr++;
+		    	continue;
+		}
+		optlen = optptr[1];
+		if (optlen<2 || optlen>l)
+		{
+			pp_ptr = optptr;
+			goto error;
+		}
+		switch (*optptr)
+		{
+			case IPOPT_MPIP:
+		    	opt->node_id[0] = optptr[2];
+		    	opt->node_id[1] = optptr[3];
+		    	opt->node_id[2] = optptr[4];
+		    	print_node_id(opt->node_id);
+		    	opt->session_id = optptr[5];
+		    	printk("opt->session_id=%d\n",opt->session_id);
+		    	opt->path_id = (optptr[6] & 0xf0) >> 4;
+		    	printk("opt->path_id=%d\n",opt->path_id);
+		    	opt->stat_path_id = (optptr[6] & 0x0f);
+		    	printk("opt->stat_path_id=%d\n",opt->stat_path_id);
+		    	opt->packet_count = (optptr[8]<<8)|optptr[7];
+		    	printk("opt->packet_count=%d\n",opt->packet_count);
+		    	break;
+		    default:
+		    	if (!skb && !ns_capable(net->user_ns, CAP_NET_RAW))
+		    	{
+		    		pp_ptr = optptr;
+		    		goto error;
+		    	}
+		    	break;
+		}
+		l -= optlen;
+		optptr += optlen;
+	}
+
+eol:
+	if (!pp_ptr)
+		return 0;
+
+error:
+	return -EINVAL;
+}
+
+
+static struct mpip_options_rcu *mpip_options_get_alloc(const int optlen)
+{
+	return kzalloc(sizeof(struct ip_options_rcu) + ((optlen + 3) & ~3),
+		       GFP_ATOMIC);
+}
+
+
+static int mpip_options_get_finish(struct net *net, struct ip_options_rcu **optp,
+				 struct ip_options_rcu *opt, int optlen)
+{
+	while (optlen & 3)
+		opt->opt.__data[optlen++] = IPOPT_END;
+	opt->opt.optlen = optlen;
+
+	if (optlen && mpip_options_compile(net, &opt->opt, NULL)) {
+		kfree(opt);
+		return -EINVAL;
+	}
+	if (*optp)
+	{
+		kfree(*optp);
+	}
+	*optp = opt;
+	return 0;
+}
+
+
+static int mpip_options_get(struct net *net, struct ip_options_rcu **optp,
+		   unsigned char *data, int optlen)
+{
+	struct ip_options_rcu *opt = mpip_options_get_alloc(optlen);
+
+	if (!opt)
+		return -ENOMEM;
+
+	if (optlen)
+		memcpy(opt->opt.__data, data, optlen);
+
+	return mpip_options_get_finish(net, optp, opt, optlen);
+}
+
+static void mpip_options_build(struct sk_buff *skb, struct ip_options *opt,
+		      __be32 daddr, struct rtable *rt, int is_frag)
+{
+	unsigned char *iph = skb_network_header(skb);
+	memcpy(&(IPCB(skb)->opt), opt, sizeof(struct ip_options));
+	memcpy(iph+sizeof(struct iphdr), opt->__data, opt->optlen);
+}
+
 
 int insert_mpip_options(struct sk_buff *skb)
 {
@@ -442,13 +572,14 @@ int insert_mpip_options(struct sk_buff *skb)
 	options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
 	get_mpip_options(skb, options);
-	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
+	res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
-	ip_options_build(skb, &(mp_opt->opt), 0, NULL, 0);
+	mpip_options_build(skb, &(mp_opt->opt), 0, NULL, 0);
 
 	kfree(options);
 	return 1;
 }
+
 
 asmlinkage long sys_mpip(void)
 {
@@ -556,3 +687,4 @@ asmlinkage long sys_reset_mpip(void)
 	return 0;
 
 }
+
