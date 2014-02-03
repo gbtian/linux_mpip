@@ -169,6 +169,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 
 
+
 	if (opt && opt->opt.optlen)
 	{
 		iph->ihl += opt->opt.optlen>>2;
