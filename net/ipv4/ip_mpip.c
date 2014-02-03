@@ -371,7 +371,7 @@ static int mpip_options_get_finish(struct net *net, struct mpip_options_rcu **op
 
 int insert_mpip_options(struct sk_buff *skb)
 {
-	char options[MPIP_OPT_LEN];
+	unsigned char options[MPIP_OPT_LEN];
 	unsigned int optlen = 0;
 	struct mpip_options_rcu *mp_opt = NULL;
 	struct iphdr *iph;
@@ -382,6 +382,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	if (iph->ihl > 5)
 		return 0;
 
+	memset(options, 0, MPIP_OPT_LEN);
 	get_mpip_options(skb, options);
 	res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
