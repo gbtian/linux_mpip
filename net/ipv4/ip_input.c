@@ -320,13 +320,18 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	const struct iphdr *iph;
 	struct rtable *rt;
 
-	if (sysctl_mpip_enabled && sysctl_mpip_rcv)
+	iph = ip_hdr(skb);
+
+	printk("before: %d\n", iph->ihl);
+
+	if (sysctl_mpip_enabled)
 	{
 		process_mpip_options(skb);
 	}
 
-
 	iph = ip_hdr(skb);
+
+	printk("after: %d\n", iph->ihl);
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
