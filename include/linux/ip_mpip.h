@@ -29,7 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_OPT_LEN 9
+#define MPIP_OPT_LEN 12
 #define MPIP_OPT_NODE_ID_LEN 3
 
 extern int sysctl_mpip_enabled;
@@ -43,6 +43,36 @@ extern struct list_head pi_head;
 extern struct list_head ss_head;
 extern struct list_head la_head;
 extern struct list_head ps_head;
+
+
+#define MPIPCB(skb) ((struct mpip_skb_parm*)((skb)->cb))
+
+struct mpip_options {
+	unsigned char	optlen;
+	unsigned char	node_id[ETH_ALEN];
+	unsigned char	session_id;
+	unsigned char	path_id;
+	unsigned char	stat_path_id;
+	u16	packet_count;
+	//unsigned char   packet_count;
+	unsigned char	__data[0];
+};
+
+struct mpip_options_rcu {
+	struct rcu_head rcu;
+	struct mpip_options opt;
+};
+
+
+struct mpip_skb_parm {
+	struct mpip_options	opt;		/* Compiled IP options		*/
+
+	unsigned char		flags;
+
+	u16			frag_max_size;
+
+};
+
 
 int mpip_init(void);
 
@@ -60,6 +90,7 @@ int		mpip_rcv(struct sk_buff *skb);
 
 int		mpip_xmit(struct sk_buff *skb);
 
+
 void get_mpip_options(struct sk_buff *skb, unsigned char *options);
 
 void print_mpip_options(struct ip_options *opt);
@@ -69,8 +100,12 @@ int insert_mpip_options(struct sk_buff *skb);
 int process_mpip_options(struct sk_buff *skb);
 
 int mpip_options_compile(struct net *net,
-		       struct ip_options *opt, struct sk_buff *skb);
+                       struct mpip_options *opt, struct sk_buff *skb);
 
+int mpip_options_get(struct net *net, struct mpip_options_rcu **optp,
+		   unsigned char *data, int optlen);
+
+void mpip_options_build(struct sk_buff *skb, struct mpip_options *opt);
 
 struct working_ip_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
