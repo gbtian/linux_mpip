@@ -320,7 +320,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	const struct iphdr *iph;
 	struct rtable *rt;
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && sysctl_mpip_rcv)
 	{
 		process_mpip_options(skb);
 	}

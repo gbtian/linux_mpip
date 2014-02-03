@@ -23,7 +23,8 @@ static char log_buf[256];
 
 
 int sysctl_mpip_enabled __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_send __read_mostly = 0;
+int sysctl_mpip_rcv __read_mostly = 0;
 int max_pkt_len = 65500;
 
 
@@ -37,11 +38,18 @@ static struct ctl_table mpip_table[] =
  		.proc_handler = &proc_dointvec
  	},
  	{
- 		.procname = "mpip_log",
- 		.data = &sysctl_mpip_log,
+ 		.procname = "mpip_send",
+ 		.data = &sysctl_mpip_send,
  		.maxlen = sizeof(int),
  		.mode = 0644,
  		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_rcv",
+ 	 		.data = &sysctl_mpip_rcv,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
  	},
  	{ }
 };
@@ -142,9 +150,6 @@ void mpip_log(const char *fmt, ...)
     struct inode *inode = NULL;
 	mm_segment_t fs;
 	loff_t pos;
-
-	//if (!sysctl_mpip_log)
-	//	return;
 
 	memset(log_buf, 0, 256);
 	va_start(args, fmt);
@@ -329,12 +334,16 @@ int process_mpip_options(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
+	printk("iph->ihl = %d\n", iph->ihl);
+
 	if (iph->ihl != 8)
 		return 0;
 
 	opt = &(IPCB(skb)->opt);
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
-	if (ip_options_compile(dev_net(dev), opt, skb)) {
+	if (ip_options_compile(dev_net(dev), opt, skb))
+	{
+		printk("what happened\n");
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 		return 1;
 	}

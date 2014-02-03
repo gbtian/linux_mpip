@@ -144,7 +144,9 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
+	else if (sysctl_mpip_enabled &&
+			sysctl_mpip_send &&
+			(skb->len < max_pkt_len))
 		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	//skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
@@ -172,7 +174,9 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
+	else if (sysctl_mpip_enabled &&
+			sysctl_mpip_send &&
+			(skb->len < max_pkt_len))
 		insert_mpip_options(skb);
 
 
@@ -195,16 +199,6 @@ static inline int ip_finish_output2(struct sk_buff *skb)
 
 	struct sock *sk = skb->sk;
 	struct inet_sock *inet = inet_sk(sk);
-
-	if (sysctl_mpip_enabled && inet->inet_opt)
-	{
-		//print_mpip_options(&(inet->inet_opt->opt));
-	}
-	else if (sysctl_mpip_enabled)
-	{
-		//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-		//dump_stack();
-	}
 
 	if (rt->rt_type == RTN_MULTICAST) {
 		IP_UPD_PO_STATS(dev_net(dev), IPSTATS_MIB_OUTMCAST, skb->len);
@@ -413,7 +407,9 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
+	else if (sysctl_mpip_enabled &&
+			sysctl_mpip_send &&
+			(skb->len < max_pkt_len))
 	{
 		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 	}
@@ -438,7 +434,9 @@ packet_routed:
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
+	else if (sysctl_mpip_enabled &&
+			sysctl_mpip_send &&
+			(skb->len < max_pkt_len))
 		insert_mpip_options(skb);
 
 
@@ -1395,18 +1393,6 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 
 	if (cork->flags & IPCORK_OPT)
 		opt = cork->opt;
-//	else if (sysctl_mpip_enabled)
-//	{
-//		//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-//
-//		//origin = false;
-//
-//		//mpip_options_build(skb, options);
-//
-//		//res = ip_options_get(sock_net(skb->sk), &tmp_opt, options, 8);
-//		//opt = &(tmp_opt->opt);
-//	}
-
 
 	if (rt->rt_type == RTN_MULTICAST)
 		ttl = inet->mc_ttl;
@@ -1415,8 +1401,6 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 
 	if (opt)
 		optlen = opt->optlen;
-//	else if (sysctl_mpip_enabled)
-//		optlen = MPIP_OPT_LEN;
 
 	iph = ip_hdr(skb);
 	iph->version = 4;
@@ -1433,13 +1417,6 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 		iph->ihl += opt->optlen>>2;
 		ip_options_build(skb, opt, cork->addr, rt, 0);
 	}
-//	else if (sysctl_mpip_enabled)
-//	{
-//		get_mpip_options(skb, options);
-//		res = mpip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
-//		iph->ihl += (mp_opt->opt.optlen)>>2;
-//		mpip_options_build(skb, &(mp_opt->opt));
-//	}
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;

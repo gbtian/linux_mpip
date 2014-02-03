@@ -33,7 +33,8 @@
 #define MPIP_OPT_NODE_ID_LEN 3
 
 extern int sysctl_mpip_enabled;
-extern int sysctl_mpip_log;
+extern int sysctl_mpip_send;
+extern int sysctl_mpip_rcv;
 extern int max_pkt_len;
 
 
