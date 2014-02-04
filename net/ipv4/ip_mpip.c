@@ -454,9 +454,12 @@ int insert_mpip_options(struct sk_buff *skb)
 	kfree(mp_opt);
 	iph = ip_hdr(skb);
 
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-
+	if (iph->saddr != iph->daddr)
+	{
+		printk("send id: %d\n", iph->id);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
+	}
 	printk("send after: %d\n", iph->ihl);
 	return 1;
 }

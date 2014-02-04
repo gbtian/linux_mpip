@@ -370,8 +370,12 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
+	if (iph->saddr != iph->daddr)
+	{
+		printk("receive id: %d\n", iph->id);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
+	}
 
 	printk("receive after: %d\n", iph->ihl);
 
