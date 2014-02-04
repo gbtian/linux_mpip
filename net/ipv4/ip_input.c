@@ -360,24 +360,28 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		st[(idx>>16)&0xFF].i_bytes += skb->len;
 	}
 #endif
-
-	printk("\nreceive before: %d\n", iph->ihl);
-
-	if (sysctl_mpip_enabled && iph->ihl > 5)
+	
+	if (iph->ihl > 5)
 	{
-		process_mpip_options(skb);
+		printk("\nreceive before: %d\n", iph->ihl);
+
+		if (sysctl_mpip_enabled && iph->ihl > 5)
+		{
+			process_mpip_options(skb);
+		}
+
+		iph = ip_hdr(skb);
+
+		if (iph->saddr != iph->daddr)
+		{
+			printk("receive id: %d\n", iph->id);
+			printk("receive len: %d\n", skb->len);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
+		}
+
+		printk("receive after: %d\n", iph->ihl);
 	}
-
-	iph = ip_hdr(skb);
-
-	if (iph->saddr != iph->daddr)
-	{
-		printk("receive id: %d\n", iph->id);
-		print_addr(iph->saddr);
-		print_addr(iph->daddr);
-	}
-
-	printk("receive after: %d\n", iph->ihl);
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
