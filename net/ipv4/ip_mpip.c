@@ -436,6 +436,8 @@ int insert_mpip_options(struct sk_buff *skb)
 	int res, i;
 
 	iph = ip_hdr(skb);
+	if (iph->id == 0)
+		return 0;
 
 	printk("\nsend before: %d\n", iph->ihl);
 	if (iph->ihl > 5)
