@@ -322,7 +322,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	printk("receive before: %d\n", iph->ihl);
+	printk("\nreceive before: %d\n", iph->ihl);
 
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);

@@ -293,8 +293,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     options[8] = (packet_count>>8) & 0xff; //packet_count
 
 
-    if (path_id > 0)
-    //if (false)
+    //if (path_id > 0)
+    if (false)
     {
 //    	mpip_log("\niph->saddr=");
 //    	print_addr(iph->saddr);
@@ -365,8 +365,8 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_session(opt->node_id, opt->session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	if (res)
-	//if (false)
+	//if (res)
+	if (false)
 	{
 //		mpip_log("\n11iph->saddr=");
 //		print_addr(iph->saddr);
@@ -437,7 +437,7 @@ int insert_mpip_options(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	printk("send before: %d\n", iph->ihl);
+	printk("\nsend before: %d\n", iph->ihl);
 	if (iph->ihl > 5)
 	{
 		printk("here we get: %d\n", iph->ihl);
@@ -456,7 +456,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	kfree(options);
 	kfree(mp_opt);
 	iph = ip_hdr(skb);
-	printk("send before: %d\n", iph->ihl);
+	printk("send after: %d\n", iph->ihl);
 	return 1;
 }
 
