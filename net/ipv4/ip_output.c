@@ -97,11 +97,6 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
-		insert_mpip_options(skb);
-
-	iph = ip_hdr(skb);
-
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
@@ -175,6 +170,9 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
+
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
+		insert_mpip_options(skb);
 
 	/* Send it out. */
 	return ip_local_out(skb);
@@ -430,6 +428,9 @@ packet_routed:
 	skb->mark = sk->sk_mark;
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
+		insert_mpip_options(skb);
 
 	res = ip_local_out(skb);
 	rcu_read_unlock();
