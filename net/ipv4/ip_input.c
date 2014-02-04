@@ -322,8 +322,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	printk("before: %d\n", iph->ihl);
+	printk("receive before: %d\n", iph->ihl);
 
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 	if (sysctl_mpip_enabled && iph->ihl > 5)
 	{
 		process_mpip_options(skb);
@@ -331,7 +333,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	printk("after: %d\n", iph->ihl);
+	printk("receive after: %d\n", iph->ihl);
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {

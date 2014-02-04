@@ -436,8 +436,16 @@ int insert_mpip_options(struct sk_buff *skb)
 	int res, i;
 
 	iph = ip_hdr(skb);
+
+	printk("send before: %d\n", iph->ihl);
 	if (iph->ihl > 5)
+	{
+		printk("here we get: %d\n", iph->ihl);
 		return 0;
+	}
+
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 
 	options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
@@ -445,8 +453,10 @@ int insert_mpip_options(struct sk_buff *skb)
 	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	ip_options_build(skb, &(mp_opt->opt), 0, NULL, 0);
-
 	kfree(options);
+	kfree(mp_opt);
+	iph = ip_hdr(skb);
+	printk("send before: %d\n", iph->ihl);
 	return 1;
 }
 
