@@ -468,7 +468,7 @@ int insert_mpip_options(struct sk_buff *skb)
 
 	if (iph->saddr != iph->daddr)
 	{
-		print_mpip_options(mp_opt->opt);
+		print_mpip_options(&(mp_opt->opt));
 		printk("send id: %d\n", iph->id);
 		printk("send len: %d\n", skb->len);
 		print_addr(iph->saddr);
