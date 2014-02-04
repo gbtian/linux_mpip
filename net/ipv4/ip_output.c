@@ -171,7 +171,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5) && (skb->len < 1000))
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
 		insert_mpip_options(skb);
 
 	/* Send it out. */
@@ -240,7 +240,7 @@ static int ip_finish_output(struct sk_buff *skb)
 	}
 #endif
 
-	//printk("skb->len = %d, mtu = %d\n", skb->len, ip_skb_dst_mtu(skb));
+	printk("skb->len = %d, mtu = %d\n", skb->len, ip_skb_dst_mtu(skb));
 	if (skb->len > ip_skb_dst_mtu(skb) && !skb_is_gso(skb))
 		return ip_fragment(skb, ip_finish_output2);
 	else
@@ -429,7 +429,7 @@ packet_routed:
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5) && (skb->len < 1000))
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
 		insert_mpip_options(skb);
 
 	res = ip_local_out(skb);
