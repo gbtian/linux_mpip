@@ -141,41 +141,56 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	//struct mpip_options_rcu *mp_opt = NULL;
 
 
-	/* Build the IP header. */
-	if (opt && opt->opt.optlen)
-		optlen = opt->opt.optlen;
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
-		optlen = ((MPIP_OPT_LEN + 3) & ~3);
-
-	//skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
-	skb_push(skb, sizeof(struct iphdr) + optlen);
-	skb_reset_network_header(skb);
-	iph = ip_hdr(skb);
-	iph->version  = 4;
-	iph->ihl      = 5;
-	iph->tos      = inet->tos;
-	if (ip_dont_fragment(sk, &rt->dst))
-		iph->frag_off = htons(IP_DF);
-	else
-		iph->frag_off = 0;
-
-	iph->ttl      = ip_select_ttl(inet, &rt->dst);
-	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
-	iph->saddr    = saddr;
-	iph->protocol = sk->sk_protocol;
-	ip_select_ident(skb, &rt->dst, sk);
-
-
-
-
-	if (opt && opt->opt.optlen)
+	if (!sysctl_mpip_enabled)
 	{
-		iph->ihl += opt->opt.optlen>>2;
-		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
-	}
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
-		insert_mpip_options(skb);
+		/* Build the IP header. */
+		if (opt && opt->opt.optlen)
+			optlen = opt->opt.optlen;
 
+		skb_push(skb, sizeof(struct iphdr) + optlen);
+		skb_reset_network_header(skb);
+		iph = ip_hdr(skb);
+		iph->version  = 4;
+		iph->ihl      = 5;
+		iph->tos      = inet->tos;
+		if (ip_dont_fragment(sk, &rt->dst))
+			iph->frag_off = htons(IP_DF);
+		else
+			iph->frag_off = 0;
+
+		iph->ttl      = ip_select_ttl(inet, &rt->dst);
+		iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
+		iph->saddr    = saddr;
+		iph->protocol = sk->sk_protocol;
+		ip_select_ident(skb, &rt->dst, sk);
+
+		if (opt && opt->opt.optlen)
+		{
+			iph->ihl += opt->opt.optlen>>2;
+			ip_options_build(skb, &(opt->opt), daddr, rt, 0);
+		}
+	}
+	else
+	{
+		skb_push(skb, sizeof(struct iphdr));
+		skb_reset_network_header(skb);
+		iph = ip_hdr(skb);
+		iph->version  = 4;
+		iph->ihl      = 5;
+		iph->tos      = inet->tos;
+		if (ip_dont_fragment(sk, &rt->dst))
+			iph->frag_off = htons(IP_DF);
+		else
+			iph->frag_off = 0;
+
+		iph->ttl      = ip_select_ttl(inet, &rt->dst);
+		iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
+		iph->saddr    = saddr;
+		iph->protocol = sk->sk_protocol;
+		ip_select_ident(skb, &rt->dst, sk);
+
+		insert_mpip_options(skb);
+	}
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
@@ -399,39 +414,52 @@ packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
 		goto no_route;
 
-	/* OK, we know where to send it, allocate and build IP header. */
-	if (inet_opt && inet_opt->opt.optlen)
-	{
-		optlen = inet_opt->opt.optlen;
-	}
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
-	{
-		optlen = ((MPIP_OPT_LEN + 3) & ~3);
-	}
 
-	skb_push(skb, sizeof(struct iphdr) + optlen);
-	skb_reset_network_header(skb);
-	iph = ip_hdr(skb);
-	*((__be16 *)iph) = htons((4 << 12) | (5 << 8) | (inet->tos & 0xff));
-	if (ip_dont_fragment(sk, &rt->dst) && !skb->local_df)
-		iph->frag_off = htons(IP_DF);
+	if (!sysctl_mpip_enabled)
+	{
+		/* OK, we know where to send it, allocate and build IP header. */
+		if (inet_opt && inet_opt->opt.optlen)
+		{
+			optlen = inet_opt->opt.optlen;
+		}
+		skb_push(skb, sizeof(struct iphdr) + optlen);
+		skb_reset_network_header(skb);
+		iph = ip_hdr(skb);
+		*((__be16 *)iph) = htons((4 << 12) | (5 << 8) | (inet->tos & 0xff));
+		if (ip_dont_fragment(sk, &rt->dst) && !skb->local_df)
+			iph->frag_off = htons(IP_DF);
+		else
+			iph->frag_off = 0;
+
+		iph->ttl      = ip_select_ttl(inet, &rt->dst);
+		iph->protocol = sk->sk_protocol;
+		ip_copy_addrs(iph, fl4);
+
+		/* Transport layer set skb->h.foo itself. */
+
+		if (inet_opt && inet_opt->opt.optlen)
+		{
+			iph->ihl += inet_opt->opt.optlen >> 2;
+			ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
+		}
+	}
 	else
-		iph->frag_off = 0;
-
-	iph->ttl      = ip_select_ttl(inet, &rt->dst);
-	iph->protocol = sk->sk_protocol;
-	ip_copy_addrs(iph, fl4);
-
-	/* Transport layer set skb->h.foo itself. */
-
-	if (inet_opt && inet_opt->opt.optlen)
 	{
-		iph->ihl += inet_opt->opt.optlen >> 2;
-		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
-	}
-	else if (sysctl_mpip_enabled && (skb->len < max_pkt_len))
-		insert_mpip_options(skb);
+		skb_push(skb, sizeof(struct iphdr));
+		skb_reset_network_header(skb);
+		iph = ip_hdr(skb);
+		*((__be16 *)iph) = htons((4 << 12) | (5 << 8) | (inet->tos & 0xff));
+		if (ip_dont_fragment(sk, &rt->dst) && !skb->local_df)
+			iph->frag_off = htons(IP_DF);
+		else
+			iph->frag_off = 0;
 
+		iph->ttl      = ip_select_ttl(inet, &rt->dst);
+		iph->protocol = sk->sk_protocol;
+		ip_copy_addrs(iph, fl4);
+
+		insert_mpip_options(skb);
+	}
 
 	ip_select_ident_more(skb, &rt->dst, sk,
 			     (skb_shinfo(skb)->gso_segs ?: 1) - 1);

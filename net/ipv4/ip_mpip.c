@@ -427,6 +427,24 @@ int process_mpip_options(struct sk_buff *skb)
 }
 EXPORT_SYMBOL(process_mpip_options);
 
+void mpip_options_build(struct sk_buff *skb, struct ip_options *opt)
+{
+	unsigned char *tmp = NULL;
+	unsigned char *iph = skb_network_header(skb);
+
+	tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+	memcpy(tmp, iph, sizeof(struct iphdr));
+	memcpy(iph - opt->optlen, tmp, sizeof(struct iphdr));
+	kfree(tmp);
+
+	skb_push(skb, opt->optlen);
+	skb_reset_network_header(skb);
+
+	iph = skb_network_header(skb);
+
+	memcpy(&(IPCB(skb)->opt), opt, sizeof(struct ip_options));
+	memcpy(iph+sizeof(struct iphdr), opt->__data, opt->optlen);
+}
 
 int insert_mpip_options(struct sk_buff *skb)
 {
@@ -436,8 +454,8 @@ int insert_mpip_options(struct sk_buff *skb)
 	int res, i;
 
 	iph = ip_hdr(skb);
-	if (iph->id == 0)
-		return 0;
+	//if (iph->id == 0)
+	//	return 0;
 
 	printk("\nsend before: %d\n", iph->ihl);
 	if (iph->ihl > 5)
@@ -451,7 +469,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	get_mpip_options(skb, options);
 	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
-	ip_options_build(skb, &(mp_opt->opt), 0, NULL, 0);
+	mpip_options_build(skb, &(mp_opt->opt));
 	kfree(options);
 	kfree(mp_opt);
 	iph = ip_hdr(skb);
