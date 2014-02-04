@@ -171,7 +171,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (skb->len < 1000))
 		insert_mpip_options(skb);
 
 	/* Send it out. */
@@ -429,7 +429,7 @@ packet_routed:
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (skb->len < 1000))
 		insert_mpip_options(skb);
 
 	res = ip_local_out(skb);
