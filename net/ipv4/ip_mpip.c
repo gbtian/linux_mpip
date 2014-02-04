@@ -444,9 +444,6 @@ int insert_mpip_options(struct sk_buff *skb)
 		return 0;
 	}
 
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-
 	options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
 	get_mpip_options(skb, options);
@@ -456,6 +453,10 @@ int insert_mpip_options(struct sk_buff *skb)
 	kfree(options);
 	kfree(mp_opt);
 	iph = ip_hdr(skb);
+
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
+
 	printk("send after: %d\n", iph->ihl);
 	return 1;
 }

@@ -322,19 +322,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	printk("\nreceive before: %d\n", iph->ihl);
-
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-	if (sysctl_mpip_enabled && iph->ihl > 5)
-	{
-		process_mpip_options(skb);
-	}
-
-	iph = ip_hdr(skb);
-
-	printk("receive after: %d\n", iph->ihl);
-
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
@@ -374,8 +361,19 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
+	printk("\nreceive before: %d\n", iph->ihl);
 
-	//mpip_log("444 ihl=%d\n", iph->ihl);
+	if (sysctl_mpip_enabled && iph->ihl > 5)
+	{
+		process_mpip_options(skb);
+	}
+
+	iph = ip_hdr(skb);
+
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
+
+	printk("receive after: %d\n", iph->ihl);
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
