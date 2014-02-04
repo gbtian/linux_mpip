@@ -515,8 +515,8 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 		return -EMSGSIZE;
 	}
 
-	//printk("333: %d, %d, %d\n", iph->frag_off,
-	//		IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+	printk("333: %d, %d, %d\n", iph->frag_off,
+			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 
 
 	/*
