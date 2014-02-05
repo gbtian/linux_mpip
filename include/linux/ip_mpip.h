@@ -37,12 +37,12 @@ extern int sysctl_mpip_send;
 extern int sysctl_mpip_rcv;
 extern int max_pkt_len;
 
-
-extern struct list_head wi_head;
-extern struct list_head pi_head;
-extern struct list_head ss_head;
-extern struct list_head la_head;
-extern struct list_head ps_head;
+//
+//extern struct list_head wi_head;
+//extern struct list_head pi_head;
+//extern struct list_head ss_head;
+//extern struct list_head la_head;
+//extern struct list_head ps_head;
 
 int mpip_init(void);
 

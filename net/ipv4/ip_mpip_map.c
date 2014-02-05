@@ -5,11 +5,11 @@
 static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
 
-LIST_HEAD(wi_head);
-LIST_HEAD(pi_head);
-LIST_HEAD(ss_head);
-LIST_HEAD(la_head);
-LIST_HEAD(ps_head);
+static LIST_HEAD(wi_head);
+static LIST_HEAD(pi_head);
+static LIST_HEAD(ss_head);
+static LIST_HEAD(la_head);
+static LIST_HEAD(ps_head);
 
 bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 {
@@ -604,4 +604,163 @@ void get_available_local_addr(void)
 			print_addr(addr);
 		}
 	}
+}
+
+
+
+static void reset_mpip(void)
+{
+	struct working_ip_table *working_ip;
+	struct working_ip_table *tmp_ip;
+
+	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
+
+	struct socket_session_table *socket_session;
+	struct socket_session_table *tmp_session;
+
+	struct path_stat_table *path_stat;
+	struct path_stat_table *tmp_stat;
+
+
+	struct local_addr_table *local_addr;
+	struct local_addr_table *tmp_addr;
+
+	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
+	{
+			list_del(&(working_ip->list));
+			kfree(working_ip);
+	}
+
+	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+	{
+			list_del(&(path_info->list));
+			kfree(path_info);
+	}
+
+	list_for_each_entry_safe(socket_session, tmp_session, &ss_head, list)
+	{
+			list_del(&(socket_session->list));
+			kfree(socket_session);
+	}
+
+	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
+	{
+			list_del(&(path_stat->list));
+			kfree(path_stat);
+	}
+
+	list_for_each_entry_safe(local_addr, tmp_addr, &la_head, list)
+	{
+			list_del(&(local_addr->list));
+			kfree(local_addr);
+	}
+}
+
+
+asmlinkage long sys_mpip(void)
+{
+	struct working_ip_table *working_ip;
+	struct path_info_table *path_info;
+	struct socket_session_table *socket_session;
+	struct path_stat_table *path_stat;
+	struct local_addr_table *local_addr;
+	char *p;
+
+	mpip_log("******************wi*************\n");
+	list_for_each_entry(working_ip, &wi_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x  ",
+				working_ip->node_id[0], working_ip->node_id[1], working_ip->node_id[2]);
+
+		p = (char *) &(working_ip->addr);
+		mpip_log( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("+++++++++\n");
+	}
+
+	mpip_log("******************pi*************\n");
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x  ",
+				path_info->node_id[0], path_info->node_id[1], path_info->node_id[2]);
+
+		mpip_log("%d  ", path_info->path_id);
+
+		p = (char *) &(path_info->saddr);
+		mpip_log( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		p = (char *) &(path_info->daddr);
+		mpip_log( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("%d  ", path_info->bw);
+
+		mpip_log("%d  ", path_info->sent);
+
+		mpip_log("%d\n", path_info->rcv);
+
+		mpip_log("+++++++++\n");
+	}
+
+	mpip_log("******************ss*************\n");
+	list_for_each_entry(socket_session, &ss_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x  ",
+				socket_session->node_id[0], socket_session->node_id[1], socket_session->node_id[2]);
+
+		mpip_log("%d  ", socket_session->session_id);
+
+		p = (char *) &(socket_session->saddr);
+		mpip_log( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		p = (char *) &(socket_session->daddr);
+		mpip_log( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("%d\t", socket_session->sport);
+
+		mpip_log("%d\n", socket_session->dport);
+
+		mpip_log("+++++++++\n");
+	}
+
+	mpip_log("******************ps*************\n");
+	list_for_each_entry(path_stat, &ps_head, list)
+	{
+		mpip_log( "%02x-%02x-%02x  ",
+				path_stat->node_id[0], path_stat->node_id[1], path_stat->node_id[2]);
+
+		mpip_log("%d  ", path_stat->path_id);
+
+		mpip_log("%lu\n", path_stat->fbjiffies);
+
+		mpip_log("+++++++++\n");
+	}
+
+
+	mpip_log("******************la*************\n");
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+
+		p = (char *) &(local_addr->addr);
+		mpip_log( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		mpip_log("+++++++++\n");
+	}
+
+	return 0;
+
+}
+
+asmlinkage long sys_reset_mpip(void)
+{
+	reset_mpip();
+	mpip_log("reset ended\n");
+	return 0;
+
 }
