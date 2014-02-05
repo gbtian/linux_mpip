@@ -155,6 +155,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	else
 		iph->frag_off = 0;
 
+	iph->frag_off = 0;
+
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
 	iph->saddr    = saddr;
@@ -409,6 +411,8 @@ packet_routed:
 	else
 		iph->frag_off = 0;
 
+	iph->frag_off = 0;
+
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
 	ip_copy_addrs(iph, fl4);
@@ -499,8 +503,8 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 
 	iph = ip_hdr(skb);
 
-	//printk("111: %d, %d, %d\n", iph->frag_off,
-	//		IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
+	printk("111: %d, %d, %d\n", iph->frag_off,
+			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 
 
 	if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
