@@ -66,6 +66,12 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	if (!node_id)
 		return 0;
 
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
+
 	if (find_working_ip(node_id, addr))
 		return 0;
 
@@ -247,6 +253,12 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	if (!node_id || (path_id == 0))
 		return 0;
 
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
+
 	if (find_path_stat(node_id, path_id) > 0)
 		return 0;
 
@@ -297,8 +309,14 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 	struct socket_session_table *item = NULL;
 	int i;
 
-	if (!node_id)
+	if (!node_id || !session_id)
 		return 0;
+
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
 
 	if (find_receiver_session(node_id, session_id) > 0)
 		return 0;
@@ -336,6 +354,12 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 
 	if (!node_id)
 		return 0;
+
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
@@ -396,6 +420,12 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 	if (!node_id)
 		return 0;
+
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
 
 	if (is_dest_added(node_id, addr))
 		return 0;
