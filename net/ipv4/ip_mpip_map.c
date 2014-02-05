@@ -61,6 +61,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct working_ip_table *item = NULL;
+	int i;
 
 	if (!node_id)
 		return 0;
@@ -71,7 +72,10 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
+		item->node_id[i] = node_id[i];
+
+	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->addr = addr;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
@@ -238,6 +242,7 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
 int add_path_stat(unsigned char *node_id, unsigned char path_id)
 {
 	struct path_stat_table *item = NULL;
+	int i;
 
 	if (!node_id || (path_id == 0))
 		return 0;
@@ -248,7 +253,10 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 
 	item = kzalloc(sizeof(struct path_stat_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
+		item->node_id[i] = node_id[i];
+
+	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->path_id = path_id;
 	item->rcv = 0;
 	item->fbjiffies = jiffies;
@@ -287,6 +295,7 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 		 	 	 	 	__be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
+	int i;
 
 	if (!node_id)
 		return 0;
@@ -297,7 +306,10 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
+		item->node_id[i] = node_id[i];
+
+	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -379,8 +391,8 @@ bool is_dest_added(unsigned char *node_id, __be32 addr)
 int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
-
 	struct path_info_table *item = NULL;
+	int i;
 
 	if (!node_id)
 		return 0;
@@ -393,7 +405,11 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	{
 
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
-		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+
+		for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
+			item->node_id[i] = node_id[i];
+
+		//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
 		item->sent = 0;

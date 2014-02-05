@@ -294,16 +294,16 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
     if (path_id > 0)
     {
-    	mpip_log("\niph->saddr=");
+    	mpip_log("\ns: iph->saddr=");
     	print_addr(iph->saddr);
 
-    	mpip_log("saddr=");
+    	mpip_log("s: saddr=");
     	print_addr(saddr);
 
-    	mpip_log("iph->daddr=");
+    	mpip_log("s: iph->daddr=");
     	print_addr(iph->daddr);
 
-    	mpip_log("daddr=");
+    	mpip_log("s: daddr=");
     	print_addr(daddr);
 
     	iph->saddr = saddr;
@@ -366,20 +366,20 @@ int process_mpip_options(struct sk_buff *skb)
 
 	if (res)
 	{
-		mpip_log("\n11iph->saddr=");
+		mpip_log("\nr: iph->saddr=");
 		print_addr(iph->saddr);
 
-		mpip_log("11daddr=");
+		mpip_log("r: daddr=");
 		print_addr(daddr);
 
-		mpip_log("11iph->daddr=");
+		mpip_log("r: iph->daddr=");
 		print_addr(iph->daddr);
 
-		mpip_log("11saddr=");
+		mpip_log("r: saddr=");
 		print_addr(saddr);
 
-		mpip_log("tcph->source= %d, dport=%d\n", tcph->source, dport);
-		mpip_log("tcph->dest= %d, sport=%d\n", tcph->dest, sport);
+		mpip_log("r: tcph->source= %d, dport=%d\n", tcph->source, dport);
+		mpip_log("r: tcph->dest= %d, sport=%d\n", tcph->dest, sport);
 
 		iph->saddr = daddr;
 		iph->daddr = saddr;
@@ -459,8 +459,8 @@ int insert_mpip_options(struct sk_buff *skb)
 	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
-	kfree(options);
-	kfree(mp_opt);
+
+	print_mpip_options(&(mp_opt->opt));
 
 //	iph = ip_hdr(skb);
 
@@ -473,6 +473,9 @@ int insert_mpip_options(struct sk_buff *skb)
 //		print_addr(iph->daddr);
 //	}
 //	printk("send after: %d\n", iph->ihl);
+
+	kfree(options);
+	kfree(mp_opt);
 	return 1;
 }
 
