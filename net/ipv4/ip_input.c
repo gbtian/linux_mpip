@@ -408,23 +408,23 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	if (sysctl_mpip_enabled && iph->ihl > 5)
 	{
-		printk("\nreceive before: %d\n", iph->ihl);
-		printk("receive before id: %d\n", iph->id);
-		printk("receive before len: %d\n", skb->len);
+//		printk("\nreceive before: %d\n", iph->ihl);
+//		printk("receive before id: %d\n", iph->id);
+//		printk("receive before len: %d\n", skb->len);
 
 		process_mpip_options(skb);
 
-		iph = ip_hdr(skb);
-
-		if (iph->saddr != iph->daddr)
-		{
-			printk("receive id: %d\n", iph->id);
-			printk("receive len: %d\n", skb->len);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-		}
-
-		printk("receive after: %d\n", iph->ihl);
+//		iph = ip_hdr(skb);
+//
+//		if (iph->saddr != iph->daddr)
+//		{
+//			printk("receive id: %d\n", iph->id);
+//			printk("receive len: %d\n", skb->len);
+//			print_addr(iph->saddr);
+//			print_addr(iph->daddr);
+//		}
+//
+//		printk("receive after: %d\n", iph->ihl);
 	}
 
 	iph = ip_hdr(skb);

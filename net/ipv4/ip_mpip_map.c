@@ -479,7 +479,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 		//mpip_log("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
 		//		path_stat->fbjiffies, e_fbtime);
 
-		if (path_stat->fbjiffies < e_fbtime)
+		if (path_stat->fbjiffies <= e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
 			//mpip_log("epathstatid = %d\n", e_path_stat_id);

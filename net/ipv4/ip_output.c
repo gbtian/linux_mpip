@@ -503,9 +503,6 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 
 	iph = ip_hdr(skb);
 
-	printk("111: %d, %d, %d\n", iph->frag_off,
-			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
-
 
 	if (unlikely(((iph->frag_off & htons(IP_DF)) && !skb->local_df) ||
 				 (IPCB(skb)->frag_max_size &&
@@ -518,9 +515,6 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 		kfree_skb(skb);
 		return -EMSGSIZE;
 	}
-
-	printk("333: %d, %d, %d\n", iph->frag_off,
-			IPCB(skb)->frag_max_size, dst_mtu(&rt->dst));
 
 
 	/*
