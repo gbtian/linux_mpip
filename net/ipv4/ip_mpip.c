@@ -153,22 +153,21 @@ unsigned char *get_node_id(void)
 }
 
 char get_session_id(__be32 saddr, __be16 sport,
-					__be32 daddr, __be16 dport)
+					__be32 daddr, __be16 dport, bool *is_new)
 {
 	unsigned char session_id = get_sender_session(saddr, sport,
 										  		  daddr, dport);
 
-//	if (session_id == 0)
-//	{
-//		session_id = find_receiver_socket_by_socket(dest_node_id,
-//										  	  	  	daddr, dport,
-//										  	  	  	saddr, sport);
-//	}
 
 	if (session_id == 0)
 	{
+		*is_new = true;
 		add_sender_session(saddr, sport, daddr, dport);
 		session_id = get_sender_session(saddr, sport, daddr, dport);
+	}
+	else
+	{
+		*is_new = false;
 	}
 
 	return session_id;
@@ -180,6 +179,12 @@ unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
 	if (node_id == NULL)
 		return 0;
 
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
+
 	return find_fastest_path_id(node_id, saddr, daddr,
 								origin_saddr, origin_daddr, pkt_count);
 }
@@ -188,6 +193,12 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
 {
 	if (!dest_node_id)
 		return 0;
+
+	if ((dest_node_id[0] == dest_node_id[1]) &&
+		(dest_node_id[1] == dest_node_id[2]))
+	{
+		return 0;
+	}
 
 	return find_earliest_stat_path_id(dest_node_id, packet_count);
 }
@@ -207,6 +218,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	int pkt_len = skb->len + 12;
 	int mtu = ip_skb_dst_mtu(skb);
 	int pkt_count = pkt_len / mtu + ((pkt_len % mtu) ? 1 : 0);
+	bool is_new = true;
 
 	get_node_id();
 	get_available_local_addr();
@@ -219,10 +231,13 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     	options[2 + i] =  static_node_id[i];
 
     options[5] = get_session_id(iph->saddr, tcph->source,
-								iph->daddr, tcph->dest);
+								iph->daddr, tcph->dest, &is_new);
 
-    path_id = get_path_id(dest_node_id, &saddr, &daddr,
+    if (!is_new)
+    {
+    	path_id = get_path_id(dest_node_id, &saddr, &daddr,
 			 	 	 	  iph->saddr, iph->daddr, pkt_count);
+    }
 
     path_stat_id = get_path_stat_id(dest_node_id, &packet_count);
 

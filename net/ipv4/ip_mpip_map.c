@@ -471,6 +471,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	if (!node_id)
 		return 0;
 
+	if ((node_id[0] == node_id[1]) &&
+		(node_id[1] == node_id[2]))
+	{
+		return 0;
+	}
+
 	list_for_each_entry(path, &pi_head, list)
 	{
 		if (!is_equal_node_id(path->node_id, node_id))
@@ -686,6 +692,9 @@ static void reset_mpip(void)
 			list_del(&(local_addr->list));
 			kfree(local_addr);
 	}
+
+	static_session_id = 1;
+	static_path_id = 1;
 }
 
 
