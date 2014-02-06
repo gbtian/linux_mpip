@@ -1355,6 +1355,10 @@ unsigned int tcp_current_mss(struct sock *sk)
 		mss_now -= delta;
 	}
 
+	if (sysctl_mpip_enabled)
+	{
+		mss_now -= 12;
+	}
 	return mss_now;
 }
 
