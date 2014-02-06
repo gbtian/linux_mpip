@@ -10,6 +10,7 @@
 #include <linux/kernel.h>
 #include <linux/sysctl.h>
 #include <linux/syscalls.h>
+#include <net/route.h>
 
 #include <linux/ip_mpip.h>
 #include <net/ip.h>
@@ -174,13 +175,13 @@ char get_session_id(__be32 saddr, __be16 sport,
 }
 
 unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
-						  __be32 origin_saddr, __be32 origin_daddr)
+						  __be32 origin_saddr, __be32 origin_daddr, int pkt_count)
 {
 	if (node_id == NULL)
 		return 0;
 
 	return find_fastest_path_id(node_id, saddr, daddr,
-								origin_saddr, origin_daddr);
+								origin_saddr, origin_daddr, pkt_count);
 }
 
 unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
@@ -203,6 +204,9 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	u16	packet_count = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
+	int pkt_len = skb->len + 12;
+	int mtu = ip_skb_dst_mtu(skb);
+	int pkt_count = pkt_len / mtu + ((pkt_len % mtu) ? 1 : 0);
 
 	get_node_id();
 	get_available_local_addr();
@@ -218,7 +222,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 								iph->daddr, tcph->dest);
 
     path_id = get_path_id(dest_node_id, &saddr, &daddr,
-			 	 	 	  iph->saddr, iph->daddr);
+			 	 	 	  iph->saddr, iph->daddr, pkt_count);
 
     path_stat_id = get_path_stat_id(dest_node_id, &packet_count);
 

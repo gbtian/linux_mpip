@@ -172,7 +172,8 @@ int add_path_info(unsigned char *node_id, __be32 addr);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
-								   __be32 origin_saddr, __be32 origin_daddr);
+								   __be32 origin_saddr, __be32 origin_daddr,
+								   int pkt_count);
 
 unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id,
 										 u16 *packet_count);

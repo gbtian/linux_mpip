@@ -460,7 +460,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
-								   __be32 origin_saddr, __be32 origin_daddr)
+								   __be32 origin_saddr, __be32 origin_daddr,
+								   int pkt_count)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -485,7 +486,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (f_path_id > 0)
 	{
-		f_path->sent += 1;
+		f_path->sent += pkt_count;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 	}
@@ -494,7 +495,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
-			f_path->sent += 1;
+			f_path->sent += pkt_count;
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
