@@ -344,10 +344,10 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 		//tcph->check = tcp_fast_csum()
+
+		printk("receiving:\n");
+		print_mpip_options(opt);
 	}
-
-
-	print_mpip_options(opt);
 
 
 	if (opt->optlen > 0)
@@ -415,6 +415,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
 
+	printk("sending:\n");
 	print_mpip_options(&(mp_opt->opt));
 
 //	iph = ip_hdr(skb);

@@ -36,6 +36,18 @@ void print_node_id(unsigned char *node_id)
 			node_id[0], node_id[1], node_id[2]);
 }
 
+bool is_lan_addr(__be32 addr)
+{
+	char *p = (char *) &addr;
+
+	if ((p[0] & 255) == 192 &&
+		(p[1] & 255) == 168)
+	{
+		return true;
+	}
+	return false;
+}
+
 void print_addr(__be32 addr)
 {
 	char *p = (char *) &addr;
@@ -574,6 +586,11 @@ int add_sender_session(__be32 saddr, __be16 sport,
 					  __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
+
+	if (!is_lan_addr(daddr))
+	{
+		return 0;
+	}
 
 	if (get_sender_session(saddr, sport, daddr, dport) > 0)
 		return 0;

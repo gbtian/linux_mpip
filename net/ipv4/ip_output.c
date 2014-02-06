@@ -242,7 +242,7 @@ static int ip_finish_output(struct sk_buff *skb)
 	}
 #endif
 
-	printk("skb->len = %d, mtu = %d\n", skb->len, ip_skb_dst_mtu(skb));
+	//printk("skb->len = %d, mtu = %d\n", skb->len, ip_skb_dst_mtu(skb));
 	if (skb->len > ip_skb_dst_mtu(skb) && !skb_is_gso(skb))
 		return ip_fragment(skb, ip_finish_output2);
 	else
