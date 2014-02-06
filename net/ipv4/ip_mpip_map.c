@@ -765,7 +765,7 @@ asmlinkage long sys_mpip(void)
 				path_stat->node_id[0], path_stat->node_id[1], path_stat->node_id[2]);
 
 		mpip_log("%d  ", path_stat->path_id);
-
+		mpip_log("%d  ", path_stat->rcv);
 		mpip_log("%lu\n", path_stat->fbjiffies);
 
 		mpip_log("+++++++++\n");
