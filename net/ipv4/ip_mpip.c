@@ -11,6 +11,7 @@
 #include <linux/sysctl.h>
 #include <linux/syscalls.h>
 #include <net/route.h>
+#include <net/tcp.h>
 
 #include <linux/ip_mpip.h>
 #include <net/ip.h>
@@ -345,7 +346,9 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->daddr = saddr;
 		tcph->source = dport;
 		tcph->dest = sport;
-		tcph->check = 0;
+
+		tcp_v4_send_check(skb->sk, skb);
+		//tcph->check = 0;
 
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
