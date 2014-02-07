@@ -266,7 +266,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("r: tcph->source= %d\n", tcph->source);
 	mpip_log("r: tcph->dest= %d\n", tcph->dest);
 
-    if (path_id > 0)
+    //if (path_id > 0)
+    if(false)
     {
 
 
@@ -329,7 +330,8 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	if (res)
+	//if (res)
+	if (false)
 	{
 		mpip_log("\nr: iph->saddr=");
 		print_addr(iph->saddr);
@@ -369,6 +371,24 @@ int process_mpip_options(struct sk_buff *skb)
 		print_mpip_options(opt);
 	}
 
+	mpip_log("\nr: iph->saddr=");
+	print_addr(iph->saddr);
+
+	mpip_log("r: daddr=");
+	print_addr(daddr);
+
+	mpip_log("r: iph->daddr=");
+	print_addr(iph->daddr);
+
+
+	mpip_log("r: saddr=");
+	print_addr(saddr);
+
+	mpip_log("r: tcph->source= %d, dport=%d\n", tcph->source, dport);
+	mpip_log("r: tcph->dest= %d, sport=%d\n", tcph->dest, sport);
+
+	printk("receiving:\n");
+	print_mpip_options(opt);
 
 	if (opt->optlen > 0)
 	{
