@@ -261,6 +261,9 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     	mpip_log("s: daddr=");
     	print_addr(daddr);
 
+		mpip_log("r: tcph->source= %d\n", tcph->source);
+		mpip_log("r: tcph->dest= %d\n", tcph->dest);
+
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 
@@ -415,7 +418,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
 
-	printk("sending:\n");
+	printk("\nsending:\n");
 	print_mpip_options(&(mp_opt->opt));
 
 //	iph = ip_hdr(skb);

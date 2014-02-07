@@ -287,8 +287,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
 
-	mpip_log( "ps: %d", path_id);
-	print_node_id(node_id);
+	//mpip_log( "ps: %d", path_id);
+	//print_node_id(node_id);
 
 	return 1;
 }
