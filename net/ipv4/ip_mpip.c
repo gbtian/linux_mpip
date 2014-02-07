@@ -344,15 +344,20 @@ int process_mpip_options(struct sk_buff *skb)
 
 		iph->saddr = daddr;
 		iph->daddr = saddr;
-		tcph->source = dport;
-		tcph->dest = sport;
-
-		tcp_v4_send_check(skb->sk, skb);
-		//tcph->check = 0;
 
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+
+		tcph->source = dport;
+		tcph->dest = sport;
+
+		__tcp_v4_send_check(skb, daddr,saddr);
+
+		//if (skb->sk)
+		//	tcp_v4_send_check(skb->sk, skb);
+		//tcph->check = 0;
+
 		//tcph->check = tcp_fast_csum()
 
 		printk("receiving:\n");
