@@ -162,8 +162,8 @@ char get_session_id(__be32 saddr, __be16 sport,
 	if (session_id == 0)
 	{
 		*is_new = true;
-		add_sender_session(saddr, sport, daddr, dport);
-		session_id = get_sender_session(saddr, sport, daddr, dport);
+		//add_sender_session(saddr, sport, daddr, dport);
+		//session_id = get_sender_session(saddr, sport, daddr, dport);
 	}
 	else
 	{
@@ -290,6 +290,7 @@ int process_mpip_options(struct sk_buff *skb)
 	struct tcphdr *tcph = tcp_hdr(skb);
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
+	unsigned char session_id = 0;
 
 	iph = ip_hdr(skb);
 
@@ -317,10 +318,10 @@ int process_mpip_options(struct sk_buff *skb)
 	update_sender_packet_rcv(opt->node_id, opt->path_id);
 	update_path_info();
 
-	add_receiver_session(opt->node_id,  opt->session_id,
+	session_id = add_receiver_session(opt->node_id,  opt->session_id,
 						iph->daddr, tcph->dest, iph->saddr, tcph->source);
 
-	res = get_receiver_session(opt->node_id, opt->session_id,
+	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
 	if (res)
@@ -342,8 +343,10 @@ int process_mpip_options(struct sk_buff *skb)
 
 		iph->saddr = daddr;
 		iph->daddr = saddr;
-		//tcph->source = dport;
-		//tcph->dest = sport;
+		tcph->source = dport;
+		tcph->dest = sport;
+		tcph->check = 0;
+
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);

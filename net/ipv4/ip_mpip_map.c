@@ -294,6 +294,59 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 }
 
 
+unsigned char get_sender_session(__be32 saddr, __be16 sport,
+								 __be32 daddr, __be16 dport)
+{
+	struct socket_session_table *socket_session;
+
+	list_for_each_entry(socket_session, &ss_head, list)
+	{
+		if ((socket_session->saddr == saddr) &&
+			(socket_session->sport == sport) &&
+			(socket_session->daddr == daddr) &&
+			(socket_session->dport == dport))
+		{
+			return socket_session->session_id;
+		}
+	}
+
+	return 0;
+}
+
+int add_sender_session(__be32 saddr, __be16 sport,
+					  __be32 daddr, __be16 dport)
+{
+	struct socket_session_table *item = NULL;
+
+	if (!is_lan_addr(daddr))
+	{
+		return 0;
+	}
+
+	if (get_sender_session(saddr, sport, daddr, dport) > 0)
+		return 0;
+
+
+	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
+
+	item->saddr = saddr;
+	item->sport = sport;
+	item->daddr = daddr;
+	item->dport = dport;
+	item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;
+	INIT_LIST_HEAD(&(item->list));
+	list_add(&(item->list), &ss_head);
+
+	//mpip_log( "ss: %d,%d,%d\n", item->session_id,
+	//		sport, dport);
+
+	//print_addr(saddr);
+	//print_addr(daddr);
+
+	return 1;
+}
+
+
 
 unsigned char find_receiver_session(unsigned char *node_id, unsigned char session_id)
 {
@@ -314,14 +367,15 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 	return 0;
 }
 
-int add_receiver_session(unsigned char *node_id, unsigned char session_id,
+unsigned char add_receiver_session(unsigned char *node_id, unsigned char session_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
 	int i;
 
-	if (!node_id || !session_id)
+
+	if (!node_id)
 		return 0;
 
 	if ((node_id[0] == node_id[1]) &&
@@ -331,7 +385,7 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 	}
 
 	if (find_receiver_session(node_id, session_id) > 0)
-		return 0;
+		return session_id;
 
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
@@ -344,7 +398,7 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	item->session_id = session_id;
+	item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
@@ -355,7 +409,7 @@ int add_receiver_session(unsigned char *node_id, unsigned char session_id,
 //	print_addr(saddr);
 //	print_addr(daddr);
 
-	return 1;
+	return item->session_id;
 }
 
 int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
@@ -364,7 +418,7 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 {
 	struct socket_session_table *socket_session;
 
-	if (!node_id)
+	if (!node_id || !session_id)
 		return 0;
 
 	if ((node_id[0] == node_id[1]) &&
@@ -562,59 +616,6 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
 	return e_path_stat_id;
 }
-
-unsigned char get_sender_session(__be32 saddr, __be16 sport,
-								 __be32 daddr, __be16 dport)
-{
-	struct socket_session_table *socket_session;
-
-	list_for_each_entry(socket_session, &ss_head, list)
-	{
-		if ((socket_session->saddr == saddr) &&
-			(socket_session->sport == sport) &&
-			(socket_session->daddr == daddr) &&
-			(socket_session->dport == dport))
-		{
-			return socket_session->session_id;
-		}
-	}
-
-	return 0;
-}
-
-int add_sender_session(__be32 saddr, __be16 sport,
-					  __be32 daddr, __be16 dport)
-{
-	struct socket_session_table *item = NULL;
-
-	if (!is_lan_addr(daddr))
-	{
-		return 0;
-	}
-
-	if (get_sender_session(saddr, sport, daddr, dport) > 0)
-		return 0;
-
-
-	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
-
-	item->saddr = saddr;
-	item->sport = sport;
-	item->daddr = daddr;
-	item->dport = dport;
-	item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;
-	INIT_LIST_HEAD(&(item->list));
-	list_add(&(item->list), &ss_head);
-
-	//mpip_log( "ss: %d,%d,%d\n", item->session_id,
-	//		sport, dport);
-
-	//print_addr(saddr);
-	//print_addr(daddr);
-
-	return 1;
-}
-
 
 __be32 find_local_addr(__be32 addr)
 {
