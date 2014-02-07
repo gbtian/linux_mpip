@@ -246,23 +246,24 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     options[7] = packet_count & 0xff; //packet_count
     options[8] = (packet_count>>8) & 0xff; //packet_count
 
+    mpip_log("\ns: iph->saddr=");
+	print_addr(iph->saddr);
+
+	mpip_log("s: saddr=");
+	print_addr(saddr);
+
+	mpip_log("s: iph->daddr=");
+	print_addr(iph->daddr);
+
+	mpip_log("s: daddr=");
+	print_addr(daddr);
+
+	mpip_log("r: tcph->source= %d\n", tcph->source);
+	mpip_log("r: tcph->dest= %d\n", tcph->dest);
 
     if (path_id > 0)
     {
-    	mpip_log("\ns: iph->saddr=");
-    	print_addr(iph->saddr);
 
-    	mpip_log("s: saddr=");
-    	print_addr(saddr);
-
-    	mpip_log("s: iph->daddr=");
-    	print_addr(iph->daddr);
-
-    	mpip_log("s: daddr=");
-    	print_addr(daddr);
-
-		mpip_log("r: tcph->source= %d\n", tcph->source);
-		mpip_log("r: tcph->dest= %d\n", tcph->dest);
 
     	iph->saddr = saddr;
     	iph->daddr = daddr;
