@@ -153,7 +153,7 @@ unsigned char *get_node_id(void)
 	return NULL;
 }
 
-char get_session_id(__be32 saddr, __be16 sport,
+char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 					__be32 daddr, __be16 dport, bool *is_new)
 {
 	unsigned char session_id = get_sender_session(saddr, sport,
@@ -163,8 +163,11 @@ char get_session_id(__be32 saddr, __be16 sport,
 	if (session_id == 0)
 	{
 		*is_new = true;
-		//add_sender_session(saddr, sport, daddr, dport);
-		//session_id = get_sender_session(saddr, sport, daddr, dport);
+		if (dest_node_id)
+		{
+			add_sender_session(dest_node_id, saddr, sport, daddr, dport);
+			session_id = get_sender_session(saddr, sport, daddr, dport);
+		}
 	}
 	else
 	{
@@ -231,7 +234,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
     	options[2 + i] =  static_node_id[i];
 
-    options[5] = get_session_id(iph->saddr, tcph->source,
+    options[5] = get_session_id(dest_node_id,
+    							iph->saddr, tcph->source,
 								iph->daddr, tcph->dest, &is_new);
 
     if (!is_new)

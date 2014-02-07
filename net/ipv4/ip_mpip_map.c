@@ -313,12 +313,22 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 	return 0;
 }
 
-int add_sender_session(__be32 saddr, __be16 sport,
+int add_sender_session(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 					  __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
+	int i;
 
 	if (!is_lan_addr(daddr))
+	{
+		return 0;
+	}
+
+	if (!dest_node_id)
+		return 0;
+
+	if ((dest_node_id[0] == dest_node_id[1]) &&
+		(dest_node_id[1] == dest_node_id[2]))
 	{
 		return 0;
 	}
@@ -329,6 +339,10 @@ int add_sender_session(__be32 saddr, __be16 sport,
 
 	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
 
+	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
+		item->node_id[i] = dest_node_id[i];
+
+	//memcpy(item->node_id, dest_node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;

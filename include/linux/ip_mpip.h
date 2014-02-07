@@ -180,7 +180,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id,
 unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);
 
-int add_sender_session(__be32 saddr, __be16 sport,
+int add_sender_session(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 					  __be32 daddr, __be16 dport);
 
 __be32 find_local_addr(__be32 addr);
