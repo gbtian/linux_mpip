@@ -318,8 +318,8 @@ int process_mpip_options(struct sk_buff *skb)
 	update_sender_packet_rcv(opt->node_id, opt->path_id);
 	update_path_info();
 
-	session_id = add_receiver_session(opt->node_id,  opt->session_id,
-						iph->daddr, tcph->dest, iph->saddr, tcph->source);
+	session_id = add_receiver_session(opt->node_id, iph->daddr, tcph->dest,
+										iph->saddr, tcph->source);
 
 	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);

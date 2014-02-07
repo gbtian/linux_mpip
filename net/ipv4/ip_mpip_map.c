@@ -367,12 +367,12 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 	return 0;
 }
 
-unsigned char add_receiver_session(unsigned char *node_id, unsigned char session_id,
+unsigned char add_receiver_session(unsigned char *node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
-	int i;
+	int i, sid;
 
 
 	if (!node_id)
@@ -383,9 +383,9 @@ unsigned char add_receiver_session(unsigned char *node_id, unsigned char session
 	{
 		return 0;
 	}
-
-	if (find_receiver_session(node_id, session_id) > 0)
-		return session_id;
+	sid = get_sender_session(saddr, sport, daddr, dport);
+	if (sid > 0)
+		return sid;
 
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
