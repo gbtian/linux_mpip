@@ -288,6 +288,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("r: tcph->source= %d\n", sport);
 	mpip_log("r: tcph->dest= %d\n", dport);
 
+
     if (path_id > 0)
     {
     	iph->saddr = saddr;
