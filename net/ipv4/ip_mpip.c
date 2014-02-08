@@ -291,7 +291,6 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     {
     	iph->saddr = saddr;
     	iph->daddr = daddr;
-
     	iph->tot_len = htons(skb->len);
     	iph->check = 0;
     	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
@@ -362,7 +361,7 @@ int process_mpip_options(struct sk_buff *skb)
 	update_path_info();
 
 	session_id = add_receiver_session(opt->node_id, iph->daddr, odport,
-										iph->saddr, osport);
+										iph->saddr, osport, opt->session_id);
 
 	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);

@@ -383,7 +383,8 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 
 unsigned char add_receiver_session(unsigned char *node_id,
 						__be32 saddr, __be16 sport,
-		 	 	 	 	__be32 daddr, __be16 dport)
+		 	 	 	 	__be32 daddr, __be16 dport,
+		 	 	 	 	unsigned char session_id)
 {
 	struct socket_session_table *item = NULL;
 	int i, sid;
@@ -412,7 +413,14 @@ unsigned char add_receiver_session(unsigned char *node_id,
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;;
+	if (session_id > 0)
+	{
+		item->session_id = session_id;
+	}
+	else
+	{
+		item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;;
+	}
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
