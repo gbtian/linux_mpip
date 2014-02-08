@@ -399,6 +399,7 @@ unsigned char add_receiver_session(unsigned char *node_id,
 		return 0;
 	}
 
+
 	if ((find_receiver_session(node_id, session_id) > 0) ||
 		(get_sender_session(saddr, sport, daddr, dport) > 0))
 	{
