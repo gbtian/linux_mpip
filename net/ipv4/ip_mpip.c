@@ -285,12 +285,13 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("s: daddr=");
 	print_addr(daddr);
 
-	mpip_log("r: tcph->source= %d\n", sport);
-	mpip_log("r: tcph->dest= %d\n", dport);
+	mpip_log("s: tcph->source= %d\n", sport);
+	mpip_log("s: tcph->dest= %d\n", dport);
 
 
     if (path_id > 0)
     {
+		mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
     	iph->tot_len = htons(skb->len);
@@ -373,24 +374,29 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
+	printk("\nreceiving:\n");
+	mpip_log("r: iph->id=%d\n", iph->id);
+	mpip_log("r: iph->saddr=");
+	print_addr(iph->saddr);
+
+	mpip_log("r: daddr=");
+	print_addr(daddr);
+
+	mpip_log("r: iph->daddr=");
+	print_addr(iph->daddr);
+
+
+	mpip_log("r: saddr=");
+	print_addr(saddr);
+
+	mpip_log("r: tcph->source= %d, dport=%d\n", osport, dport);
+	mpip_log("r: tcph->dest= %d, sport=%d\n", odport, sport);
+
+	print_mpip_options(opt);
+
 	if (res)
 	{
-		mpip_log("\nr: iph->id=%d\n", iph->id);
-		mpip_log("r: iph->saddr=");
-		print_addr(iph->saddr);
-
-		mpip_log("r: daddr=");
-		print_addr(daddr);
-
-		mpip_log("r: iph->daddr=");
-		print_addr(iph->daddr);
-
-
-		mpip_log("r: saddr=");
-		print_addr(saddr);
-
-		mpip_log("r: tcph->source= %d, dport=%d\n", osport, dport);
-		mpip_log("r: tcph->dest= %d, sport=%d\n", odport, sport);
+		mpip_log("r: modifying header\n");
 
 		iph->saddr = daddr;
 		iph->daddr = saddr;
@@ -408,21 +414,12 @@ int process_mpip_options(struct sk_buff *skb)
 //			udph->source = dport;
 //			udph->dest = sport;
 		}
-
-
-		//if (skb->sk)
-		//	tcp_v4_send_check(skb->sk, skb);
-		//tcph->check = 0;
-
-		//tcph->check = tcp_fast_csum()
-
-		printk("receiving:\n");
-		print_mpip_options(opt);
 	}
 
 
 	if (opt->optlen > 0)
 	{
+		mpip_log("r: unwrapping options\n");
 		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
 		memcpy(tmp, iph_addr, sizeof(struct iphdr));
 		memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
