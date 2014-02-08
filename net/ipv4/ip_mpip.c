@@ -218,6 +218,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	unsigned char *dest_node_id = find_node_id_in_working_ip(iph->daddr);
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
+	__be16 osport = 0, odport = 0;
 	u16	packet_count = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
@@ -233,15 +234,19 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	    //tcp_header = (struct tcphdr *)skb_transport_header(sock_buff); //doing the cast this way gave me the same problem
 
 		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
-		sport = htons((unsigned short int) tcph->source); //sport now has the source port
-	    dport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
+		osport = htons((unsigned short int) tcph->source); //sport now has the source port
+		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
+		sport = tcph->source; //sport now has the source port
+		dport = tcph->dest;   //dport now has the dest port
 
 	}
 	else if(iph->protocol==IPPROTO_UDP)
 	{
 		udph= (struct udphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
-		sport = htons((unsigned short int) udph->source); //sport now has the source port
-	    dport = htons((unsigned short int) udph->dest);   //dport now has the dest port
+		osport = htons((unsigned short int) udph->source); //sport now has the source port
+		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
+		sport = udph->source; //sport now has the source port
+		dport = udph->dest;   //dport now has the dest port
 	}
 
 	get_node_id();
@@ -285,9 +290,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("s: daddr=");
 	print_addr(daddr);
 
-	mpip_log("s: tcph->source= %d\n", sport);
-	mpip_log("s: tcph->dest= %d\n", dport);
-
+	mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
+	mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
 
     if (path_id > 0)
     {
@@ -338,12 +342,16 @@ int process_mpip_options(struct sk_buff *skb)
 		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
 		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
+		sport = tcph->source; //sport now has the source port
+		dport = tcph->dest;   //dport now has the dest port
 	}
 	else if(iph->protocol==IPPROTO_UDP)
 	{
 		udph= (struct udphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
 		osport = htons((unsigned short int) udph->source); //sport now has the source port
 		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
+		sport = udph->source; //sport now has the source port
+		dport = udph->dest;   //dport now has the dest port
 	}
 
 
@@ -368,8 +376,8 @@ int process_mpip_options(struct sk_buff *skb)
 	update_sender_packet_rcv(opt->node_id, opt->path_id);
 	update_path_info();
 
-	session_id = add_receiver_session(opt->node_id, iph->daddr, odport,
-										iph->saddr, osport, opt->session_id);
+	session_id = add_receiver_session(opt->node_id, iph->daddr, dport,
+										iph->saddr, sport, opt->session_id);
 
 	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
@@ -389,8 +397,8 @@ int process_mpip_options(struct sk_buff *skb)
 	mpip_log("r: saddr=");
 	print_addr(saddr);
 
-	mpip_log("r: tcph->source= %d, dport=%d\n", osport, dport);
-	mpip_log("r: tcph->dest= %d, sport=%d\n", odport, sport);
+	mpip_log("r: tcph->source= %d, osport=%d, dport=%d\n", tcph->source, osport, dport);
+	mpip_log("r: tcph->dest= %d, odport=%d, sport=%d\n", tcph->dest, odport, sport);
 
 	print_mpip_options(opt);
 
@@ -407,6 +415,8 @@ int process_mpip_options(struct sk_buff *skb)
 
 		if(iph->protocol==IPPROTO_TCP)
 		{
+			tcph->source = dport;
+			tcph->dest = sport;
 			__tcp_v4_send_check(skb, daddr,saddr);
 		}
 		if(iph->protocol==IPPROTO_UDP)
@@ -432,6 +442,8 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+
+		__tcp_v4_send_check(skb, daddr,saddr);
 	}
 
 	return 1;
