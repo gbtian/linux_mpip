@@ -295,6 +295,11 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     	iph->tot_len = htons(skb->len);
     	iph->check = 0;
     	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+
+    	if(iph->protocol==IPPROTO_TCP)
+		{
+			__tcp_v4_send_check(skb, saddr, daddr);
+		}
     }
 
 }
