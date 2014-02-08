@@ -398,6 +398,7 @@ unsigned char add_receiver_session(unsigned char *node_id,
 	{
 		return 0;
 	}
+
 	//sid = get_sender_session(saddr, sport, daddr, dport);
 	sid = find_receiver_session(node_id, session_id)
 	if (sid > 0)
