@@ -272,7 +272,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     options[8] = (packet_count>>8) & 0xff; //packet_count
 
 
-    mpip_log("\ns: iph->saddr=");
+    mpip_log("\ns: iph->id=%d\n", iph->id);
+    mpip_log("s: iph->saddr=");
 	print_addr(iph->saddr);
 
 	mpip_log("s: saddr=");
@@ -368,7 +369,8 @@ int process_mpip_options(struct sk_buff *skb)
 
 	if (res)
 	{
-		mpip_log("\nr: iph->saddr=");
+		mpip_log("\nr: iph->id=%d\n", iph->id);
+		mpip_log("r: iph->saddr=");
 		print_addr(iph->saddr);
 
 		mpip_log("r: daddr=");
@@ -391,17 +393,16 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
-//		if(iph->protocol==IPPROTO_TCP)
-//		{
-//			tcph->source = dport;
-//			tcph->dest = sport;
-//		}
-//		if(iph->protocol==IPPROTO_UDP)
-//		{
+		if(iph->protocol==IPPROTO_TCP)
+		{
+			__tcp_v4_send_check(skb, daddr,saddr);
+		}
+		if(iph->protocol==IPPROTO_UDP)
+		{
 //			udph->source = dport;
 //			udph->dest = sport;
-//		}
-		//__tcp_v4_send_check(skb, daddr,saddr);
+		}
+
 
 		//if (skb->sk)
 		//	tcp_v4_send_check(skb->sk, skb);
