@@ -211,8 +211,8 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
 void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 {
 	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
-	const struct tcphdr *tcph = NULL;
-	const struct udphdr *udph = NULL;
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
 
 	int i;
 	unsigned char *dest_node_id = find_node_id_in_working_ip(iph->daddr);
@@ -298,14 +298,15 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
-//    	iph->tot_len = htons(skb->len);
-//    	iph->check = 0;
-//    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    	iph->tot_len = htons(skb->len);
+    	iph->check = 0;
+    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
-//    	if(iph->protocol==IPPROTO_TCP)
-//		{
-//			__tcp_v4_send_check(skb, saddr, daddr);
-//		}
+    	if(iph->protocol==IPPROTO_TCP)
+		{
+    		tcph->check = 0;
+			__tcp_v4_send_check(skb, saddr, daddr);
+		}
     }
 
 }
@@ -409,21 +410,22 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
-//		iph->tot_len = htons(skb->len);
-//		iph->check = 0;
-//		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-//
-//		if(iph->protocol==IPPROTO_TCP)
-//		{
+		iph->tot_len = htons(skb->len);
+		iph->check = 0;
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+
+		if(iph->protocol==IPPROTO_TCP)
+		{
 //			tcph->source = dport;
 //			tcph->dest = sport;
-//			__tcp_v4_send_check(skb, daddr,saddr);
-//		}
-//		if(iph->protocol==IPPROTO_UDP)
-//		{
+			tcph->check = 0;
+			__tcp_v4_send_check(skb, daddr,saddr);
+		}
+		if(iph->protocol==IPPROTO_UDP)
+		{
 //			udph->source = dport;
 //			udph->dest = sport;
-//		}
+		}
 	}
 
 
@@ -439,11 +441,12 @@ int process_mpip_options(struct sk_buff *skb)
 		skb_reset_network_header(skb);
 		iph = ip_hdr(skb);
 		iph->ihl -= opt->optlen>>2;
-//		iph->tot_len = htons(skb->len);
-//		iph->check = 0;
-//		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-//
-//		__tcp_v4_send_check(skb, daddr,saddr);
+		iph->tot_len = htons(skb->len);
+		iph->check = 0;
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+
+		tcph->check = 0;
+		__tcp_v4_send_check(skb, daddr,saddr);
 	}
 
 	return 1;
