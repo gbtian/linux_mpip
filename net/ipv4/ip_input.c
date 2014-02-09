@@ -428,11 +428,11 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 //		printk("receive after: %d\n", iph->ihl);
 	}
 
-	if (!sysctl_mpip_enabled)
+	//if (!sysctl_mpip_enabled)
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("i: skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", skb->ip_summed, th->check, ih->check, __LINE__);
+		printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 	}
 
 

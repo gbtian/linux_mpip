@@ -179,7 +179,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("o: skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", skb->ip_summed, th->check, ih->check, __LINE__);
+		printk("o: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n",ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 	}
 	/* Send it out. */
 	return ip_local_out(skb);
@@ -448,7 +448,7 @@ packet_routed:
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("o: skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", skb->ip_summed, th->check, ih->check, __LINE__);
+		printk("o: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n",ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 	}
 
 	res = ip_local_out(skb);
