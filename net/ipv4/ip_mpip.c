@@ -304,8 +304,10 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
     	if(iph->protocol==IPPROTO_TCP)
 		{
+    		mpip_log("s: before tcph->check=%d\n", tcph->check);
     		tcph->check = 0;
 			__tcp_v4_send_check(skb, saddr, daddr);
+			mpip_log("s: after tcph->check=%d\n", tcph->check);
 		}
     }
 
@@ -418,8 +420,10 @@ int process_mpip_options(struct sk_buff *skb)
 		{
 //			tcph->source = dport;
 //			tcph->dest = sport;
+			mpip_log("r: before tcph->check=%d\n", tcph->check);
 			tcph->check = 0;
 			__tcp_v4_send_check(skb, daddr,saddr);
+			mpip_log("r: before tcph->check=%d\n", tcph->check);
 		}
 		if(iph->protocol==IPPROTO_UDP)
 		{
@@ -445,8 +449,12 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
+		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
+
+		mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
 		tcph->check = 0;
 		__tcp_v4_send_check(skb, daddr,saddr);
+		mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
 	}
 
 	return 1;
