@@ -130,6 +130,75 @@ void print_mpip_options(struct ip_options *opt)
 }
 EXPORT_SYMBOL(print_mpip_options);
 
+static inline unsigned short
+from64to16 (unsigned long x)
+{
+	/* add up 32-bit words for 33 bits */
+	x = (x & 0xffffffff) + (x >> 32);
+	/* add up 16-bit and 17-bit words for 17+c bits */
+	x = (x & 0xffff) + (x >> 16);
+	/* add up 16-bit and 2-bit for 16+c bit */
+	x = (x & 0xffff) + (x >> 16);
+	/* add up carry.. */
+	x = (x & 0xffff) + (x >> 16);
+	return x;
+}
+
+__sum16
+mpip_csum_tcpudp_magic (__be32 saddr, __be32 daddr, unsigned short len,
+		   unsigned short proto, __wsum sum)
+{
+	__sum16 mysum = (__force __sum16)~from64to16(
+			(__force u64)saddr + (__force u64)daddr +
+			(__force u64)sum + ((len + proto) << 8));
+	printk("mysum=%d, %d\n", mysum, __LINE__);
+	return mysum;
+}
+
+static inline __sum16 mpip_tcp_v4_check(int len, __be32 saddr,
+				   __be32 daddr, __wsum base)
+{
+	return mpip_csum_tcpudp_magic(saddr,daddr,len,IPPROTO_TCP,base);
+}
+
+extern unsigned long do_csum (const unsigned char *, long);
+
+__wsum mpip_csum_partial(const void *buff, int len, __wsum sum)
+{
+	u64 result = do_csum(buff, len);
+	printk("len=%d, sum=%d, %d\n", len, sum, __LINE__);
+	/* add in old sum, and carry.. */
+	result += (__force u32)sum;
+	/* 32+c bits -> 32 bits */
+	result = (result & 0xffffffff) + (result >> 32);
+	printk("result=%d, %d\n", result, __LINE__);
+	return (__force __wsum)result;
+}
+
+void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
+{
+	struct tcphdr *th = tcp_hdr(skb);
+	printk("saddr=%d, %d\n", saddr, __LINE__);
+	printk("daddr=%d, %d\n", daddr, __LINE__);
+	printk("skb->ip_summed=%d\n", skb->ip_summed);
+	printk("CHECKSUM_PARTIAL=%d\n", CHECKSUM_PARTIAL);
+	if (skb->ip_summed == CHECKSUM_PARTIAL) {
+		printk("th->check=%d, %d\n", th->check, __LINE__);
+		th->check = ~mpip_tcp_v4_check(skb->len, saddr, daddr, 0);
+		printk("th->check=%d, %d\n", th->check, __LINE__);
+		skb->csum_start = skb_transport_header(skb) - skb->head;
+		skb->csum_offset = offsetof(struct tcphdr, check);
+	} else {
+		printk("th->check=%d, %d\n", th->check, __LINE__);
+		th->check = mpip_tcp_v4_check(skb->len, saddr, daddr,
+					 mpip_csum_partial(th,
+						      th->doff << 2,
+						      skb->csum));
+		printk("th->check=%d, %d\n", th->check, __LINE__);
+	}
+}
+
+
 
 unsigned char *get_node_id(void)
 {
@@ -295,7 +364,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
 	mpip_log("s: before tcph->check=%d\n", tcph->check);
 	tcph->check = 0;
-	__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+	mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 	mpip_log("s: after tcph->check=%d\n", tcph->check);
 
     if (path_id > 0)
@@ -311,7 +380,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		{
     		mpip_log("s: before 1 tcph->check=%d\n", tcph->check);
     		tcph->check = 0;
-			__tcp_v4_send_check(skb, saddr, daddr);
+			mpip_tcp_v4_send_check(skb, saddr, daddr);
 			mpip_log("s: after 1 tcph->check=%d\n", tcph->check);
 		}
     }
@@ -429,7 +498,7 @@ int process_mpip_options(struct sk_buff *skb)
 			mpip_log("r: before tcph->check=%d\n", tcph->check);
 			th = tcp_hdr(skb);
 			th->check = 0;
-			__tcp_v4_send_check(skb, daddr,saddr);
+			mpip_tcp_v4_send_check(skb, daddr,saddr);
 			mpip_log("r: after tcph->check=%d\n", tcph->check);
 		}
 		if(iph->protocol==IPPROTO_UDP)
@@ -460,7 +529,7 @@ int process_mpip_options(struct sk_buff *skb)
 		th->check = 0;
 		mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
 		tcph->check = 0;
-		__tcp_v4_send_check(skb, daddr,saddr);
+		mpip_tcp_v4_send_check(skb, daddr,saddr);
 		mpip_log("r: after 1 tcph->check=%d\n", tcph->check);
 	}
 
