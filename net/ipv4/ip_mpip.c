@@ -293,6 +293,11 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
 	mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
 
+	mpip_log("s: before tcph->check=%d\n", tcph->check);
+	tcph->check = 0;
+	__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+	mpip_log("s: after tcph->check=%d\n", tcph->check);
+
     if (path_id > 0)
     {
 		mpip_log("s: modifying header\n");
@@ -304,10 +309,10 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
     	if(iph->protocol==IPPROTO_TCP)
 		{
-    		mpip_log("s: before tcph->check=%d\n", tcph->check);
+    		mpip_log("s: before 1 tcph->check=%d\n", tcph->check);
     		tcph->check = 0;
 			__tcp_v4_send_check(skb, saddr, daddr);
-			mpip_log("s: after tcph->check=%d\n", tcph->check);
+			mpip_log("s: after 1 tcph->check=%d\n", tcph->check);
 		}
     }
 
@@ -320,6 +325,7 @@ int process_mpip_options(struct sk_buff *skb)
 	struct ip_options *opt;
 	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
 	struct tcphdr *tcph = NULL;
+	struct tcphdr *th = NULL;
 	struct udphdr *udph = NULL;
 	struct net_device *dev = skb->dev;
 	unsigned char *optptr;
@@ -332,7 +338,7 @@ int process_mpip_options(struct sk_buff *skb)
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
 
-	iph = ip_hdr(skb);
+	//iph = ip_hdr(skb);
 
 
 	if (iph->ihl <= 5)
@@ -421,9 +427,10 @@ int process_mpip_options(struct sk_buff *skb)
 //			tcph->source = dport;
 //			tcph->dest = sport;
 			mpip_log("r: before tcph->check=%d\n", tcph->check);
-			tcph->check = 0;
+			th = tcp_hdr(skb);
+			th->check = 0;
 			__tcp_v4_send_check(skb, daddr,saddr);
-			mpip_log("r: before tcph->check=%d\n", tcph->check);
+			mpip_log("r: after tcph->check=%d\n", tcph->check);
 		}
 		if(iph->protocol==IPPROTO_UDP)
 		{
@@ -449,12 +456,12 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
-		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
-
+		th = tcp_hdr(skb);
+		th->check = 0;
 		mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
 		tcph->check = 0;
 		__tcp_v4_send_check(skb, daddr,saddr);
-		mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
+		mpip_log("r: after 1 tcph->check=%d\n", tcph->check);
 	}
 
 	return 1;
