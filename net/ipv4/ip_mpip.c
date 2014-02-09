@@ -353,9 +353,9 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		//mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
-//    	iph->tot_len = htons(skb->len);
-//    	iph->check = 0;
-//    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+    	iph->tot_len = htons(skb->len);
+    	iph->check = 0;
+    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
     	if(iph->protocol==IPPROTO_TCP)
 		{
@@ -504,9 +504,9 @@ int process_mpip_options(struct sk_buff *skb)
 		skb_reset_network_header(skb);
 		iph = (struct iphdr *)skb_network_header(skb);
 		iph->ihl -= opt->optlen>>2;
-//		iph->tot_len = htons(skb->len);
-//		iph->check = 0;
-//		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+		iph->tot_len = htons(skb->len);
+		iph->check = 0;
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 //
 //		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
 //		tcph->check = 0;
