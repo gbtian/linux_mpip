@@ -161,19 +161,6 @@ static inline __sum16 mpip_tcp_v4_check(int len, __be32 saddr,
 	return mpip_csum_tcpudp_magic(saddr,daddr,len,IPPROTO_TCP,base);
 }
 
-extern unsigned long do_csum (const unsigned char *, long);
-
-__wsum mpip_csum_partial(const void *buff, int len, __wsum sum)
-{
-	u64 result = do_csum(buff, len);
-	printk("len=%d, sum=%d, %d\n", len, sum, __LINE__);
-	/* add in old sum, and carry.. */
-	result += (__force u32)sum;
-	/* 32+c bits -> 32 bits */
-	result = (result & 0xffffffff) + (result >> 32);
-	printk("result=%d, %d\n", result, __LINE__);
-	return (__force __wsum)result;
-}
 
 void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 {
@@ -191,7 +178,7 @@ void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 	} else {
 		printk("th->check=%d, %d\n", th->check, __LINE__);
 		th->check = mpip_tcp_v4_check(skb->len, saddr, daddr,
-					 mpip_csum_partial(th,
+					 csum_partial(th,
 						      th->doff << 2,
 						      skb->csum));
 		printk("th->check=%d, %d\n", th->check, __LINE__);
