@@ -381,7 +381,6 @@ int process_mpip_options(struct sk_buff *skb)
 	struct ip_options *opt;
 	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
 	struct tcphdr *tcph = NULL;
-	struct tcphdr *th = NULL;
 	struct udphdr *udph = NULL;
 	struct net_device *dev = skb->dev;
 	unsigned char *optptr;
@@ -483,8 +482,7 @@ int process_mpip_options(struct sk_buff *skb)
 //			tcph->source = dport;
 //			tcph->dest = sport;
 			mpip_log("r: before tcph->check=%d\n", tcph->check);
-			th = tcp_hdr(skb);
-			th->check = 0;
+			tcph->check = 0;
 			mpip_tcp_v4_send_check(skb, daddr,saddr);
 			mpip_log("r: after tcph->check=%d\n", tcph->check);
 		}
@@ -506,14 +504,14 @@ int process_mpip_options(struct sk_buff *skb)
 
 		skb_pull(skb, opt->optlen);
 		skb_reset_network_header(skb);
-		iph = ip_hdr(skb);
+		iph = (struct iphdr *)skb_network_header(skb);
 		iph->ihl -= opt->optlen>>2;
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
-		th = tcp_hdr(skb);
-		th->check = 0;
+		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
+		tcph->check = 0;
 		mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
 		tcph->check = 0;
 		mpip_tcp_v4_send_check(skb, daddr,saddr);
