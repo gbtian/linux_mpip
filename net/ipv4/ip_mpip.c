@@ -164,7 +164,8 @@ static inline __sum16 mpip_tcp_v4_check(int len, __be32 saddr,
 
 void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 {
-	struct tcphdr *th = tcp_hdr(skb);
+	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
+	struct tcphdr *th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
 	printk("saddr=%d, %d\n", saddr, __LINE__);
 	printk("daddr=%d, %d\n", daddr, __LINE__);
 	printk("skb->ip_summed=%d\n", skb->ip_summed);
