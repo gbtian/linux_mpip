@@ -572,6 +572,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	iph->check = 0;
 	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
+
 	if(iph->protocol==IPPROTO_TCP)
 	{
 		//mpip_log("s: before 1 tcph->check=%d\n", tcph->check);
