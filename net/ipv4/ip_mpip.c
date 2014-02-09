@@ -186,8 +186,6 @@ void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 	}
 }
 
-
-
 unsigned char *get_node_id(void)
 {
 	struct net_device *dev;
