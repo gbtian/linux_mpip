@@ -386,7 +386,8 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 {
 	const struct iphdr *iph;
 	u32 len;
-
+	struct iphdr *ih;
+	struct tcphdr *th;
 	/* When the interface is in promisc. mode, drop all the crap
 	 * that it receives, do not try to analyse it.
 	 */
@@ -426,6 +427,16 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 //
 //		printk("receive after: %d\n", iph->ihl);
 	}
+
+	if (!sysctl_mpip_enabled)
+	{
+		ih = (struct iphdr *)skb_network_header(skb);
+		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
+		printk("skb->ip_summed=%d, %d\n", skb->ip_summed, __LINE__);
+		printk("CHECKSUM_PARTIAL=%d, %d\n", CHECKSUM_PARTIAL, __LINE__);
+		printk("th->check=%d, %d\n", th->check, __LINE__);
+	}
+
 
 	iph = ip_hdr(skb);
 

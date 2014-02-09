@@ -348,11 +348,6 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
 	mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
 
-	mpip_log("s: before tcph->check=%d\n", tcph->check);
-	tcph->check = 0;
-	mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-	mpip_log("s: after tcph->check=%d\n", tcph->check);
-
     if (path_id > 0)
     {
 		mpip_log("s: modifying header\n");
