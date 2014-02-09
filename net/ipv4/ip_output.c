@@ -179,9 +179,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("skb->ip_summed=%d, %d\n", skb->ip_summed, __LINE__);
-		printk("CHECKSUM_PARTIAL=%d, %d\n", CHECKSUM_PARTIAL, __LINE__);
-		printk("th->check=%d, %d\n", th->check, __LINE__);
+		printk("o: skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", skb->ip_summed, th->check, ih->check, __LINE__);
 	}
 	/* Send it out. */
 	return ip_local_out(skb);
@@ -355,6 +353,9 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct iphdr *iph;
 	int res;
 
+	struct iphdr *ih;
+	struct tcphdr *th;
+
 //	char options[MPIP_OPT_LEN];
 	unsigned int optlen = 0;
 //	struct mpip_options_rcu *mp_opt = NULL;
@@ -442,6 +443,13 @@ packet_routed:
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
 		insert_mpip_options(skb);
+
+	if (!sysctl_mpip_enabled)
+	{
+		ih = (struct iphdr *)skb_network_header(skb);
+		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
+		printk("o: skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", skb->ip_summed, th->check, ih->check, __LINE__);
+	}
 
 	res = ip_local_out(skb);
 	rcu_read_unlock();

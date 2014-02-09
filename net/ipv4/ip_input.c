@@ -432,9 +432,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("skb->ip_summed=%d, %d\n", skb->ip_summed, __LINE__);
-		printk("CHECKSUM_PARTIAL=%d, %d\n", CHECKSUM_PARTIAL, __LINE__);
-		printk("th->check=%d, %d\n", th->check, __LINE__);
+		printk("i: skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", skb->ip_summed, th->check, ih->check, __LINE__);
 	}
 
 

@@ -169,7 +169,6 @@ void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 	printk("saddr=%d, %d\n", saddr, __LINE__);
 	printk("daddr=%d, %d\n", daddr, __LINE__);
 	printk("skb->ip_summed=%d\n", skb->ip_summed);
-	printk("CHECKSUM_PARTIAL=%d\n", CHECKSUM_PARTIAL);
 	if (skb->ip_summed == CHECKSUM_PARTIAL) {
 		printk("th->check=%d, %d\n", th->check, __LINE__);
 		th->check = ~mpip_tcp_v4_check(skb->len, saddr, daddr, 0);
