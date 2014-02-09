@@ -353,15 +353,15 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		//mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
-    	iph->tot_len = htons(skb->len);
-    	iph->check = 0;
-    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+//    	iph->tot_len = htons(skb->len);
+//    	iph->check = 0;
+//    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
     	if(iph->protocol==IPPROTO_TCP)
 		{
     		//mpip_log("s: before 1 tcph->check=%d\n", tcph->check);
-    		tcph->check = 0;
-			mpip_tcp_v4_send_check(skb, saddr, daddr);
+//    		tcph->check = 0;
+//			mpip_tcp_v4_send_check(skb, saddr, daddr);
 			//mpip_log("s: after 1 tcph->check=%d\n", tcph->check);
 		}
     	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
@@ -470,17 +470,17 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
-		iph->tot_len = htons(skb->len);
-		iph->check = 0;
-		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+//		iph->tot_len = htons(skb->len);
+//		iph->check = 0;
+//		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
 		if(iph->protocol==IPPROTO_TCP)
 		{
 //			tcph->source = dport;
 //			tcph->dest = sport;
 			//mpip_log("r: before 1 tcph->check=%d\n", tcph->check);
-			tcph->check = 0;
-			mpip_tcp_v4_send_check(skb, iph->saddr,iph->daddr);
+//			tcph->check = 0;
+//			mpip_tcp_v4_send_check(skb, iph->saddr,iph->daddr);
 			//mpip_log("r: after 1 tcph->check=%d\n", tcph->check);
 		}
 		if(iph->protocol==IPPROTO_UDP)
@@ -504,15 +504,15 @@ int process_mpip_options(struct sk_buff *skb)
 		skb_reset_network_header(skb);
 		iph = (struct iphdr *)skb_network_header(skb);
 		iph->ihl -= opt->optlen>>2;
-		iph->tot_len = htons(skb->len);
-		iph->check = 0;
-		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-
-		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		tcph->check = 0;
-		//mpip_log("r: before 2 tcph->check=%d\n", tcph->check);
-		tcph->check = 0;
-		mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+//		iph->tot_len = htons(skb->len);
+//		iph->check = 0;
+//		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+//
+//		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
+//		tcph->check = 0;
+//		//mpip_log("r: before 2 tcph->check=%d\n", tcph->check);
+//		tcph->check = 0;
+//		mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		//mpip_log("r: after 2 tcph->check=%d\n", tcph->check);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
@@ -546,10 +546,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	unsigned char *options = NULL;
 	struct ip_options_rcu *mp_opt = NULL;
 	int res, i;
-	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
-	struct tcphdr *tcph;
-
-	//iph = ip_hdr(skb);
+	struct iphdr *iph = ip_hdr(skb);
 	//if (iph->id == 0)
 	//	return 0;
 
@@ -567,20 +564,6 @@ int insert_mpip_options(struct sk_buff *skb)
 	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
-
-	iph->tot_len = htons(skb->len);
-	iph->check = 0;
-	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-
-
-	if(iph->protocol==IPPROTO_TCP)
-	{
-		//mpip_log("s: before 1 tcph->check=%d\n", tcph->check);
-		tcph = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		tcph->check = 0;
-		mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-		//mpip_log("s: after 1 tcph->check=%d\n", tcph->check);
-	}
 
 	//printk("\nsending:\n");
 	//print_mpip_options(&(mp_opt->opt));
