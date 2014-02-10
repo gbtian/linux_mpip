@@ -518,8 +518,8 @@ int process_mpip_options(struct sk_buff *skb)
 
 		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
 		tcph->check = 0;
-		tcp_v4_send_check(skb->sk, skb);
-		//mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+		//tcp_v4_send_check(skb->sk, skb);
+		mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		//mpip_log("r: after 2 tcph->check=%d\n", tcph->check);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
