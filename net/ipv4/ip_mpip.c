@@ -413,9 +413,10 @@ int process_mpip_options(struct sk_buff *skb)
 		dport = udph->dest;   //dport now has the dest port
 	}
 
-
-
 	opt = &(IPCB(skb)->opt);
+	if (!opt || opt->optlen <= 0)
+		return 0;
+
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
 	if (ip_options_compile(dev_net(dev), opt, skb))
 	{
@@ -496,6 +497,13 @@ int process_mpip_options(struct sk_buff *skb)
 	{
 		//mpip_log("r: unwrapping options\n");
 		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+
+		if (!tmp)
+		{
+			printk("tmp == NULL\n");
+			return 0;
+		}
+
 		memcpy(tmp, iph_addr, sizeof(struct iphdr));
 		memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
 		kfree(tmp);
@@ -507,12 +515,11 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-//
-//		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
-//		tcph->check = 0;
-//		//mpip_log("r: before 2 tcph->check=%d\n", tcph->check);
-//		tcph->check = 0;
-//		mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+
+		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl);
+		tcph->check = 0;
+		tcp_v4_send_check(skb->sk, skb);
+		//mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		//mpip_log("r: after 2 tcph->check=%d\n", tcph->check);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
