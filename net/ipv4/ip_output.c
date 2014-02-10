@@ -175,7 +175,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
 		insert_mpip_options(skb);
 
-	if (!sysctl_mpip_enabled)
+	//if (!sysctl_mpip_enabled)
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
@@ -444,7 +444,7 @@ packet_routed:
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
 		insert_mpip_options(skb);
 
-	if (!sysctl_mpip_enabled)
+	//if (!sysctl_mpip_enabled)
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
 		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);

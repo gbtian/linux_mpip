@@ -414,7 +414,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 	opt = &(IPCB(skb)->opt);
-	if (!opt || opt->optlen <= 0)
+	if (!opt)
 		return 0;
 
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
