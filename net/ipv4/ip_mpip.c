@@ -358,13 +358,13 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		{
 			iph->tot_len = 0;
 			iph->check = 0;
+			tcph->check = 0;
 			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		}
 
     	iph->tot_len = htons(skb->len);
     	iph->check = 0;
     	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-
 
     	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     }
@@ -499,6 +499,7 @@ int process_mpip_options(struct sk_buff *skb)
 		{
 			iph->tot_len = 0;
 			iph->check = 0;
+			tcph->check = 0;
 			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		}
 

@@ -391,7 +391,7 @@ int sock_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 	int skb_len;
 	unsigned long flags;
 	struct sk_buff_head *list = &sk->sk_receive_queue;
-
+	printk("i: %s, %d\n", __FILE__, __LINE__);
 	if (atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf) {
 		atomic_inc(&sk->sk_drops);
 		trace_sock_rcvqueue_full(sk, skb);
@@ -426,7 +426,7 @@ int sock_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 	skb->dropcount = atomic_read(&sk->sk_drops);
 	__skb_queue_tail(list, skb);
 	spin_unlock_irqrestore(&list->lock, flags);
-
+	printk("i: %s, %d\n", __FILE__, __LINE__);
 	if (!sock_flag(sk, SOCK_DEAD))
 		sk->sk_data_ready(sk, skb_len);
 	return 0;
