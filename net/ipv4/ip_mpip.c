@@ -524,7 +524,6 @@ int process_mpip_options(struct sk_buff *skb)
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
 
-
 	return 1;
 }
 EXPORT_SYMBOL(process_mpip_options);
