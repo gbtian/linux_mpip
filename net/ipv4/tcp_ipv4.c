@@ -1971,7 +1971,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	if (!skb_csum_unnecessary(skb) && tcp_v4_checksum_init(skb))
 	{
 		printk("i: %s, %d\n", __FILE__, __LINE__);
-		//goto csum_error;
+		goto csum_error;
 	}
 
 	th = tcp_hdr(skb);
