@@ -97,8 +97,12 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	iph->tot_len = htons(skb->len);
-	ip_send_check(iph);
+	if (!sysctl_mpip_enabled && iph->ihl == 5)
+	{
+		iph->tot_len = htons(skb->len);
+		ip_send_check(iph);
+	}
+
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
 }
@@ -173,7 +177,12 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	skb->mark = sk->sk_mark;
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	{
+		iph->tot_len = htons(skb->len);
+		ip_send_check(iph);
+
 		insert_mpip_options(skb);
+	}
 
 	//if (!sysctl_mpip_enabled)
 	{
@@ -442,8 +451,12 @@ packet_routed:
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
-		insert_mpip_options(skb);
+	{
+		iph->tot_len = htons(skb->len);
+		ip_send_check(iph);
 
+		insert_mpip_options(skb);
+	}
 	//if (!sysctl_mpip_enabled)
 	{
 		ih = (struct iphdr *)skb_network_header(skb);
