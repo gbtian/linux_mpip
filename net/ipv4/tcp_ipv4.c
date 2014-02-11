@@ -1961,7 +1961,10 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	 * provided case of th->doff==0 is eliminated.
 	 * So, we defer the checks. */
 	if (!skb_csum_unnecessary(skb) && tcp_v4_checksum_init(skb))
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
+	}
 
 	th = tcp_hdr(skb);
 	iph = ip_hdr(skb);
@@ -2029,6 +2032,7 @@ no_tcp_socket:
 
 	if (skb->len < (th->doff << 2) || tcp_checksum_complete(skb)) {
 csum_error:
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		TCP_INC_STATS_BH(net, TCP_MIB_CSUMERRORS);
 bad_packet:
 		TCP_INC_STATS_BH(net, TCP_MIB_INERRS);
@@ -2057,6 +2061,7 @@ do_time_wait:
 	}
 	if (tcp_checksum_complete(skb)) {
 		inet_twsk_put(inet_twsk(sk));
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
 	switch (tcp_timewait_state_process(inet_twsk(sk), skb, th)) {
