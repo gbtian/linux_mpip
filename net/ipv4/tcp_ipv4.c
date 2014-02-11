@@ -1968,11 +1968,11 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	 * Packet length and doff are validated by header prediction,
 	 * provided case of th->doff==0 is eliminated.
 	 * So, we defer the checks. */
-	if (!skb_csum_unnecessary(skb) && tcp_v4_checksum_init(skb))
-	{
-		printk("i: %s, %d\n", __FILE__, __LINE__);
-		goto csum_error;
-	}
+//	if (!skb_csum_unnecessary(skb) && tcp_v4_checksum_init(skb))
+//	{
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		goto csum_error;
+//	}
 
 	th = tcp_hdr(skb);
 	iph = ip_hdr(skb);
@@ -2067,11 +2067,14 @@ do_time_wait:
 		inet_twsk_put(inet_twsk(sk));
 		goto bad_packet;
 	}
-	if (tcp_checksum_complete(skb)) {
-		inet_twsk_put(inet_twsk(sk));
-		printk("i: %s, %d\n", __FILE__, __LINE__);
-		goto csum_error;
-	}
+
+//	if (tcp_checksum_complete(skb))
+//	{
+//		inet_twsk_put(inet_twsk(sk));
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		goto csum_error;
+//	}
+
 	switch (tcp_timewait_state_process(inet_twsk(sk), skb, th)) {
 	case TCP_TW_SYN: {
 		struct sock *sk2 = inet_lookup_listener(dev_net(skb->dev),

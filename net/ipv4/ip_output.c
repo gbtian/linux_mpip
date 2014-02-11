@@ -158,7 +158,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	else
 		iph->frag_off = 0;
 
-	iph->frag_off = 0;
+	//iph->frag_off = 0;
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
@@ -428,7 +428,7 @@ packet_routed:
 	else
 		iph->frag_off = 0;
 
-	iph->frag_off = 0;
+	//iph->frag_off = 0;
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
