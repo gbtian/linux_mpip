@@ -67,6 +67,7 @@ static inline __sum16 csum_fold(__wsum csum)
 	u32 sum = (__force u32)csum;
 	sum = (sum & 0xffff) + (sum >> 16);
 	sum = (sum & 0xffff) + (sum >> 16);
+	printk("i:%d, %s, %d\n", sum, __FILE__, __LINE__);
 	return (__force __sum16)~sum;
 }
 

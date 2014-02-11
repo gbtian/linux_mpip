@@ -26,6 +26,7 @@ from64to16 (unsigned long x)
 	x = (x & 0xffff) + (x >> 16);
 	/* add up carry.. */
 	x = (x & 0xffff) + (x >> 16);
+	printk("i:%d, %s, %d\n", x, __FILE__, __LINE__);
 	return x;
 }
 
