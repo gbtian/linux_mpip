@@ -495,10 +495,10 @@ int process_mpip_options(struct sk_buff *skb)
 		skb_reset_network_header(skb);
 		iph = (struct iphdr *)skb_network_header(skb);
 		iph->ihl -= opt->optlen>>2;
-		if(iph->protocol==IPPROTO_TCP)
-		{
-			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-		}
+//		if(iph->protocol==IPPROTO_TCP)
+//		{
+//			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+//		}
 
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
