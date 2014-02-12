@@ -495,6 +495,7 @@ int process_mpip_options(struct sk_buff *skb)
 		iph = (struct iphdr *)skb_network_header(skb);
 		iph->ihl -= opt->optlen>>2;
 		iph->tot_len = htons(skb->len);
+		iph->check = 0;
 		if(iph->protocol==IPPROTO_TCP && sysctl_mpip_rcv)
 		{
 			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
