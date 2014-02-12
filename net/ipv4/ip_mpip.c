@@ -477,10 +477,6 @@ int process_mpip_options(struct sk_buff *skb)
 		iph = ip_hdr(skb);
 		iph->ihl -= opt->optlen>>2;
 
-		iph->tot_len = htons(skb->len);
-		iph->check = 0;
-		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-
 		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
 		{
 			tcph= tcp_hdr(skb);
@@ -488,6 +484,9 @@ int process_mpip_options(struct sk_buff *skb)
 			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 		}
+
+		iph->tot_len = htons(skb->len);
+		ip_send_check(iph);
 
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
@@ -538,9 +537,6 @@ int insert_mpip_options(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-//	iph->tot_len = htons(skb->len);
-//	iph->check = 0;
-//	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
 	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 	{
