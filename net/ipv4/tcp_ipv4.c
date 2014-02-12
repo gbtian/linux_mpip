@@ -556,10 +556,10 @@ void __tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 		skb->csum_offset = offsetof(struct tcphdr, check);
 	} else {
 		printk("r: id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
-		th->check = tcp_v4_check(skb->len, saddr, daddr, 0);
-//					 csum_partial(th,
-//						      th->doff << 2,
-//						      skb->csum));
+		th->check = tcp_v4_check(skb->len, saddr, daddr,
+					 csum_partial(th,
+						      th->doff << 2,
+						      skb->csum));
 		printk("r: id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
 	}
 }
