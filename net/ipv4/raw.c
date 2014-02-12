@@ -197,17 +197,17 @@ int raw_local_deliver(struct sk_buff *skb, int protocol)
 {
 	int hash;
 	struct sock *raw_sk;
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	hash = protocol & (RAW_HTABLE_SIZE - 1);
 	raw_sk = sk_head(&raw_v4_hashinfo.ht[hash]);
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	/* If there maybe a raw socket we must check - if not we
 	 * don't care less
 	 */
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	if (raw_sk && !raw_v4_input(skb, ip_hdr(skb), hash))
 		raw_sk = NULL;
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	return raw_sk != NULL;
 
 }
