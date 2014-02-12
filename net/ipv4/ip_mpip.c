@@ -27,6 +27,7 @@ static char log_buf[256];
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 0;
 int max_pkt_len = 65500;
 
 
@@ -49,6 +50,13 @@ static struct ctl_table mpip_table[] =
  	{
  	 		.procname = "mpip_rcv",
  	 		.data = &sysctl_mpip_rcv,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_log",
+ 	 		.data = &sysctl_mpip_log,
  	 		.maxlen = sizeof(int),
  	 		.mode = 0644,
  	 		.proc_handler = &proc_dointvec
@@ -89,6 +97,9 @@ void mpip_log(const char *fmt, ...)
 	mm_segment_t fs;
 	loff_t pos;
 
+	if (!sysctl_mpip_log)
+		return;
+
 	memset(log_buf, 0, 256);
 	va_start(args, fmt);
 	r = vsnprintf(log_buf, 256, fmt, args);
@@ -120,13 +131,13 @@ EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(struct ip_options *opt)
 {
-	printk("optlen: %d\n", opt->optlen);
-	printk("node_id: ");
+	mpip_log("optlen: %d\n", opt->optlen);
+	mpip_log("node_id: ");
 	print_node_id(opt->node_id);
-	printk("session_id: %d\n", opt->session_id);
-	printk("path_id: %d\n", opt->path_id);
-	printk("stat_path_id: %d\n", opt->stat_path_id);
-	printk("packet_count: %d\n", opt->packet_count);
+	mpip_log("session_id: %d\n", opt->session_id);
+	mpip_log("path_id: %d\n", opt->path_id);
+	mpip_log("stat_path_id: %d\n", opt->stat_path_id);
+	mpip_log("packet_count: %d\n", opt->packet_count);
 }
 EXPORT_SYMBOL(print_mpip_options);
 
@@ -140,7 +151,6 @@ unsigned char *get_node_id(void)
 
 	for_each_netdev(&init_net, dev)
 	{
-		//printk("dev = %s\n", dev->name);
 		if (strstr(dev->name, "lo"))
 			continue;
 
@@ -289,14 +299,13 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
 	mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
 
-//    printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     if (path_id > 0)
     {
 		mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 
-//    	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+//    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     }
 
 }
@@ -391,7 +400,6 @@ int process_mpip_options(struct sk_buff *skb)
 
 	print_mpip_options(opt);
 
-//	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	if (res)
 	{
 		mpip_log("r: modifying header\n");
@@ -427,15 +435,15 @@ int process_mpip_options(struct sk_buff *skb)
 //		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
 //		{
 //			tcph= tcp_hdr(skb);
-//			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+//			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 //			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-//			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+//			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 //		}
 
 		iph->tot_len = htons(skb->len);
 		ip_send_check(iph);
 
-//		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+//		mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
 
 	return 1;
@@ -471,7 +479,7 @@ int insert_mpip_options(struct sk_buff *skb)
 
 	if (iph->ihl > 5)
 	{
-		printk("here we get: %d\n", iph->ihl);
+		mpip_log("here we get: %d\n", iph->ihl);
 		return 0;
 	}
 
@@ -487,9 +495,9 @@ int insert_mpip_options(struct sk_buff *skb)
 //
 //	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 //	{
-//		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+//		mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 //		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-//		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+//		mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 //	}
 
 	mpip_log("\nsending:\n");

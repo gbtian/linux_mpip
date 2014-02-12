@@ -161,7 +161,6 @@ static int raw_v4_input(struct sk_buff *skb, const struct iphdr *iph, int hash)
 	struct hlist_head *head;
 	int delivered = 0;
 	struct net *net;
-	printk("i: %s, %d\n", __FILE__, __LINE__);
 	read_lock(&raw_v4_hashinfo.lock);
 	head = &raw_v4_hashinfo.ht[hash];
 	if (hlist_empty(head))
@@ -171,7 +170,6 @@ static int raw_v4_input(struct sk_buff *skb, const struct iphdr *iph, int hash)
 	sk = __raw_v4_lookup(net, __sk_head(head), iph->protocol,
 			     iph->saddr, iph->daddr,
 			     skb->dev->ifindex);
-	printk("i: %s, %d\n", __FILE__, __LINE__);
 	while (sk) {
 		delivered = 1;
 		if (iph->protocol != IPPROTO_ICMP || !icmp_filter(sk, skb)) {
@@ -180,7 +178,6 @@ static int raw_v4_input(struct sk_buff *skb, const struct iphdr *iph, int hash)
 			/* Not releasing hash table! */
 			if (clone)
 			{
-				printk("i: %s, %d\n", __FILE__, __LINE__);
 				raw_rcv(sk, clone);
 			}
 		}
@@ -197,14 +194,11 @@ int raw_local_deliver(struct sk_buff *skb, int protocol)
 {
 	int hash;
 	struct sock *raw_sk;
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	hash = protocol & (RAW_HTABLE_SIZE - 1);
 	raw_sk = sk_head(&raw_v4_hashinfo.ht[hash]);
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	/* If there maybe a raw socket we must check - if not we
 	 * don't care less
 	 */
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	if (raw_sk && !raw_v4_input(skb, ip_hdr(skb), hash))
 		raw_sk = NULL;
 	return raw_sk != NULL;
@@ -301,7 +295,6 @@ void raw_icmp_error(struct sk_buff *skb, int protocol, u32 info)
 static int raw_rcv_skb(struct sock *sk, struct sk_buff *skb)
 {
 	/* Charge it to the socket. */
-	printk("i: %s, %d\n", __FILE__, __LINE__);
 	ipv4_pktinfo_prepare(skb);
 	if (sock_queue_rcv_skb(sk, skb) < 0) {
 		kfree_skb(skb);
@@ -319,9 +312,7 @@ int raw_rcv(struct sock *sk, struct sk_buff *skb)
 		return NET_RX_DROP;
 	}
 	nf_reset(skb);
-	printk("i: %s, %d\n", __FILE__, __LINE__);
 	skb_push(skb, skb->data - skb_network_header(skb));
-	printk("i: %s, %d\n", __FILE__, __LINE__);
 	raw_rcv_skb(sk, skb);
 	return 0;
 }
