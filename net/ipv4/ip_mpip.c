@@ -354,20 +354,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 
-    	iph->tot_len = htons(skb->len);
-		iph->check = 0;
-		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
-		{
-			printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-			printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-		}
-//
-//    	iph->tot_len = htons(skb->len);
-//    	iph->check = 0;
-//    	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
-
-//    	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+    	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     }
 
 }
@@ -504,6 +491,7 @@ int process_mpip_options(struct sk_buff *skb)
 			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 		}
 
+		iph->tot_len = htons(skb->len);
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
@@ -540,6 +528,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	int res, i;
 	struct iphdr *iph = ip_hdr(skb);
 
+
 	if (iph->ihl > 5)
 	{
 		printk("here we get: %d\n", iph->ihl);
@@ -552,6 +541,20 @@ int insert_mpip_options(struct sk_buff *skb)
 	res = ip_options_get(sock_net(skb->sk), &mp_opt, options, MPIP_OPT_LEN);
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
+
+	iph->tot_len = htons(skb->len);
+	iph->check = 0;
+	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
+	{
+		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(sb))->check, iph->check, __LINE__);
+		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(sb))->check, iph->check, __LINE__);
+	}
+
+	iph->tot_len = htons(skb->len);
+	iph->check = 0;
+	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+
 
 	//printk("\nsending:\n");
 	//print_mpip_options(&(mp_opt->opt));
