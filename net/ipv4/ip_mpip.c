@@ -542,18 +542,21 @@ int insert_mpip_options(struct sk_buff *skb)
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
 
-	iph->tot_len = htons(skb->len);
-	iph->check = 0;
+
 	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 	{
+		iph->tot_len = htons(skb->len);
+		iph->check = 0;
+
 		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+
+		iph->tot_len = htons(skb->len);
+		iph->check = 0;
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 	}
 
-	iph->tot_len = htons(skb->len);
-	iph->check = 0;
-	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
 
 	//printk("\nsending:\n");
