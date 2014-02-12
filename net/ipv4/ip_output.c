@@ -445,9 +445,6 @@ packet_routed:
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
 	{
-		iph->tot_len = htons(skb->len);
-		ip_send_check(iph);
-
 		insert_mpip_options(skb);
 	}
 	//if (!sysctl_mpip_enabled)
