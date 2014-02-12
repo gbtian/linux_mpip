@@ -478,6 +478,7 @@ int process_mpip_options(struct sk_buff *skb)
 		memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
 		kfree(tmp);
 
+
 		skb_pull(skb, opt->optlen);
 		skb_reset_network_header(skb);
 		iph = (struct iphdr *)skb_network_header(skb);
