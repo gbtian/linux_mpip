@@ -207,7 +207,6 @@ int raw_local_deliver(struct sk_buff *skb, int protocol)
 //	printk("i: %s, %d\n", __FILE__, __LINE__);
 	if (raw_sk && !raw_v4_input(skb, ip_hdr(skb), hash))
 		raw_sk = NULL;
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	return raw_sk != NULL;
 
 }
