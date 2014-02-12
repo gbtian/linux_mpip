@@ -48,6 +48,8 @@ int mpip_init(void);
 
 void mpip_log(const char *fmt, ...);
 
+void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr);
+
 void print_node_id(unsigned char *node_id);
 
 void print_addr(__be32 addr);

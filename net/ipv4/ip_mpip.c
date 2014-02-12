@@ -166,6 +166,7 @@ void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 {
 	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
 	struct tcphdr *th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
+	th->check = 0;
 //	printk("saddr=%d, %d\n", saddr, __LINE__);
 //	printk("daddr=%d, %d\n", daddr, __LINE__);
 //	printk("skb->ip_summed=%d\n", skb->ip_summed);
@@ -494,18 +495,14 @@ int process_mpip_options(struct sk_buff *skb)
 		skb_reset_network_header(skb);
 		iph = (struct iphdr *)skb_network_header(skb);
 		iph->ihl -= opt->optlen>>2;
-//		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
-//		if(iph->protocol==IPPROTO_TCP)
-//		{
-//			iph->tot_len = 0;
-//			iph->check = 0;
-//			tcph->check = 0;
-//			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-//		}
-//
-//		iph->tot_len = htons(skb->len);
-//		iph->check = 0;
-//		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+		if(iph->protocol==IPPROTO_TCP)
+		{
+			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+		}
+
+		iph->tot_len = htons(skb->len);
+		iph->check = 0;
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
