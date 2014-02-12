@@ -364,7 +364,7 @@ EXPORT_SYMBOL(get_mpip_options);
 int process_mpip_options(struct sk_buff *skb)
 {
 	struct ip_options *opt;
-	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
+	struct iphdr *iph = ip_hdr(skb);
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	struct net_device *dev = skb->dev;
@@ -388,19 +388,12 @@ int process_mpip_options(struct sk_buff *skb)
 	if(iph->protocol==IPPROTO_TCP)
 	{
 		//tcp_header = (struct tcphdr *)skb_transport_header(sock_buff); //doing the cast this way gave me the same problem
-		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
+		//tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
+		tcph= tcp_hdr(skb); //this fixed the problem
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
 		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
 		sport = tcph->source; //sport now has the source port
 		dport = tcph->dest;   //dport now has the dest port
-	}
-	else if(iph->protocol==IPPROTO_UDP)
-	{
-		udph= (struct udphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
-		osport = htons((unsigned short int) udph->source); //sport now has the source port
-		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
-		sport = udph->source; //sport now has the source port
-		dport = udph->dest;   //dport now has the dest port
 	}
 
 	opt = &(IPCB(skb)->opt);
@@ -481,7 +474,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 		skb_pull(skb, opt->optlen);
 		skb_reset_network_header(skb);
-		iph = (struct iphdr *)skb_network_header(skb);
+		iph = ip_hdr(skb);
 		iph->ihl -= opt->optlen>>2;
 
 		iph->tot_len = htons(skb->len);
@@ -490,6 +483,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
 		{
+			tcph= tcp_hdr(skb);
 			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
@@ -544,9 +538,9 @@ int insert_mpip_options(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	iph->tot_len = htons(skb->len);
-	iph->check = 0;
-	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+//	iph->tot_len = htons(skb->len);
+//	iph->check = 0;
+//	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
 	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 	{
