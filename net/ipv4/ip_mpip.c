@@ -350,7 +350,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     if (path_id > 0)
     {
-		//mpip_log("s: modifying header\n");
+		mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 //
