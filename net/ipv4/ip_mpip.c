@@ -543,6 +543,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 	mpip_options_build(skb, &(mp_opt->opt));
 
+	iph = ip_hdr(skb);
 
 	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 	{
