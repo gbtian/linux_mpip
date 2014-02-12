@@ -177,12 +177,12 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		insert_mpip_options(skb);
 	}
 
-	//if (!sysctl_mpip_enabled)
-	{
-		ih = (struct iphdr *)skb_network_header(skb);
-		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("o: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n",ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
-	}
+//	//if (!sysctl_mpip_enabled)
+//	{
+//		ih = (struct iphdr *)skb_network_header(skb);
+//		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
+//		printk("o: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n",ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
+//	}
 	/* Send it out. */
 	return ip_local_out(skb);
 }
@@ -447,12 +447,12 @@ packet_routed:
 	{
 		insert_mpip_options(skb);
 	}
-	//if (!sysctl_mpip_enabled)
-	{
-		ih = (struct iphdr *)skb_network_header(skb);
-		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("o: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n",ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
-	}
+//  if (!sysctl_mpip_enabled)
+//	{
+//		ih = (struct iphdr *)skb_network_header(skb);
+//		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
+//		printk("o: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n",ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
+//	}
 
 	res = ip_local_out(skb);
 	rcu_read_unlock();

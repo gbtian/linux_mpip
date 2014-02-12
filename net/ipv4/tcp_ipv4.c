@@ -549,18 +549,18 @@ out:
 void __tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr)
 {
 	struct tcphdr *th = tcp_hdr(skb);
-	printk("id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
+//	printk("id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
 	if (skb->ip_summed == CHECKSUM_PARTIAL) {
 		th->check = ~tcp_v4_check(skb->len, saddr, daddr, 0);
 		skb->csum_start = skb_transport_header(skb) - skb->head;
 		skb->csum_offset = offsetof(struct tcphdr, check);
 	} else {
-		printk("r: id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
+//		printk("r: id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
 		th->check = tcp_v4_check(skb->len, saddr, daddr,
 					 csum_partial(th,
 						      th->doff << 2,
 						      skb->csum));
-		printk("r: id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
+//		printk("r: id=%d, skb->ip_summed=%d, %s, %d\n",(ip_hdr(skb))->id, skb->ip_summed, __FILE__, __LINE__);
 	}
 }
 
@@ -1749,10 +1749,10 @@ static struct sock *tcp_v4_hnd_req(struct sock *sk, struct sk_buff *skb)
 static __sum16 tcp_v4_checksum_init(struct sk_buff *skb)
 {
 	const struct iphdr *iph = ip_hdr(skb);
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	if (skb->ip_summed == CHECKSUM_COMPLETE)
 	{
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		if (!tcp_v4_check(skb->len, iph->saddr,
 				  iph->daddr, skb->csum))
 		{
@@ -1761,15 +1761,15 @@ static __sum16 tcp_v4_checksum_init(struct sk_buff *skb)
 		}
 	}
 
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 	skb->csum = csum_tcpudp_nofold(iph->saddr, iph->daddr,
 				       skb->len, IPPROTO_TCP, 0);
 
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 
 	if (skb->len <= 76)
 	{
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		return __skb_checksum_complete(skb);
 	}
 	return 0;
@@ -1973,7 +1973,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	 * So, we defer the checks. */
 	if (!skb_csum_unnecessary(skb) && tcp_v4_checksum_init(skb))
 	{
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
 
@@ -2043,7 +2043,7 @@ no_tcp_socket:
 
 	if (skb->len < (th->doff << 2) || tcp_checksum_complete(skb)) {
 csum_error:
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		TCP_INC_STATS_BH(net, TCP_MIB_CSUMERRORS);
 bad_packet:
 		TCP_INC_STATS_BH(net, TCP_MIB_INERRS);
@@ -2074,7 +2074,7 @@ do_time_wait:
 	if (tcp_checksum_complete(skb))
 	{
 		inet_twsk_put(inet_twsk(sk));
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
 

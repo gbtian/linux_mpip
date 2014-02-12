@@ -197,7 +197,7 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 
 	__skb_pull(skb, skb_network_header_len(skb));
 
-	printk("i: %s, %d\n", __FILE__, __LINE__);
+//	printk("i: %s, %d\n", __FILE__, __LINE__);
 
 	rcu_read_lock();
 	{
@@ -206,9 +206,9 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 		int raw;
 
 	resubmit:
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		raw = raw_local_deliver(skb, protocol);
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+//		printk("i: %s, %d\n", __FILE__, __LINE__);
 		ipprot = rcu_dereference(inet_protos[protocol]);
 		if (ipprot != NULL) {
 			int ret;
@@ -323,7 +323,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	struct rtable *rt;
 
 	iph = ip_hdr(skb);
-	printk("i: id=%d, skb->ip_summed=%d, %d\n", iph->id, skb->ip_summed, __LINE__);
+//	printk("i: id=%d, skb->ip_summed=%d, %d\n", iph->id, skb->ip_summed, __LINE__);
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
@@ -373,7 +373,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	} else if (rt->rt_type == RTN_BROADCAST)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
-	printk("i: id=%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+//	printk("i: id=%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 
 	return dst_input(skb);
 
@@ -410,7 +410,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+//	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 
 	if (sysctl_mpip_enabled && iph->ihl > 5)
 	{
@@ -434,11 +434,11 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	}
 
 	//if (!sysctl_mpip_enabled)
-	{
-		ih = (struct iphdr *)skb_network_header(skb);
-		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-		printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
-	}
+//	{
+//		ih = (struct iphdr *)skb_network_header(skb);
+//		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
+//		printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
+//	}
 
 
 	iph = ip_hdr(skb);
@@ -472,7 +472,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	if (unlikely(ip_fast_csum((u8 *)iph, iph->ihl)))
 		goto csum_error;
 
-	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
+//	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 
 	len = ntohs(iph->tot_len);
 	if (skb->len < len) {
@@ -481,7 +481,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	} else if (len < (iph->ihl*4))
 		goto inhdr_error;
 
-	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
+//	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 	/* Our transport medium may have padded the buffer out. Now we know it
 	 * is IP we can trim to the true length of the frame.
 	 * Note this now means skb->len holds ntohs(iph->tot_len).
@@ -490,7 +490,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INDISCARDS);
 		goto drop;
 	}
-	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
+//	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 
 	skb->transport_header = skb->network_header + iph->ihl*4;
 
