@@ -351,8 +351,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     if (path_id > 0)
     {
 		//mpip_log("s: modifying header\n");
-//    	iph->saddr = saddr;
-//    	iph->daddr = daddr;
+    	iph->saddr = saddr;
+    	iph->daddr = daddr;
 //
 //    	if(iph->protocol==IPPROTO_TCP)
 //		{
@@ -468,7 +468,7 @@ int process_mpip_options(struct sk_buff *skb)
 	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	if (res)
 	{
-		//mpip_log("r: modifying header\n");
+		mpip_log("r: modifying header\n");
 
 		iph->saddr = daddr;
 		iph->daddr = saddr;
@@ -477,7 +477,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	if (opt->optlen > 0)
 	{
-		//mpip_log("r: unwrapping options\n");
+		mpip_log("r: unwrapping options\n");
 		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
 
 		if (!tmp)
@@ -496,15 +496,17 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->ihl -= opt->optlen>>2;
 		iph->tot_len = htons(skb->len);
 		iph->check = 0;
-		if(iph->protocol==IPPROTO_TCP && sysctl_mpip_rcv)
+		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
 		{
+			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 		}
 
 		iph->check = 0;
 		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 
-		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
 
 	return 1;
