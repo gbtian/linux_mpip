@@ -353,14 +353,15 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		mpip_log("s: modifying header\n");
     	iph->saddr = saddr;
     	iph->daddr = daddr;
-//
-//    	if(iph->protocol==IPPROTO_TCP)
-//		{
-//			iph->tot_len = 0;
-//			iph->check = 0;
-//			tcph->check = 0;
-//			mpip_tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-//		}
+
+    	iph->tot_len = htons(skb->len);
+		iph->check = 0;
+		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
+		{
+			printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+			printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+		}
 //
 //    	iph->tot_len = htons(skb->len);
 //    	iph->check = 0;

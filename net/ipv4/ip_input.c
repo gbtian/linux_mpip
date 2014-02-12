@@ -410,6 +410,8 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
+	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+
 	if (sysctl_mpip_enabled && iph->ihl > 5)
 	{
 //		printk("\nreceive before: %d\n", iph->ihl);
