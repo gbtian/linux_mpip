@@ -425,33 +425,32 @@ int process_mpip_options(struct sk_buff *skb)
 			mpip_log("tmp == NULL\n");
 			return 0;
 		}
-//		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-//		printk("r: tcpheader=%p, %d\n",tcp_hdr(skb), __LINE__);
+
 		iph_addr = skb_network_header(skb);
-//		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-//		printk("r: tcpheader=%p, %d\n",tcp_hdr(skb), __LINE__);
 		memcpy(tmp, iph_addr, sizeof(struct iphdr));
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		kfree(tmp);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		//skb->ip_summed = CHECKSUM_UNNECESSARY;
 		skb_pull(skb, opt->optlen);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		skb_reset_network_header(skb);
+		skb_set_transport_header(skb, sizeof(struct iphdr));
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
+
 		iph = ip_hdr(skb);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		iph->ihl -= opt->optlen>>2;
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		printk("r: tcpheader=%p, iph_addr=%p, optlen=%d, %d\n",tcp_hdr(skb), iph_addr, opt->optlen, __LINE__);
+		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 		{
 			tcph= tcp_hdr(skb);
