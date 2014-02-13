@@ -431,7 +431,7 @@ int process_mpip_options(struct sk_buff *skb)
 		skb_reset_network_header(skb);
 		iph = ip_hdr(skb);
 		iph->ihl -= opt->optlen>>2;
-		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 //
 //		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
 //		{
@@ -441,8 +441,11 @@ int process_mpip_options(struct sk_buff *skb)
 //			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 //		}
 
-//		iph->tot_len = htons(skb->len);
-//		ip_send_check(iph);
+		if (sysctl_mpip_rcv)
+		{
+			iph->tot_len = htons(skb->len);
+			ip_send_check(iph);
+		}
 
 //		mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
 	}
