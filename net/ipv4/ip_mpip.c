@@ -433,7 +433,7 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->ihl -= opt->optlen>>2;
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 
-		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
+		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 		{
 			tcph= tcp_hdr(skb);
 			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
