@@ -432,14 +432,14 @@ int process_mpip_options(struct sk_buff *skb)
 		iph = ip_hdr(skb);
 		iph->ihl -= opt->optlen>>2;
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-//
-//		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
-//		{
-//			tcph= tcp_hdr(skb);
-//			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-//			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-//			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-//		}
+
+		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_rcv)
+		{
+			tcph= tcp_hdr(skb);
+			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+			mpip_log("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+		}
 
 		if (sysctl_mpip_rcv)
 		{
@@ -497,12 +497,12 @@ int insert_mpip_options(struct sk_buff *skb)
 	iph = ip_hdr(skb);
 
 
-//	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
-//	{
-//		mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-//		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-//		mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-//	}
+	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
+	{
+		mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+		mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+	}
 
 	mpip_log("\nsending:\n");
 	print_mpip_options(&(mp_opt->opt));
