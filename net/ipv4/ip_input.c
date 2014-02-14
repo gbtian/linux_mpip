@@ -289,6 +289,7 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		goto drop;
 	}
 
+	process_mpip_options_1(skb, opt);
 
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
@@ -363,6 +364,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
+	process_mpip_options(skb);
+
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
 
@@ -407,38 +410,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	if (!pskb_may_pull(skb, sizeof(struct iphdr)))
 		goto inhdr_error;
-
-	iph = ip_hdr(skb);
-
-//	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-
-	if (sysctl_mpip_enabled && iph->ihl > 5)
-	{
-//		printk("\nreceive before: %d\n", iph->ihl);
-//		printk("receive before id: %d\n", iph->id);
-//		printk("receive before len: %d\n", skb->len);
-
-		process_mpip_options(skb);
-
-//		iph = ip_hdr(skb);
-//
-//		if (iph->saddr != iph->daddr)
-//		{
-//			printk("receive id: %d\n", iph->id);
-//			printk("receive len: %d\n", skb->len);
-//			print_addr(iph->saddr);
-//			print_addr(iph->daddr);
-//		}
-//
-//		printk("receive after: %d\n", iph->ihl);
-	}
-
-	//if (!sysctl_mpip_enabled)
-//	{
-//		ih = (struct iphdr *)skb_network_header(skb);
-//		th = (struct tcphdr *)((__u32 *)iph + iph->ihl);
-//		printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
-//	}
 
 
 	iph = ip_hdr(skb);
