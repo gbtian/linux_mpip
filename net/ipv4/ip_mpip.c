@@ -635,14 +635,11 @@ int insert_mpip_options(struct sk_buff *skb)
 	tcph = tcp_hdr(skb);
 	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 
-	//iph->tot_len = htons(skb->len);
-	//if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
-    if(false)
-	{
+	iph->tot_len = htons(skb->len);
+	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
+    {
 		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		skb->csum = csum_partial((char *)tcph,
-						 sizeof(struct tcphdr), skb->csum);
-		tcph->check = tcp_v4_check(skb->len, iph->saddr, iph->daddr, skb->csum);
+		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
 		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 	}
 
