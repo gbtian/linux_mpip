@@ -262,51 +262,51 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	options[0] = IPOPT_MPIP;
 	options[1] = MPIP_OPT_LEN;
 
-    for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
-    	options[2 + i] =  static_node_id[i];
-
-    options[5] = get_session_id(dest_node_id,
-    							iph->saddr, sport,
-								iph->daddr, dport, &is_new);
-
-    if (!is_new)
-    {
-    	path_id = get_path_id(dest_node_id, &saddr, &daddr,
-			 	 	 	  iph->saddr, iph->daddr, pkt_count);
-    }
-
-    path_stat_id = get_path_stat_id(dest_node_id, &packet_count);
-
-    options[6] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
-
-    options[7] = packet_count & 0xff; //packet_count
-    options[8] = (packet_count>>8) & 0xff; //packet_count
-
-
-    mpip_log("\ns: iph->id=%d\n", iph->id);
-    mpip_log("s: iph->saddr=");
-	print_addr(iph->saddr);
-
-	mpip_log("s: saddr=");
-	print_addr(saddr);
-
-	mpip_log("s: iph->daddr=");
-	print_addr(iph->daddr);
-
-	mpip_log("s: daddr=");
-	print_addr(daddr);
-
-	mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
-	mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
-
-    if (path_id > 0)
-    {
-		mpip_log("s: modifying header\n");
-    	iph->saddr = saddr;
-    	iph->daddr = daddr;
-
-//    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-    }
+//    for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
+//    	options[2 + i] =  static_node_id[i];
+//
+//    options[5] = get_session_id(dest_node_id,
+//    							iph->saddr, sport,
+//								iph->daddr, dport, &is_new);
+//
+//    if (!is_new)
+//    {
+//    	path_id = get_path_id(dest_node_id, &saddr, &daddr,
+//			 	 	 	  iph->saddr, iph->daddr, pkt_count);
+//    }
+//
+//    path_stat_id = get_path_stat_id(dest_node_id, &packet_count);
+//
+//    options[6] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
+//
+//    options[7] = packet_count & 0xff; //packet_count
+//    options[8] = (packet_count>>8) & 0xff; //packet_count
+//
+//
+//    mpip_log("\ns: iph->id=%d\n", iph->id);
+//    mpip_log("s: iph->saddr=");
+//	print_addr(iph->saddr);
+//
+//	mpip_log("s: saddr=");
+//	print_addr(saddr);
+//
+//	mpip_log("s: iph->daddr=");
+//	print_addr(iph->daddr);
+//
+//	mpip_log("s: daddr=");
+//	print_addr(daddr);
+//
+//	mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
+//	mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
+//
+//    if (path_id > 0)
+//    {
+//		mpip_log("s: modifying header\n");
+//    	iph->saddr = saddr;
+//    	iph->daddr = daddr;
+//
+////    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+//    }
 
 }
 EXPORT_SYMBOL(get_mpip_options);
@@ -531,47 +531,47 @@ int process_mpip_options_1(struct sk_buff *skb, struct ip_options *opt)
 	get_available_local_addr();
 
 
-	add_working_ip(opt->node_id, iph->saddr);
-	add_path_info(opt->node_id, iph->saddr);
-	add_path_stat(opt->node_id, opt->path_id);
-
-	update_packet_rcv(opt->stat_path_id, opt->packet_count);
-	update_sender_packet_rcv(opt->node_id, opt->path_id);
-	update_path_info();
-
-	session_id = add_receiver_session(opt->node_id, iph->daddr, dport,
-										iph->saddr, sport, opt->session_id);
-
-	res = get_receiver_session(opt->node_id, session_id,
-							  &saddr, &sport, &daddr, &dport);
-
-	mpip_log("\nreceiving:\n");
-	mpip_log("r: iph->id=%d\n", iph->id);
-	mpip_log("r: iph->saddr=");
-	print_addr(iph->saddr);
-
-	mpip_log("r: daddr=");
-	print_addr(daddr);
-
-	mpip_log("r: iph->daddr=");
-	print_addr(iph->daddr);
-
-
-	mpip_log("r: saddr=");
-	print_addr(saddr);
-
-	mpip_log("r: tcph->source= %d, osport=%d, dport=%d\n", tcph->source, osport, dport);
-	mpip_log("r: tcph->dest= %d, odport=%d, sport=%d\n", tcph->dest, odport, sport);
-
-
-	print_mpip_options(opt);
-
-	if (res)
-	{
-		mpip_log("r: modifying header\n");
-		iph->saddr = daddr;
-		iph->daddr = saddr;
-	}
+//	add_working_ip(opt->node_id, iph->saddr);
+//	add_path_info(opt->node_id, iph->saddr);
+//	add_path_stat(opt->node_id, opt->path_id);
+//
+//	update_packet_rcv(opt->stat_path_id, opt->packet_count);
+//	update_sender_packet_rcv(opt->node_id, opt->path_id);
+//	update_path_info();
+//
+//	session_id = add_receiver_session(opt->node_id, iph->daddr, dport,
+//										iph->saddr, sport, opt->session_id);
+//
+//	res = get_receiver_session(opt->node_id, session_id,
+//							  &saddr, &sport, &daddr, &dport);
+//
+//	mpip_log("\nreceiving:\n");
+//	mpip_log("r: iph->id=%d\n", iph->id);
+//	mpip_log("r: iph->saddr=");
+//	print_addr(iph->saddr);
+//
+//	mpip_log("r: daddr=");
+//	print_addr(daddr);
+//
+//	mpip_log("r: iph->daddr=");
+//	print_addr(iph->daddr);
+//
+//
+//	mpip_log("r: saddr=");
+//	print_addr(saddr);
+//
+//	mpip_log("r: tcph->source= %d, osport=%d, dport=%d\n", tcph->source, osport, dport);
+//	mpip_log("r: tcph->dest= %d, odport=%d, sport=%d\n", tcph->dest, odport, sport);
+//
+//
+//	print_mpip_options(opt);
+//
+//	if (res)
+//	{
+//		mpip_log("r: modifying header\n");
+//		iph->saddr = daddr;
+//		iph->daddr = saddr;
+//	}
 
 	iph->tot_len = htons(skb->len);
 	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
