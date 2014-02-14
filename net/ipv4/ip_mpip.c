@@ -441,7 +441,7 @@ int process_mpip_options(struct sk_buff *skb)
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 		skb_reset_network_header(skb);
-		skb_set_transport_header(skb, sizeof(struct iphdr));
+		skb_reset_transport_header(skb);
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
 
