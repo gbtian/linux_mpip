@@ -451,17 +451,20 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->ihl -= opt->optlen>>2;
 		printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 		printk("r: tcpheader=%p, ipheader=%p, ihl=%d, %d\n",tcp_hdr(skb), ip_hdr(skb), ip_hdr(skb)->ihl, __LINE__);
+		iph->tot_len = htons(skb->len);
 		if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 		{
 			tcph= tcp_hdr(skb);
-			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-			__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
+			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
+			skb->csum = csum_partial((char *)tcph,
+							 sizeof(struct tcphdr), skb->csum);
+			tcph->check = tcp_v4_check(skb->len, iph->saddr, iph->daddr, skb->csum);
+			printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 		}
 
 		if (sysctl_mpip_rcv)
 		{
-			iph->tot_len = htons(skb->len);
+			//iph->tot_len = htons(skb->len);
 			ip_send_check(iph);
 		}
 
@@ -497,6 +500,7 @@ int insert_mpip_options(struct sk_buff *skb)
 	struct ip_options_rcu *mp_opt = NULL;
 	int res, i;
 	struct iphdr *iph = ip_hdr(skb);
+	struct tcphdr *tcph;
 
 
 	if (iph->ihl > 5)
@@ -513,13 +517,16 @@ int insert_mpip_options(struct sk_buff *skb)
 	mpip_options_build(skb, &(mp_opt->opt));
 
 	iph = ip_hdr(skb);
-
+	tcph = tcp_hdr(skb);
 	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 
+	iph->tot_len = htons(skb->len);
 	if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
 	{
 		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
-		__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
+		skb->csum = csum_partial((char *)tcph,
+						 sizeof(struct tcphdr), skb->csum);
+		tcph->check = tcp_v4_check(skb->len, iph->saddr, iph->daddr, skb->csum);
 		printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
 	}
 
