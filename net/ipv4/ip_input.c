@@ -364,7 +364,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
-	process_mpip_options(skb);
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
