@@ -1814,7 +1814,10 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
 	}
 
 	if (skb->len < tcp_hdrlen(skb) || tcp_checksum_complete(skb))
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_err;
+	}
 
 
 	if (sk->sk_state == TCP_LISTEN) {
@@ -1973,7 +1976,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	 * So, we defer the checks. */
 	if (!skb_csum_unnecessary(skb) && tcp_v4_checksum_init(skb))
 	{
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
 
@@ -2043,7 +2046,7 @@ no_tcp_socket:
 
 	if (skb->len < (th->doff << 2) || tcp_checksum_complete(skb)) {
 csum_error:
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		TCP_INC_STATS_BH(net, TCP_MIB_CSUMERRORS);
 bad_packet:
 		TCP_INC_STATS_BH(net, TCP_MIB_INERRS);
@@ -2074,7 +2077,7 @@ do_time_wait:
 	if (tcp_checksum_complete(skb))
 	{
 		inet_twsk_put(inet_twsk(sk));
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
 
