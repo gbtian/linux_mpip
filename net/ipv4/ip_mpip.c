@@ -333,6 +333,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     if (path_id > 0)
     {
 		mpip_log("s: modifying header\n");
+
+
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 
