@@ -613,8 +613,15 @@ int process_mpip_options_1(struct sk_buff *skb, struct ip_options *opt)
 			{
 				printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
 				//__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-				mpip_tcp_v4_checksum_init(skb);
-				tcp_checksum_complete(skb);
+				//mpip_tcp_v4_checksum_init(skb);
+				//tcp_checksum_complete(skb);
+
+				tcph->check = 0;
+				tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+				                                  skb->len, iph->protocol,
+				                                  csum_partial((char *)tcph, skb->len, 0));
+				    skb->ip_summed = CHECKSUM_UNNECESSARY;
+
 				printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
 			}
 
