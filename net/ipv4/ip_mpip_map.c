@@ -573,20 +573,20 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	}
 
 
-	list_for_each_entry(path, &pi_head, list)
-	{
-		if (!is_equal_node_id(path->node_id, node_id))
-			continue;
-
-		if ((path->saddr != origin_saddr) || (path->daddr != origin_daddr))
-		{
-			f_path_id = path->path_id;
-			path->sent += pkt_count;
-			*saddr = path->saddr;
-			*daddr = path->daddr;
-			return f_path_id;
-		}
-	}
+//	list_for_each_entry(path, &pi_head, list)
+//	{
+//		if (!is_equal_node_id(path->node_id, node_id))
+//			continue;
+//
+//		if ((path->saddr != origin_saddr) || (path->daddr != origin_daddr))
+//		{
+//			f_path_id = path->path_id;
+//			path->sent += pkt_count;
+//			*saddr = path->saddr;
+//			*daddr = path->daddr;
+//			return f_path_id;
+//		}
+//	}
 
 
 
