@@ -1799,6 +1799,7 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
 #endif
 
 	if (sk->sk_state == TCP_ESTABLISHED) { /* Fast path */
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		struct dst_entry *dst = sk->sk_rx_dst;
 
 		sock_rps_save_rxhash(sk, skb);
@@ -1809,6 +1810,7 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
 				sk->sk_rx_dst = NULL;
 			}
 		}
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		tcp_rcv_established(sk, skb, tcp_hdr(skb), skb->len);
 		return 0;
 	}
@@ -1822,6 +1824,7 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
 
 
 	if (sk->sk_state == TCP_LISTEN) {
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		struct sock *nsk = tcp_v4_hnd_req(sk, skb);
 		if (!nsk)
 			goto discard;
@@ -1993,13 +1996,21 @@ int tcp_v4_rcv(struct sk_buff *skb)
 
 	sk = __inet_lookup_skb(&tcp_hashinfo, skb, th->source, th->dest);
 	if (!sk)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto no_tcp_socket;
+	}
 
 process:
 	if (sk->sk_state == TCP_TIME_WAIT)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto do_time_wait;
+	}
 
-	if (unlikely(iph->ttl < inet_sk(sk)->min_ttl)) {
+	if (unlikely(iph->ttl < inet_sk(sk)->min_ttl))
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		NET_INC_STATS_BH(net, LINUX_MIB_TCPMINTTLDROP);
 		goto discard_and_relse;
 	}
@@ -2009,14 +2020,19 @@ process:
 	nf_reset(skb);
 
 	if (sk_filter(sk, skb))
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto discard_and_relse;
+	}
 
 	sk_mark_napi_id(sk, skb);
 	skb->dev = NULL;
 
 	bh_lock_sock_nested(sk);
 	ret = 0;
-	if (!sock_owned_by_user(sk)) {
+	if (!sock_owned_by_user(sk))
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 #ifdef CONFIG_NET_DMA
 		struct tcp_sock *tp = tcp_sk(sk);
 		if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
@@ -2027,10 +2043,15 @@ process:
 #endif
 		{
 			if (!tcp_prequeue(sk, skb))
+			{
+				printk("i: %s, %d\n", __FILE__, __LINE__);
 				ret = tcp_v4_do_rcv(sk, skb);
+			}
 		}
 	} else if (unlikely(sk_add_backlog(sk, skb,
-					   sk->sk_rcvbuf + sk->sk_sndbuf))) {
+					   sk->sk_rcvbuf + sk->sk_sndbuf)))
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		bh_unlock_sock(sk);
 		NET_INC_STATS_BH(net, LINUX_MIB_TCPBACKLOGDROP);
 		goto discard_and_relse;
