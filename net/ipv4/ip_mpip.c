@@ -666,9 +666,9 @@ int insert_mpip_options(struct sk_buff *skb)
 	mpip_options_build(skb, &(mp_opt->opt));
 
 	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
-	mpip_tcp_v4_checksum_init(skb);
-	tcp_checksum_complete(skb);
-	printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
+	//mpip_tcp_v4_checksum_init(skb);
+	//tcp_checksum_complete(skb);
+	//printk("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
 
 	mpip_log("\nsending:\n");
 	print_mpip_options(&(mp_opt->opt));
