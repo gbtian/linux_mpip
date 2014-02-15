@@ -600,7 +600,7 @@ int process_mpip_options_1(struct sk_buff *skb, struct ip_options *opt)
 	{
 		mpip_log("r: modifying header\n");
 
-		if ((iph->saddr != daddr) || (iph->daddr != saddr))
+		//if ((iph->saddr != daddr) || (iph->daddr != saddr))
 		{
 			iph->saddr = daddr;
 			iph->daddr = saddr;
