@@ -142,6 +142,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
+	else if (sysctl_mpip_enabled)
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
@@ -411,6 +413,8 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
+	else if (sysctl_mpip_enabled)
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
