@@ -595,6 +595,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 				continue;
 
 			random = get_random_int() % totalbw;
+			random = (random >0) ? random : -random;
 			if (path->bw > random)
 			{
 				f_path_id = path->path_id;
