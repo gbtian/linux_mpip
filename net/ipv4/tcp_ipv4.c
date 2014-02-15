@@ -1815,6 +1815,7 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
 
 	if (skb->len < tcp_hdrlen(skb) || tcp_checksum_complete(skb))
 	{
+		printk("i: %d, %d, %s, %d\n", skb->len, tcp_hdrlen(skb), __FILE__, __LINE__);
 		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto csum_err;
 	}
@@ -2046,6 +2047,7 @@ no_tcp_socket:
 
 	if (skb->len < (th->doff << 2) || tcp_checksum_complete(skb)) {
 csum_error:
+		printk("i: %d, %d, %s, %d\n", skb->len, (th->doff << 2), __FILE__, __LINE__);
 		printk("i: %s, %d\n", __FILE__, __LINE__);
 		TCP_INC_STATS_BH(net, TCP_MIB_CSUMERRORS);
 bad_packet:
