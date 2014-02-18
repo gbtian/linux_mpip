@@ -289,7 +289,8 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		goto drop;
 	}
 
-	process_mpip_options_1(skb, opt);
+	if (sysctl_mpip_enabled)
+		process_mpip_options_1(skb, opt);
 
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
