@@ -225,6 +225,8 @@ int update_path_info()
 		if (path_info->sent > 0)
 		{
 			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
+			if (path_info->bw < 20)
+				path_info->bw = 20;
 		}
 
 		//mpip_log("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
