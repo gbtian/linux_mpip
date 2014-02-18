@@ -219,8 +219,13 @@ int update_path_info()
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-		if ((path_info->rcv == 1) && (path_info->sent >= 60000))
-			path_info->sent = 1;
+		if (path_info->sent >= 60000)
+		{
+			path_info->sent = 60000;
+
+			if (path_info->rcv < 3000)
+				path_info->sent = path_info->rcv;
+		}
 
 		if (path_info->sent > 0)
 		{
