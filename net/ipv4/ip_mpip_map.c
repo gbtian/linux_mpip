@@ -602,16 +602,17 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		if (!is_equal_node_id(path->node_id, node_id))
 			continue;
 
-		totalbw += path->bw;
+		totalbw += path->rcv;
 
-		if (path->bw > f_bw)
+		if (path->rcv > f_bw)
 		{
 			f_path_id = path->path_id;
-			f_bw = path->bw;
+			f_bw = path->rcv;
 			f_path = path;
 		}
 	}
 
+	totalbw = (totalbw > 0) ? totalbw : 1;
 	if (totalbw > 0)
 	{
 		list_for_each_entry(path, &pi_head, list)
@@ -620,8 +621,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 				continue;
 
 			random = get_random_int() % totalbw;
-			random = (random >0) ? random : -random;
-			if (path->bw > random)
+			random = (random > 0) ? random : -random;
+			if (path->rcv >= random)
 			{
 				f_path_id = path->path_id;
 				f_path = path;
