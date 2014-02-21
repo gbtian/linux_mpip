@@ -334,9 +334,22 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
     {
 		mpip_log("s: modifying header\n");
 
+		__be32 waddr = convert_addr(192, 168, 1, 20);
+		__be32 eaddr = convert_addr(192, 168, 1, 21);
+
 
     	iph->saddr = saddr;
     	iph->daddr = daddr;
+
+		if (iph->saddr == waddr)
+		{
+			iph->saddr = eaddr;
+		}
+
+		if (iph->daddr == waddr)
+		{
+			iph->daddr = eaddr;
+		}
 
 //    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     }
@@ -620,7 +633,7 @@ int process_mpip_options_1(struct sk_buff *skb, struct ip_options *opt)
 				tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
 				                                  skb->len, iph->protocol,
 				                                  csum_partial((char *)tcph, skb->len, 0));
-				    skb->ip_summed = CHECKSUM_UNNECESSARY;
+				skb->ip_summed = CHECKSUM_UNNECESSARY;
 
 //				printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
 			}

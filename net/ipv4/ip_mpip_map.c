@@ -55,6 +55,20 @@ void print_addr(__be32 addr)
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 }
 
+
+__be32 convert_addr(char a1, char a2, char a3, char a4)
+{
+	__be32 addr;
+	char *p = (char *) &addr;
+	p[0] = a1;
+	p[1] = a2;
+	p[2] = a3;
+	p[3] = a4;
+
+	return (__be32)addr;
+}
+
+
 char *in_ntoa(unsigned long in)
 {
 	char *buff = kzalloc(18, GFP_ATOMIC);
