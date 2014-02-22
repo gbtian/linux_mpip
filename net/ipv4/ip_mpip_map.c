@@ -411,7 +411,7 @@ unsigned char add_receiver_session(unsigned char *node_id,
 	int i, sid;
 
 
-	if (!node_id)
+	if (!node_id || !session_id)
 		return 0;
 
 	if ((node_id[0] == node_id[1]) &&
@@ -439,14 +439,7 @@ unsigned char add_receiver_session(unsigned char *node_id,
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	if (session_id > 0)
-	{
-		item->session_id = session_id;
-	}
-	else
-	{
-		item->session_id = (static_session_id > 250) ? 1 : ++static_session_id;;
-	}
+	item->session_id = session_id;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
