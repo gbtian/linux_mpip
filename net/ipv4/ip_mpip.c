@@ -256,6 +256,9 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 		return 0;
 
 	struct iphdr *iph = ip_hdr(skb);
+	if (!iph)
+		return 0;
+
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
@@ -288,7 +291,12 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	}
 	else if(iph->protocol==IPPROTO_UDP)
 	{
-
+		return 0;
+//		udph= udp_hdr(skb); //this fixed the problem
+//		osport = htons((unsigned short int) udph->source); //sport now has the source port
+//		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
+//		sport = udph->source; //sport now has the source port
+//		dport = udph->dest;   //dport now has the dest port
 	}
 
 	get_node_id();
@@ -579,6 +587,10 @@ int process_mpip_options_1(struct sk_buff *skb, struct ip_options *opt)
 		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
 		sport = tcph->source; //sport now has the source port
 		dport = tcph->dest;   //dport now has the dest port
+	}
+	else
+	{
+		return 0;
 	}
 
 //	printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, (tcp_hdr(skb))->check, iph->check, __LINE__);
