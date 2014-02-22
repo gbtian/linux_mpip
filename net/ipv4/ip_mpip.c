@@ -202,6 +202,7 @@ char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 
 	if (session_id == 0)
 	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		*is_new = true;
 		if (dest_node_id)
 		{
@@ -211,6 +212,7 @@ char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 	}
 	else
 	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		*is_new = false;
 	}
 
@@ -302,6 +304,7 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
     if (!is_new)
     {
+    	printk("%s, %d\n", __FILE__, __LINE__);
     	path_id = get_path_id(dest_node_id, &saddr, &daddr,
 			 	 	 	  iph->saddr, iph->daddr, pkt_count);
     }
