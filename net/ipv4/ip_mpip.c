@@ -250,8 +250,11 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
 }
 
 
-void get_mpip_options(struct sk_buff *skb, unsigned char *options)
+int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 {
+	if (!skb)
+		return 0;
+
 	struct iphdr *iph = ip_hdr(skb);
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
@@ -356,6 +359,8 @@ void get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
 //    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     }
+
+    return 1;
 
 }
 EXPORT_SYMBOL(get_mpip_options);
@@ -713,7 +718,8 @@ int insert_mpip_options(struct sk_buff *skb)
 
 	//options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
-	get_mpip_options(skb, options);
+	if (!get_mpip_options(skb, options))
+		return 0;
 
 	if (!mp_opt)
 		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),

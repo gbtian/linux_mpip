@@ -65,7 +65,7 @@ int		mpip_rcv(struct sk_buff *skb);
 
 int		mpip_xmit(struct sk_buff *skb);
 
-void get_mpip_options(struct sk_buff *skb, unsigned char *options);
+int get_mpip_options(struct sk_buff *skb, unsigned char *options);
 
 void print_mpip_options(struct ip_options *opt);
 
