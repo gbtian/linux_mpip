@@ -558,7 +558,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->daddr = addr;
 		item->sent = 0;
 		item->rcv = 0;
-		item->bw = 100;
+		item->bw = 20;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
