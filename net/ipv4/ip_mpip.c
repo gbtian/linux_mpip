@@ -282,7 +282,10 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	    //tcp_header = (struct tcphdr *)skb_transport_header(sock_buff); //doing the cast this way gave me the same problem
 
 //		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
-		tcph= tcp_hdr(skb); //this fixed the problem
+		tcph = tcp_hdr(skb); //this fixed the problem
+		if (!tcph)
+			return 0;
+
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
 		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
 		sport = tcph->source; //sport now has the source port
