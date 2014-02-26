@@ -443,10 +443,10 @@ packet_routed:
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		insert_mpip_options(skb);
-//	}
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	{
+		insert_mpip_options(skb);
+	}
 
 	res = ip_local_out(skb);
 	rcu_read_unlock();
