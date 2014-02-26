@@ -253,11 +253,14 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *packet_count)
 int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 {
 	if (!skb)
+	{
 		return 0;
-
+	}
 	struct iphdr *iph = ip_hdr(skb);
 	if (!iph)
+	{
 		return 0;
+	}
 
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
@@ -284,8 +287,9 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 //		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
+		{
 			return 0;
-
+		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
 		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
 		sport = tcph->source; //sport now has the source port
@@ -351,22 +355,22 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
     {
 		mpip_log("s: modifying header\n");
 
-		__be32 waddr = convert_addr(192, 168, 1, 20);
-		__be32 eaddr = convert_addr(192, 168, 1, 21);
+//		__be32 waddr = convert_addr(192, 168, 1, 20);
+//		__be32 eaddr = convert_addr(192, 168, 1, 21);
 
 
     	iph->saddr = saddr;
     	iph->daddr = daddr;
 
-		if (iph->saddr == waddr)
-		{
-			iph->saddr = eaddr;
-		}
-
-		if (iph->daddr == waddr)
-		{
-			iph->daddr = eaddr;
-		}
+//		if (iph->saddr == waddr)
+//		{
+//			iph->saddr = eaddr;
+//		}
+//
+//		if (iph->daddr == waddr)
+//		{
+//			iph->daddr = eaddr;
+//		}
 
 //    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
     }
