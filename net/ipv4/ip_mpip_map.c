@@ -521,6 +521,7 @@ bool is_dest_added(unsigned char *node_id, __be32 addr)
 	return false;
 }
 
+
 int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
