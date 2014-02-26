@@ -577,7 +577,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
 								   __be32 origin_saddr, __be32 origin_daddr,
-								   int pkt_len)
+								   u16 pkt_len)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;

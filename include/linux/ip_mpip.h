@@ -71,9 +71,7 @@ void print_mpip_options(struct ip_options *opt);
 
 int insert_mpip_options(struct sk_buff *skb);
 
-int process_mpip_options(struct sk_buff *skb);
-
-int process_mpip_options_1(struct sk_buff *skb, struct ip_options *opt);
+int process_mpip_options(struct sk_buff *skb, struct ip_options *opt);
 
 
 struct working_ip_table {
@@ -147,13 +145,13 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr);
 
 unsigned char * find_node_id_in_working_ip(__be32 addr);
 
-int update_packet_rcv(unsigned char path_id, u16 packet_count);
+int update_packet_rcv(unsigned char path_id, u16 pkt_len);
 
 unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id);
 
 int add_path_stat(unsigned char *node_id, unsigned char path_id);
 
-int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id);
+int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len);
 
 int update_path_info(void);
 
@@ -182,10 +180,10 @@ int add_path_info(unsigned char *node_id, __be32 addr);
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
 								   __be32 origin_saddr, __be32 origin_daddr,
-								   int pkt_count);
+								   u16 pkt_len);
 
 unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id,
-										 u16 *packet_count);
+										 u16 *pkt_len);
 
 unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);
