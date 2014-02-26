@@ -59,7 +59,7 @@ struct ip_options {
 	unsigned char	session_id;
 	unsigned char	path_id:4;
 	unsigned char	stat_path_id:4;
-	u16	packet_count;
+	u16	pkt_len;
 
 	unsigned char	__pad2;
 	unsigned char	__data[0];

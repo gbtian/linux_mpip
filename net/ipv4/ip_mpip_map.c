@@ -178,7 +178,7 @@ unsigned char * find_node_id_in_working_ip(__be32 addr)
 	return NULL;
 }
 
-int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
+int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -193,10 +193,10 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
 		if (is_equal_node_id(node_id, path_stat->node_id) &&
 			(path_stat->path_id == path_id))
 		{
-			if (path_stat->rcv >= 60000)
-				path_stat->rcv = 0;
+//			if (path_stat->rcv >= 60000)
+//				path_stat->rcv = 0;
 
-			path_stat->rcv += 1;
+			path_stat->rcv += pkt_len;
 
 			break;
 		}
@@ -205,7 +205,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id)
 	return 1;
 }
 
-int update_packet_rcv(unsigned char path_id, u16 packet_count)
+int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -216,7 +216,7 @@ int update_packet_rcv(unsigned char path_id, u16 packet_count)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->rcv = packet_count;
+			path_info->rcv = pkt_len;
 			break;
 		}
 	}
@@ -235,15 +235,21 @@ int update_path_info()
 	{
 		if (path_info->sent >= 60000)
 		{
-			path_info->sent = 60000;
-
-			if (path_info->rcv < 3000)
-				path_info->sent = path_info->rcv;
+			path_info->senth += 1;
+			path_info->sent = 0;
 		}
+
+		if (path_info->rcv >= 60000)
+		{
+			path_info->rcvh += 1;
+			path_info->rcv = 0;
+		}
+
 
 		if (path_info->sent > 0)
 		{
-			path_info->bw = (unsigned char)((path_info->rcv * 100) / path_info->sent);
+			path_info->bw = (unsigned char)(((path_info->rcvh * 60000 + path_info->rcv) * 100) / (path_info->senth * 60000 + path_info->sent));
+
 			if (path_info->bw < 20)
 				path_info->bw = 20;
 		}
@@ -571,7 +577,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
 								   __be32 origin_saddr, __be32 origin_daddr,
-								   int pkt_count)
+								   int pkt_len)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -644,7 +650,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (f_path_id > 0)
 	{
-		f_path->sent += pkt_count;
+		f_path->sent += pkt_len;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 	}
@@ -653,7 +659,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
-			f_path->sent += pkt_count;
+			f_path->sent += pkt_len;
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
@@ -663,7 +669,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 }
 
 
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packet_count)
+unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_len)
 {
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
@@ -696,7 +702,10 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *packe
 	if (e_path_stat_id > 0)
 	{
 		e_path_stat->fbjiffies = jiffies;
-		*packet_count = e_path_stat->rcv;
+		*rcv_len = e_path_stat->rcv;
+
+		if (e_path_stat->rcv >= 60000)
+			path_stat->rcv = 0;
 	}
 
 	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
@@ -833,6 +842,7 @@ asmlinkage long sys_mpip(void)
 		printk("%d  ", path_info->path_id);
 
 		p = (char *) &(path_info->saddr);
+
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
@@ -842,7 +852,11 @@ asmlinkage long sys_mpip(void)
 
 		printk("%d  ", path_info->bw);
 
+		printk("%d  ", path_info->senth);
+
 		printk("%d  ", path_info->sent);
+
+		printk("%d  ", path_info->rcvh);
 
 		printk("%d\n", path_info->rcv);
 

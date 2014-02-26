@@ -94,6 +94,8 @@ struct path_info_table {
 	unsigned char	bw;  /* bandwidth */
 	__u16   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
+	__u16   senth;  /* number of mega sent on this path */
+	__u16   rcvh;  /* number of mega received on this path */
 	struct list_head list;
 };
 
