@@ -138,7 +138,7 @@ void print_mpip_options(struct ip_options *opt)
 	mpip_log("session_id: %d\n", opt->session_id);
 	mpip_log("path_id: %d\n", opt->path_id);
 	mpip_log("stat_path_id: %d\n", opt->stat_path_id);
-	mpip_log("packet_count: %d\n", opt->packet_count);
+	mpip_log("pkt_len: %d\n", opt->pkt_len);
 }
 EXPORT_SYMBOL(print_mpip_options);
 
@@ -269,11 +269,10 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
-	u16	packet_count = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
 	int pkt_len = skb->len + 12;
-	int rcv_len = 0;
+	u16 rcv_len = 0;
 //	int mtu = ip_skb_dst_mtu(skb);
 //	int pkt_count = pkt_len / mtu + ((pkt_len % mtu) ? 1 : 0);
 	bool is_new = true;
@@ -647,7 +646,7 @@ int process_mpip_options(struct sk_buff *skb)
 	add_path_info(opt->node_id, iph->saddr);
 	add_path_stat(opt->node_id, opt->path_id);
 
-	update_packet_rcv(opt->stat_path_id, opt->packet_count);
+	update_packet_rcv(opt->stat_path_id, opt->pkt_len);
 	update_sender_packet_rcv(opt->node_id, opt->path_id);
 	update_path_info();
 
