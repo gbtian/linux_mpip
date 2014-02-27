@@ -1415,6 +1415,11 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
+
+//	if (sysctl_mpip_enabled && (iph->ihl == 5))
+//	{
+//		insert_mpip_options(skb);
+//	}
 	/*
 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
 	 * on dst refcount
