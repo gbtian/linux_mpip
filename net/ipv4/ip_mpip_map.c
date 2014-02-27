@@ -246,7 +246,7 @@ int update_path_info()
 		}
 
 
-		if (path_info->sent > 0)
+		if ((path_info->senth > 0) || (path_info->sent > 0))
 		{
 			path_info->bw = (unsigned char)(((path_info->rcvh * 60000 + path_info->rcv) * 100) / (path_info->senth * 60000 + path_info->sent));
 
@@ -705,7 +705,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_l
 		*rcv_len = e_path_stat->rcv;
 
 		if (e_path_stat->rcv >= 60000)
-			path_stat->rcv = 0;
+			e_path_stat->rcv = 0;
 	}
 
 	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
