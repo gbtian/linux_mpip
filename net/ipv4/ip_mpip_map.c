@@ -217,6 +217,12 @@ int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 		if (path_info->path_id == path_id)
 		{
 			path_info->rcv = pkt_len;
+
+			if (path_info->rcv >= 60000)
+			{
+				path_info->rcvh += 1;
+				path_info->rcv = 0;
+			}
 			break;
 		}
 	}
@@ -233,17 +239,17 @@ int update_path_info()
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-		if (path_info->sent >= 60000)
-		{
-			path_info->senth += 1;
-			path_info->sent = 0;
-		}
+//		if (path_info->sent >= 60000)
+//		{
+//			path_info->senth += 1;
+//			path_info->sent = 0;
+//		}
 
-		if (path_info->rcv >= 60000)
-		{
-			path_info->rcvh += 1;
-			path_info->rcv = 0;
-		}
+//		if (path_info->rcv >= 60000)
+//		{
+//			path_info->rcvh += 1;
+//			path_info->rcv = 0;
+//		}
 
 
 		if ((path_info->senth > 0) || (path_info->sent > 0))
@@ -653,6 +659,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path->sent += pkt_len;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
+
+		if (f_path->sent >= 60000)
+		{
+			f_path->senth += 1;
+			f_path->sent = 0;
+		}
 	}
 	else
 	{
@@ -663,6 +675,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
+
+			if (f_path->sent >= 60000)
+			{
+				f_path->senth += 1;
+				f_path->sent = 0;
+			}
 		}
 	}
 	return f_path_id;
