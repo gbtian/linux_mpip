@@ -196,8 +196,8 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 //			if (path_stat->rcv >= 60000)
 //				path_stat->rcv = 0;
 
-			atomic_add(pkt_len, &(path_stat->rcv));
-			//path_stat->rcv += pkt_len;
+//			atomic_add(pkt_len, &(path_stat->rcv));
+			path_stat->rcv += pkt_len;
 
 			break;
 		}
@@ -224,6 +224,8 @@ int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 				path_info->rcvh += 1;
 				path_info->rcv = 0;
 			}
+
+			printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
 			break;
 		}
 	}
@@ -316,7 +318,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 
 	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->path_id = path_id;
-	atomic_set(&(item->rcv), 0);
+//	atomic_set(&(item->rcv), 0);
+	item->rcv = 0;
 	item->fbjiffies = jiffies;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
@@ -684,6 +687,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			}
 		}
 	}
+
+	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 	return f_path_id;
 }
 
@@ -721,10 +726,13 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_l
 	if (e_path_stat_id > 0)
 	{
 		e_path_stat->fbjiffies = jiffies;
-		*rcv_len = atomic_read(&(e_path_stat->rcv));
+//		*rcv_len = atomic_read(&(e_path_stat->rcv));
+		*rcv_len = e_path_stat->rcv;
 
-		if (atomic_read(&(e_path_stat->rcv)) >= 60000)
-			atomic_set(&(e_path_stat->rcv), 0);
+//		if (atomic_read(&(e_path_stat->rcv)) >= 60000)
+//			atomic_set(&(e_path_stat->rcv), 0);
+		if (e_path_stat->rcv >= 60000)
+			e_path_stat->rcv = 0;
 	}
 
 	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
@@ -913,7 +921,8 @@ asmlinkage long sys_mpip(void)
 				path_stat->node_id[0], path_stat->node_id[1], path_stat->node_id[2]);
 
 		printk("%d  ", path_stat->path_id);
-		printk("%d  ", atomic_read(&(path_stat->rcv)));
+//		printk("%d  ", atomic_read(&(path_stat->rcv)));
+		printk("%d  ", path_stat->rcv);
 		printk("%lu\n", path_stat->fbjiffies);
 
 		printk("+++++++++\n");
