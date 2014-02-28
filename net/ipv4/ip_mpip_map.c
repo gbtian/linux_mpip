@@ -222,6 +222,7 @@ int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 			if (path_info->rcv >= 60000)
 			{
 				path_info->rcvh += 1;
+				printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
 				path_info->rcv = 0;
 			}
 
@@ -239,6 +240,8 @@ int update_path_info()
 	/* todo: need locks */
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info;
+	int rcv = 0;
+	int sent = 0;
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
@@ -257,7 +260,9 @@ int update_path_info()
 
 		if ((path_info->senth > 0) || (path_info->sent > 0))
 		{
-			path_info->bw = (unsigned char)(((path_info->rcvh * 60000 + path_info->rcv) * 100) / (path_info->senth * 60000 + path_info->sent));
+			rcv = path_info->rcvh * 60000 + path_info->rcv;
+			sent = path_info->senth * 60000 + path_info->sent;
+			path_info->bw = (unsigned char)(rcv * 100 / sent);
 
 			if (path_info->bw < 20)
 				path_info->bw = 20;
@@ -671,6 +676,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		{
 			f_path->senth += 1;
 			f_path->sent = 0;
+			printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 		}
 	}
 	else
@@ -687,6 +693,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			{
 				f_path->senth += 1;
 				f_path->sent = 0;
+				printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 			}
 		}
 	}
