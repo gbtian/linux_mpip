@@ -193,7 +193,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 //				path_stat->rcv = 0;
 
 //			atomic_add(pkt_len, &(path_stat->rcv));
-			path_stat->rcv += pkt_len;
+			path_stat->rcv += pkt_len / 32;
 
 			if (path_stat->rcv >= 60000)
 			{
@@ -650,7 +650,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	if (f_path_id > 0)
 	{
 	//	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
-		f_path->sent += pkt_len;
+		f_path->sent += pkt_len / 32;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 
@@ -666,7 +666,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
-			f_path->sent += pkt_len;
+			f_path->sent += pkt_len / 32;
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
