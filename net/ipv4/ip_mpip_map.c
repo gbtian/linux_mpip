@@ -577,6 +577,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
 
+
 		mpip_log( "pi: %d\n", item->path_id);
 
 		print_node_id(node_id);
