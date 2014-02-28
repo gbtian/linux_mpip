@@ -568,7 +568,9 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
+		item->senth = 0;
 		item->sent = 0;
+		item->rcvh = 0;
 		item->rcv = 0;
 		item->bw = 20;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
