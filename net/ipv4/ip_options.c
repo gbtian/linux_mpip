@@ -373,16 +373,11 @@ int ip_options_compile(struct net *net,
 		    case IPOPT_MPIP:
 		    	opt->node_id[0] = optptr[2];
 		    	opt->node_id[1] = optptr[3];
-		    	opt->node_id[2] = optptr[4];
-		    	//print_node_id(opt->node_id);
-		    	opt->session_id = optptr[5];
-		    	//printk("opt->session_id=%d\n",opt->session_id);
-		    	opt->path_id = (optptr[6] & 0xf0) >> 4;
-		    	//printk("opt->path_id=%d\n",opt->path_id);
-		    	opt->stat_path_id = (optptr[6] & 0x0f);
-		    	//printk("opt->stat_path_id=%d\n",opt->stat_path_id);
-		    	opt->pkt_len = (optptr[8]<<8)|optptr[7];
-		    	//printk("opt->packet_count=%d\n",opt->packet_count);
+		    	opt->session_id = optptr[4];
+		    	opt->path_id = (optptr[5] & 0xf0) >> 4;
+		    	opt->stat_path_id = (optptr[5] & 0x0f);
+		    	opt->rcv = optptr[6];
+		    	opt->rcv = (optptr[8]<<8)|optptr[7];
 		    	break;
 		    case IPOPT_TIMESTAMP:
 		    	if (opt->ts)

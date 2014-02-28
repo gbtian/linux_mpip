@@ -29,8 +29,8 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_OPT_LEN 9
-#define MPIP_OPT_NODE_ID_LEN 3
+#define MPIP_OPT_LEN 10
+#define MPIP_OPT_NODE_ID_LEN 2
 
 extern int sysctl_mpip_enabled;
 extern int sysctl_mpip_send;
@@ -128,7 +128,8 @@ struct path_stat_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 //	atomic_t  rcv;  /* number of pkt received on this path */
-	u16  rcv;  /* number of pkt received on this path */
+	__u16   rcvh;  /* number of mega received on this path */
+	__u16  rcv;  /* number of pkt received on this path */
 	unsigned long fbjiffies; /* last feedback time of this path's stat */
 	struct list_head list;
 };
@@ -147,7 +148,7 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr);
 
 unsigned char * find_node_id_in_working_ip(__be32 addr);
 
-int update_packet_rcv(unsigned char path_id, u16 pkt_len);
+int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv);
 
 unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id);
 
@@ -184,8 +185,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 origin_saddr, __be32 origin_daddr,
 								   u16 pkt_len);
 
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id,
-										 u16 *pkt_len);
+unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned char *rcvh,
+										 u16 *rcv);
 
 unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);

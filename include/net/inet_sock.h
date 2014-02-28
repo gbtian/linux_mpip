@@ -55,11 +55,12 @@ struct ip_options {
 	unsigned char	router_alert;
 	unsigned char	cipso;
 
-	unsigned char	node_id[ETH_ALEN-3];
+	unsigned char	node_id[2];
 	unsigned char	session_id;
 	unsigned char	path_id:4;
 	unsigned char	stat_path_id:4;
-	u16	pkt_len;
+	unsigned char	rcvh;
+	u16	rcv;
 
 	unsigned char	__pad2;
 	unsigned char	__data[0];

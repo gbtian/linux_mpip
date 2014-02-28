@@ -138,7 +138,8 @@ void print_mpip_options(struct ip_options *opt)
 	mpip_log("session_id: %d\n", opt->session_id);
 	mpip_log("path_id: %d\n", opt->path_id);
 	mpip_log("stat_path_id: %d\n", opt->stat_path_id);
-	mpip_log("pkt_len: %d\n", opt->pkt_len);
+	mpip_log("rcvh: %d\n", opt->rcvh);
+	mpip_log("rcv: %d\n", opt->rcv);
 }
 EXPORT_SYMBOL(print_mpip_options);
 
@@ -234,7 +235,7 @@ unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
 								origin_saddr, origin_daddr, pkt_len);
 }
 
-unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *rcv_len)
+unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh, u16 *rcv)
 {
 	if (!dest_node_id)
 		return 0;
@@ -245,7 +246,7 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *rcv_len)
 		return 0;
 	}
 
-	return find_earliest_stat_path_id(dest_node_id, rcv_len);
+	return find_earliest_stat_path_id(dest_node_id, rcvh, rcv);
 }
 
 
@@ -273,7 +274,8 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
 	int pkt_len = skb->len + 12;
-	u16 rcv_len = 0;
+	unsigned char rcvh = 0;
+	u16 rcv = 0;
 //	int mtu = ip_skb_dst_mtu(skb);
 //	int pkt_count = pkt_len / mtu + ((pkt_len % mtu) ? 1 : 0);
 	bool is_new = true;
@@ -316,7 +318,7 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
     for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
     	options[2 + i] =  static_node_id[i];
 
-    options[5] = get_session_id(dest_node_id,
+    options[4] = get_session_id(dest_node_id,
     							iph->saddr, sport,
 								iph->daddr, dport, &is_new);
 
@@ -327,12 +329,14 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 			 	 	 	  iph->saddr, iph->daddr, pkt_len);
     }
 
-    path_stat_id = get_path_stat_id(dest_node_id, &rcv_len);
+    path_stat_id = get_path_stat_id(dest_node_id, &rcvh, &rcv);
 
-    options[6] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
+    options[5] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
 
-    options[7] = rcv_len & 0xff; //packet_count
-    options[8] = (rcv_len>>8) & 0xff; //packet_count
+    options[6] = rcvh;
+
+    options[7] = rcv & 0xff; //packet_count
+    options[8] = (rcv>>8) & 0xff; //packet_count
 
 
     mpip_log("\ns: iph->id=%d\n", iph->id);
@@ -432,7 +436,7 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	add_path_info(opt->node_id, iph->saddr);
 	add_path_stat(opt->node_id, opt->path_id);
 
-	update_packet_rcv(opt->stat_path_id, opt->pkt_len);
+	update_packet_rcv(opt->stat_path_id, opt->rcvh, opt->rcv);
 	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
 	update_path_info();
 

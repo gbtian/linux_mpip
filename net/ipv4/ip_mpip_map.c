@@ -32,8 +32,8 @@ void print_node_id(unsigned char *node_id)
 	if (!node_id)
 		return;
 
-	mpip_log( "%02x-%02x-%02x\n",
-			node_id[0], node_id[1], node_id[2]);
+	mpip_log( "%02x-%02x\n",
+			node_id[0], node_id[1]);
 }
 
 bool is_lan_addr(__be32 addr)
@@ -92,8 +92,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	if (!node_id)
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -104,10 +103,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
 
-	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
-		item->node_id[i] = node_id[i];
-
-	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->addr = addr;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
@@ -199,6 +195,13 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 //			atomic_add(pkt_len, &(path_stat->rcv));
 			path_stat->rcv += pkt_len;
 
+			if (path_stat->rcv >= 60000)
+			{
+				printk("%d, %d, %d, %s, %d\n", pkt_len, path_stat->rcvh, path_stat->rcv, __FILE__, __LINE__);
+				path_stat->rcvh += 1;
+				path_stat->rcv = 0;
+			}
+
 			break;
 		}
 	}
@@ -206,7 +209,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 	return 1;
 }
 
-int update_packet_rcv(unsigned char path_id, u16 pkt_len)
+int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -218,17 +221,8 @@ int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 		if (path_info->path_id == path_id)
 		{
 		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
-			path_info->rcv = pkt_len;
-		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
-
-			if (path_info->rcv >= 60000)
-			{
-				path_info->rcvh += 1;
-				printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
-				path_info->rcv = 0;
-			}
-
-		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
+			path_info->rcvh = rcvh;
+			path_info->rcv = rcv;
 			break;
 		}
 	}
@@ -308,8 +302,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	if (!node_id || (path_id == 0))
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -320,12 +313,11 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 
 	item = kzalloc(sizeof(struct path_stat_table),	GFP_ATOMIC);
 
-	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
-		item->node_id[i] = node_id[i];
 
-	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->path_id = path_id;
 //	atomic_set(&(item->rcv), 0);
+	item->rcvh = 0;
 	item->rcv = 0;
 	item->fbjiffies = jiffies;
 	INIT_LIST_HEAD(&(item->list));
@@ -371,8 +363,7 @@ int add_sender_session(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 	if (!dest_node_id)
 		return 0;
 
-	if ((dest_node_id[0] == dest_node_id[1]) &&
-		(dest_node_id[1] == dest_node_id[2]))
+	if (dest_node_id[0] == dest_node_id[1])
 	{
 		return 0;
 	}
@@ -383,10 +374,7 @@ int add_sender_session(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 
 	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
 
-	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
-		item->node_id[i] = dest_node_id[i];
-
-	//memcpy(item->node_id, dest_node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, dest_node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -437,8 +425,7 @@ unsigned char add_receiver_session(unsigned char *node_id,
 	if (!node_id || !session_id)
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -456,10 +443,7 @@ unsigned char add_receiver_session(unsigned char *node_id,
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
-	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
-		item->node_id[i] = node_id[i];
-
-	//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -487,8 +471,7 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 	if (!node_id || !session_id)
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -554,8 +537,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	if (!node_id)
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -569,10 +551,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
-		for(i = 0; i < MPIP_OPT_NODE_ID_LEN; ++i)
-			item->node_id[i] = node_id[i];
-
-		//memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
 		item->senth = 0;
@@ -611,8 +590,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	if (!node_id)
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -707,7 +685,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 }
 
 
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_len)
+unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned char *rcvh, u16 *rcv)
 {
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
@@ -741,15 +719,16 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_l
 	{
 		e_path_stat->fbjiffies = jiffies;
 //		*rcv_len = atomic_read(&(e_path_stat->rcv));
-		*rcv_len = e_path_stat->rcv;
+		*rcvh = e_path_stat->rcvh;
+		*rcv = e_path_stat->rcv;
 
 //		if (atomic_read(&(e_path_stat->rcv)) >= 60000)
 //			atomic_set(&(e_path_stat->rcv), 0);
-		if (e_path_stat->rcv >= 60000)
-		{
-			printk("%d, %s, %d\n", e_path_stat->rcv, __FILE__, __LINE__);
-			e_path_stat->rcv = 0;
-		}
+//		if (e_path_stat->rcv >= 60000)
+//		{
+//			printk("%d, %s, %d\n", e_path_stat->rcv, __FILE__, __LINE__);
+//			e_path_stat->rcv = 0;
+//		}
 	}
 
 	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
@@ -868,8 +847,8 @@ asmlinkage long sys_mpip(void)
 	printk("******************wi*************\n");
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
-		printk( "%02x-%02x-%02x  ",
-				working_ip->node_id[0], working_ip->node_id[1], working_ip->node_id[2]);
+		printk( "%02x-%02x  ",
+				working_ip->node_id[0], working_ip->node_id[1]);
 
 		p = (char *) &(working_ip->addr);
 		printk( "%d.%d.%d.%d\n",
@@ -881,8 +860,8 @@ asmlinkage long sys_mpip(void)
 	printk("******************pi*************\n");
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		printk( "%02x-%02x-%02x  ",
-				path_info->node_id[0], path_info->node_id[1], path_info->node_id[2]);
+		printk( "%02x-%02x  ",
+				path_info->node_id[0], path_info->node_id[1]);
 
 		printk("%d  ", path_info->path_id);
 
@@ -911,8 +890,8 @@ asmlinkage long sys_mpip(void)
 	printk("******************ss*************\n");
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		printk( "%02x-%02x-%02x  ",
-				socket_session->node_id[0], socket_session->node_id[1], socket_session->node_id[2]);
+		printk( "%02x-%02x  ",
+				socket_session->node_id[0], socket_session->node_id[1]);
 
 		printk("%d  ", socket_session->session_id);
 
@@ -934,8 +913,8 @@ asmlinkage long sys_mpip(void)
 	printk("******************ps*************\n");
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
-		printk( "%02x-%02x-%02x  ",
-				path_stat->node_id[0], path_stat->node_id[1], path_stat->node_id[2]);
+		printk( "%02x-%02x  ",
+				path_stat->node_id[0], path_stat->node_id[1]);
 
 		printk("%d  ", path_stat->path_id);
 //		printk("%d  ", atomic_read(&(path_stat->rcv)));
