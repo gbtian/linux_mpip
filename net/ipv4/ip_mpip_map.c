@@ -217,7 +217,9 @@ int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 	{
 		if (path_info->path_id == path_id)
 		{
+		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
 			path_info->rcv = pkt_len;
+		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
 
 			if (path_info->rcv >= 60000)
 			{
@@ -226,7 +228,7 @@ int update_packet_rcv(unsigned char path_id, u16 pkt_len)
 				path_info->rcv = 0;
 			}
 
-			printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
+		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
 			break;
 		}
 	}
@@ -582,6 +584,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
 
+		printk("%d, %d, %s, %d\n", item->senth, item->sent, __FILE__, __LINE__);
+		printk("%d, %d, %s, %d\n", item->senth, item->rcv, __FILE__, __LINE__);
 
 		mpip_log( "pi: %d\n", item->path_id);
 
@@ -667,15 +671,16 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (f_path_id > 0)
 	{
+	//	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 		f_path->sent += pkt_len;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 
 		if (f_path->sent >= 60000)
 		{
+			printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 			f_path->senth += 1;
 			f_path->sent = 0;
-			printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 		}
 	}
 	else
@@ -697,7 +702,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		}
 	}
 
-	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
+//	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 	return f_path_id;
 }
 
@@ -741,7 +746,10 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_l
 //		if (atomic_read(&(e_path_stat->rcv)) >= 60000)
 //			atomic_set(&(e_path_stat->rcv), 0);
 		if (e_path_stat->rcv >= 60000)
+		{
+			printk("%d, %s, %d\n", e_path_stat->rcv, __FILE__, __LINE__);
 			e_path_stat->rcv = 0;
+		}
 	}
 
 	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
