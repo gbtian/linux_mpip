@@ -123,6 +123,7 @@ struct socket_session_table {
 };
 
 
+
 struct path_stat_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/

@@ -731,6 +731,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, u16 *rcv_l
 	return e_path_stat_id;
 }
 
+
 __be32 find_local_addr(__be32 addr)
 {
 	struct local_addr_table *local_addr;

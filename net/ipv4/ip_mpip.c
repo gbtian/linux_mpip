@@ -249,6 +249,7 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, u16 *rcv_len)
 }
 
 
+
 int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 {
 	if (!skb)
