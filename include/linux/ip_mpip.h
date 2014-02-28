@@ -92,8 +92,8 @@ struct path_info_table {
 	unsigned char	bw;  /* bandwidth */
 	__u16   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
-	__u16   senth;  /* number of mega sent on this path */
-	__u16   rcvh;  /* number of mega received on this path */
+	unsigned char	senth;  /* number of mega sent on this path */
+	unsigned char	rcvh;  /* number of mega received on this path */
 	struct list_head list;
 };
 
@@ -128,7 +128,7 @@ struct path_stat_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 //	atomic_t  rcv;  /* number of pkt received on this path */
-	__u16   rcvh;  /* number of mega received on this path */
+	unsigned char	rcvh;  /* number of mega received on this path */
 	__u16  rcv;  /* number of pkt received on this path */
 	unsigned long fbjiffies; /* last feedback time of this path's stat */
 	struct list_head list;

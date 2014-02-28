@@ -564,7 +564,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		list_add(&(item->list), &pi_head);
 
 		printk("%d, %d, %s, %d\n", item->senth, item->sent, __FILE__, __LINE__);
-		printk("%d, %d, %s, %d\n", item->senth, item->rcv, __FILE__, __LINE__);
+		printk("%d, %d, %s, %d\n", item->rcvh, item->rcv, __FILE__, __LINE__);
 
 		mpip_log( "pi: %d\n", item->path_id);
 
@@ -917,6 +917,7 @@ asmlinkage long sys_mpip(void)
 				path_stat->node_id[0], path_stat->node_id[1]);
 
 		printk("%d  ", path_stat->path_id);
+		printk("%d  ", path_stat->rcvh);
 //		printk("%d  ", atomic_read(&(path_stat->rcv)));
 		printk("%d  ", path_stat->rcv);
 		printk("%lu\n", path_stat->fbjiffies);
