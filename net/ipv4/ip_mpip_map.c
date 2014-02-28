@@ -646,7 +646,6 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		}
 	}
 
-
 	if (totalbw > 0)
 	{
 		list_for_each_entry(path, &pi_head, list)
