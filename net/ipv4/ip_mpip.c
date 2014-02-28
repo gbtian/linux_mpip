@@ -225,8 +225,7 @@ unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
 	if (node_id == NULL)
 		return 0;
 
-	if ((node_id[0] == node_id[1]) &&
-		(node_id[1] == node_id[2]))
+	if (node_id[0] == node_id[1])
 	{
 		return 0;
 	}
@@ -240,8 +239,7 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh,
 	if (!dest_node_id)
 		return 0;
 
-	if ((dest_node_id[0] == dest_node_id[1]) &&
-		(dest_node_id[1] == dest_node_id[2]))
+	if (dest_node_id[0] == dest_node_id[1])
 	{
 		return 0;
 	}
