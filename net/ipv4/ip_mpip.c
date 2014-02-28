@@ -329,6 +329,8 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 
     path_stat_id = get_path_stat_id(dest_node_id, &rcvh, &rcv);
 
+    //printk("%d, %d, %s, %d\n", rcvh, rcv, __FILE__, __LINE__);
+
     options[5] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
 
     options[6] = rcvh;

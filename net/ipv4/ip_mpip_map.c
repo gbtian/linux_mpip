@@ -197,7 +197,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 
 			if (path_stat->rcv >= 60000)
 			{
-				printk("%d, %d, %d, %s, %d\n", pkt_len, path_stat->rcvh, path_stat->rcv, __FILE__, __LINE__);
+//				printk("%d, %d, %d, %s, %d\n", pkt_len, path_stat->rcvh, path_stat->rcv, __FILE__, __LINE__);
 				path_stat->rcvh += 1;
 				path_stat->rcv = 0;
 			}
@@ -722,6 +722,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 		*rcvh = e_path_stat->rcvh;
 		*rcv = e_path_stat->rcv;
 
+//		printk("%d, %d, %s, %d\n", *rcvh, *rcv, __FILE__, __LINE__);
 //		if (atomic_read(&(e_path_stat->rcv)) >= 60000)
 //			atomic_set(&(e_path_stat->rcv), 0);
 //		if (e_path_stat->rcv >= 60000)
