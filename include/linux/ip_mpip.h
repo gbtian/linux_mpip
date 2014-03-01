@@ -92,6 +92,7 @@ struct path_info_table {
 	__be32	daddr; /* destination ip address*/
 	unsigned char lossrate; /* loss rate */
 	__u32	bw;  /* bandwidth */
+	__u16   sentc;
 	__u16   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
 	unsigned char	senth;  /* number of mega sent on this path */

@@ -241,7 +241,11 @@ int update_path_info()
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-		if ((path_info->senth > 0) || (path_info->sent > 0))
+		if (path_info->sentc < 100)
+		{
+			path_info->bw = 20;
+		}
+		else if ((path_info->senth > 0) || (path_info->sent > 0))
 		{
 			rcv = path_info->rcvh * 60000 + path_info->rcv;
 			sent = path_info->senth * 60000 + path_info->sent;
@@ -538,6 +542,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
+		item->sentc = 0;
 		item->senth = 0;
 		item->sent = 0;
 		item->rcvh = 0;
@@ -635,6 +640,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	if (f_path_id > 0)
 	{
 	//	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
+		f_path->sentc += 1;
 		f_path->sent += pkt_len>>4;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
@@ -651,6 +657,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
+			f_path->sentc += 1;
 			f_path->sent += pkt_len>>4;
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
@@ -863,6 +870,8 @@ asmlinkage long sys_mpip(void)
 		printk("%d  ", path_info->lossrate);
 
 		printk("%d  ", path_info->bw);
+
+		printk("%d  ", path_info->sentc);
 
 		printk("%d  ", path_info->senth);
 
