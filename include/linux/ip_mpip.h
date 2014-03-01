@@ -89,7 +89,8 @@ struct path_info_table {
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
-	unsigned char	bw;  /* bandwidth */
+	unsigned char lossrate; /* loss rate */
+	__u32	bw;  /* bandwidth */
 	__u16   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
 	unsigned char	senth;  /* number of mega sent on this path */

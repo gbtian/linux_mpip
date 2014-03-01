@@ -193,7 +193,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 //				path_stat->rcv = 0;
 
 //			atomic_add(pkt_len, &(path_stat->rcv));
-			path_stat->rcv += pkt_len / 32;
+			path_stat->rcv += pkt_len>>4;
 
 			if (path_stat->rcv >= 60000)
 			{
@@ -241,34 +241,17 @@ int update_path_info()
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-//		if (path_info->sent >= 60000)
-//		{
-//			path_info->senth += 1;
-//			path_info->sent = 0;
-//		}
-
-//		if (path_info->rcv >= 60000)
-//		{
-//			path_info->rcvh += 1;
-//			path_info->rcv = 0;
-//		}
-
-
 		if ((path_info->senth > 0) || (path_info->sent > 0))
 		{
 			rcv = path_info->rcvh * 60000 + path_info->rcv;
 			sent = path_info->senth * 60000 + path_info->sent;
-			path_info->bw = (unsigned char)(rcv * 100 / sent);
+			path_info->lossrate = (unsigned char)(rcv * 100 / sent);
 
-			if (path_info->bw < 20)
-				path_info->bw = 20;
+			if (path_info->lossrate < 20)
+				path_info->lossrate = 20;
+
+			path_info->bw = rcv * path_info->lossrate;
 		}
-
-		//mpip_log("update_path_info: %d, %d, %d, %d\n",path_info->path_id,
-		//		path_info->sent, path_info->rcv, path_info->bw);
-
-		//print_addr(path_info->saddr);
-		//print_addr(path_info->daddr);
 	}
 
 	return 1;
@@ -558,6 +541,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->sent = 0;
 		item->rcvh = 0;
 		item->rcv = 0;
+		item->lossrate = 20;
 		item->bw = 20;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
@@ -650,7 +634,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	if (f_path_id > 0)
 	{
 	//	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
-		f_path->sent += pkt_len / 32;
+		f_path->sent += pkt_len>>4;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 
@@ -666,7 +650,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
-			f_path->sent += pkt_len / 32;
+			f_path->sent += pkt_len>>4;
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
@@ -874,6 +858,8 @@ asmlinkage long sys_mpip(void)
 		p = (char *) &(path_info->daddr);
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		printk("%d  ", path_info->lossrate);
 
 		printk("%d  ", path_info->bw);
 
