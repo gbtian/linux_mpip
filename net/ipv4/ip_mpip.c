@@ -29,6 +29,7 @@ int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
 int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_bw_factor __read_mostly = 10000;
 int max_pkt_len = 65500;
 
 
@@ -58,6 +59,13 @@ static struct ctl_table mpip_table[] =
  	{
  	 		.procname = "mpip_log",
  	 		.data = &sysctl_mpip_log,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_bw_factor",
+ 	 		.data = &sysctl_mpip_bw_factor,
  	 		.maxlen = sizeof(int),
  	 		.mode = 0644,
  	 		.proc_handler = &proc_dointvec

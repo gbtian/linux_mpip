@@ -36,6 +36,7 @@ extern int sysctl_mpip_enabled;
 extern int sysctl_mpip_send;
 extern int sysctl_mpip_rcv;
 extern int sysctl_mpip_log;
+extern int sysctl_mpip_bw_factor;
 extern int max_pkt_len;
 
 //
