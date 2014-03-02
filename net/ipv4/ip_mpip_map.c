@@ -717,7 +717,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 			continue;
 		}
 
-		if (path_stat->rcvc < 200)
+		if (path_stat->rcvc < sysctl_mpip_bw_factor)
 		{
 			continue;
 		}
