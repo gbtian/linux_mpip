@@ -228,7 +228,9 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 			path_info->rcvh = rcvh;
 			path_info->rcv = rcv;
 
-			sec = (jiffies - path_info->ts) / HZ;
+			sec = (jiffies - path_info->ts);// / HZ;
+			if (sec == 0)
+				sec = 1;
 			path_info->bw = (rcvh * 60000 + rcv) / sec;
 
 			path_info->sent = 0;
@@ -236,11 +238,6 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 			minbw = path_info->bw / 4;
 
 			//break;
-		}
-		else
-		{
-			if (path_info->bw == 20)
-				path_info->bw = minbw;
 		}
 	}
 
