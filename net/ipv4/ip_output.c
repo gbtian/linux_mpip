@@ -1439,12 +1439,12 @@ out:
 int ip_send_skb(struct net *net, struct sk_buff *skb)
 {
 	int err;
-	//struct iphdr *iph = ip_hdr(skb);
+	struct iphdr *iph = ip_hdr(skb);
 
-	//if (sysctl_mpip_enabled && (iph->ihl == 5))
-	//{
-	//	insert_mpip_options(skb);
-	//}
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
+	{
+		insert_mpip_options(skb);
+	}
 
 	err = ip_local_out(skb);
 	if (err) {
