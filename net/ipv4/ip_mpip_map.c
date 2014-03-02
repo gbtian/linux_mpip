@@ -193,6 +193,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 //				path_stat->rcv = 0;
 
 //			atomic_add(pkt_len, &(path_stat->rcv));
+			path_stat->fbjiffies = jiffies;
 			path_stat->rcv += pkt_len>>4;
 
 			if (path_stat->rcv >= 60000)
@@ -683,7 +684,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
 	unsigned char e_path_stat_id = 0;
-	unsigned long e_fbtime = jiffies;
+	unsigned long e_fbtime = 0;
 
 	if (!dest_node_id)
 		return 0;
@@ -699,7 +700,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 		//mpip_log("id = %d, fb = %lu, eb = %lu\n", path_stat->path_id,
 		//		path_stat->fbjiffies, e_fbtime);
 
-		if (path_stat->fbjiffies <= e_fbtime)
+		if (path_stat->fbjiffies >= e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
 			//mpip_log("epathstatid = %d\n", e_path_stat_id);
@@ -710,7 +711,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 
 	if (e_path_stat_id > 0)
 	{
-		e_path_stat->fbjiffies = jiffies;
+//		e_path_stat->fbjiffies = jiffies;
 //		*rcv_len = atomic_read(&(e_path_stat->rcv));
 		*rcvh = e_path_stat->rcvh;
 		*rcv = e_path_stat->rcv;
