@@ -1440,7 +1440,6 @@ int ip_send_skb(struct net *net, struct sk_buff *skb)
 {
 	int err;
 	struct iphdr *iph = ip_hdr(skb);
-
 	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
 	{
 		insert_mpip_options(skb);
