@@ -91,11 +91,11 @@ struct path_info_table {
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
 	unsigned char lossrate; /* loss rate */
+	unsigned long ts;
 	__u32	bw;  /* bandwidth */
 	__u16   sentc;
-	__u16   sent;  /* number of pkt sent on this path */
+	__u32   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
-	unsigned char	senth;  /* number of mega sent on this path */
 	unsigned char	rcvh;  /* number of mega received on this path */
 	struct list_head list;
 };
@@ -131,8 +131,9 @@ struct path_stat_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 //	atomic_t  rcv;  /* number of pkt received on this path */
+	__u16  rcvc;    /* number of pkt received on this path */
 	unsigned char	rcvh;  /* number of mega received on this path */
-	__u16  rcv;  /* number of pkt received on this path */
+	__u16  rcv;
 	unsigned long fbjiffies; /* last feedback time of this path's stat */
 	struct list_head list;
 };
