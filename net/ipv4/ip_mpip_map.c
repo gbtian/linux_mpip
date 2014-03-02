@@ -255,9 +255,9 @@ int update_path_info()
 			if (path_info->lossrate < 20)
 				path_info->lossrate = 20;
 
-//			path_info->bw = rcv / sysctl_mpip_bw_factor * path_info->lossrate;
+			path_info->bw = rcv / sysctl_mpip_bw_factor * path_info->lossrate;
 //			path_info->bw = rcv / sysctl_mpip_bw_factor;
-			path_info->bw = path_info->lossrate;
+//			path_info->bw = path_info->lossrate;
 		}
 	}
 
