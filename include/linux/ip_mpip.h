@@ -93,7 +93,7 @@ struct path_info_table {
 	unsigned char lossrate; /* loss rate */
 	unsigned long ts;
 	__u32	bw;  /* bandwidth */
-	__u16   sentc;
+	__u32   sentc;
 	__u32   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
 	unsigned char	rcvh;  /* number of mega received on this path */
