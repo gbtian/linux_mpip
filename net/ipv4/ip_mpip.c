@@ -604,8 +604,6 @@ int insert_mpip_options(struct sk_buff *skb)
 	//static struct ip_options_rcu *mp_opt = NULL;
 	int res, i;
 	struct iphdr *iph = ip_hdr(skb);
-	struct tcphdr *tcph;
-
 
 	if (iph->ihl > 5)
 	{

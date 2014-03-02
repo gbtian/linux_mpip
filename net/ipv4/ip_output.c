@@ -1439,9 +1439,20 @@ out:
 int ip_send_skb(struct net *net, struct sk_buff *skb)
 {
 	int err;
+	unsigned char *tmp = NULL;
+	unsigned char *iphh = NULL;
 	struct iphdr *iph = ip_hdr(skb);
 	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
 	{
+		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+		iphh = skb_network_header(skb);
+		memcpy(tmp, iphh, sizeof(struct iphdr));
+		memcpy(iphh - ((MPIP_OPT_LEN + 3) & ~3), tmp, sizeof(struct iphdr));
+		kfree(tmp);
+
+		skb_push(skb, ((MPIP_OPT_LEN + 3) & ~3));
+		skb_reset_network_header(skb);
+
 		insert_mpip_options(skb);
 	}
 
