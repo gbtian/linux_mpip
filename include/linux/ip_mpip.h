@@ -70,7 +70,7 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options);
 
 void print_mpip_options(struct ip_options *opt);
 
-int insert_mpip_options(struct sk_buff *skb);
+int insert_mpip_options(struct sk_buff *skb, bool pushed);
 
 int process_mpip_options(struct sk_buff *skb, struct ip_options *opt);
 
