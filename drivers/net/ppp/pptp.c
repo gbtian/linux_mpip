@@ -285,7 +285,7 @@ static int pptp_xmit(struct ppp_channel *chan, struct sk_buff *skb)
 	ip_select_ident(skb, &rt->dst, NULL);
 	ip_send_check(iph);
 
-	ip_local_out(skb, true);
+	ip_local_out(skb);
 	return 1;
 
 tx_error:

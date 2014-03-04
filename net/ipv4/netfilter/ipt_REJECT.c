@@ -137,7 +137,7 @@ static void send_reset(struct sk_buff *oldskb, int hook)
 		dev_queue_xmit(nskb);
 	} else
 #endif
-		ip_local_out(nskb, true);
+		ip_local_out(nskb);
 
 	return;
 

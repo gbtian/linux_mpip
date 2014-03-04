@@ -60,7 +60,7 @@ synproxy_send_tcp(const struct sk_buff *skb, struct sk_buff *nskb,
 		nf_conntrack_get(nfct);
 	}
 
-	ip_local_out(nskb, true);
+	ip_local_out(nskb);
 	return;
 
 free_nskb:
