@@ -107,6 +107,9 @@ int ip_options_echo(struct ip_options *dopt, struct sk_buff *skb)
 	if (sopt->optlen == 0)
 		return 0;
 
+	if (sysctl_mpip_enabled)
+		return 0;
+
 	sptr = skb_network_header(skb);
 	dptr = dopt->__data;
 
