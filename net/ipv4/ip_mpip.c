@@ -207,10 +207,13 @@ char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 	unsigned char session_id = get_sender_session(saddr, sport,
 										  		  daddr, dport);
 
-
 	if (session_id == 0)
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
+		print_addr(saddr);
+		print_addr(daddr);
+		printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+
 		*is_new = true;
 		if (dest_node_id)
 		{
@@ -385,8 +388,8 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 //		__be32 eaddr = convert_addr(192, 168, 1, 21);
 
 
-//    	iph->saddr = saddr;
-//    	iph->daddr = daddr;
+    	iph->saddr = saddr;
+    	iph->daddr = daddr;
 
 //		if (iph->saddr == waddr)
 //		{
@@ -662,7 +665,7 @@ int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
 	int res, i;
 	struct iphdr *iph = ip_hdr(skb);
 
-	printk("%d, %s\n", __LINE__, __FILE__);
+	printk("%s, %d\n", __FILE__, __LINE__);
 
 	get_mpip_options(skb, options);
 
@@ -671,7 +674,7 @@ int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
 //		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
 //			       GFP_ATOMIC);
 
-	printk("%d, %s\n", __LINE__, __FILE__);
+	printk("%s, %d\n", __FILE__, __LINE__);
 //	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 //	iph->ihl += (mp_opt->opt.optlen)>>2;
 //
