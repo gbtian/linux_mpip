@@ -393,7 +393,7 @@ static int igmpv3_sendpack(struct sk_buff *skb)
 
 	pig->csum = ip_compute_csum(igmp_hdr(skb), igmplen);
 
-	return ip_local_out(skb);
+	return ip_local_out(skb, true);
 }
 
 static int grec_size(struct ip_mc_list *pmc, int type, int gdel, int sdel)
