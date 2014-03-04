@@ -106,11 +106,6 @@ int __ip_local_out(struct sk_buff *skb)
 int ip_local_out(struct sk_buff *skb)
 {
 	int err;
-//	struct iphdr *iph = ip_hdr(skb);
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		insert_mpip_options(skb, false);
-//	}
 
 	err = __ip_local_out(skb);
 	if (likely(err == 1))
@@ -147,8 +142,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-//	else if (sysctl_mpip_enabled)
-//		optlen = ((MPIP_OPT_LEN + 3) & ~3);
+	else if (sysctl_mpip_enabled)
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
@@ -180,10 +175,10 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	skb->mark = sk->sk_mark;
 
 
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		insert_mpip_options(skb);
-//	}
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	{
+		insert_mpip_options(skb, true);
+	}
 
 
 	/* Send it out. */
@@ -415,8 +410,8 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-//	else if (sysctl_mpip_enabled)
-//		optlen = ((MPIP_OPT_LEN + 3) & ~3);
+	else if (sysctl_mpip_enabled)
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
@@ -449,10 +444,10 @@ packet_routed:
 
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		insert_mpip_options(skb);
-//	}
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	{
+		insert_mpip_options(skb, true);
+	}
 
 	res = ip_local_out(skb);
 	rcu_read_unlock();
@@ -1352,11 +1347,6 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 	__u8 ttl;
 	int optlen = 0;
 
-//	char options[MPIP_OPT_LEN];
-//	int res;
-//	struct mpip_options_rcu *mp_opt = NULL;
-
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 
 	if ((skb = __skb_dequeue(queue)) == NULL)
 		goto out;
@@ -1417,14 +1407,16 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 		iph->ihl += opt->optlen>>2;
 		ip_options_build(skb, opt, cork->addr, rt, 0);
 	}
+	else if (sysctl_mpip_enabled && (iph->ihl == 5))
+	{
+		insert_mpip_options(skb, false);
+		iph = ip_hdr(skb);
+	}
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
 
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		insert_mpip_options(skb);
-//	}
+
 	/*
 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
 	 * on dst refcount
@@ -1444,11 +1436,6 @@ out:
 int ip_send_skb(struct net *net, struct sk_buff *skb)
 {
 	int err;
-//	struct iphdr *iph = ip_hdr(skb);
-//	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol == IPPROTO_UDP))
-//	{
-//		insert_mpip_options(skb, false);
-//	}
 
 	err = ip_local_out(skb);
 	if (err) {
