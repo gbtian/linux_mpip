@@ -508,50 +508,60 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 
 	print_mpip_options(opt);
 
+
+	mpip_log("r: unwrapping options\n");
+	tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+
+	if (!tmp)
+	{
+		mpip_log("tmp == NULL\n");
+		return 0;
+	}
+
+	iph_addr = skb_network_header(skb);
+	memcpy(tmp, iph_addr, sizeof(struct iphdr));
+	memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
+	kfree(tmp);
+
+	skb_pull(skb, opt->optlen);
+	skb_reset_network_header(skb);
+
+	if (sysctl_mpip_send)
+		skb_reset_transport_header(skb);
+
+	iph = ip_hdr(skb);
+	iph->ihl -= opt->optlen>>2;
+	iph->tot_len = htons(skb->len);
+
+
 	if (res)
 	{
 		mpip_log("r: modifying header\n");
-
-		//if ((iph->saddr != daddr) || (iph->daddr != saddr))
-		{
-			iph->saddr = daddr;
-			iph->daddr = saddr;
-
-			if((iph->protocol==IPPROTO_TCP) && sysctl_mpip_send)
-			{
-//				printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
-				//__tcp_v4_send_check(skb, iph->saddr, iph->daddr);
-				//mpip_tcp_v4_checksum_init(skb);
-				//tcp_checksum_complete(skb);
-
-				tcph->check = 0;
-				tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
-				                                  skb->len, iph->protocol,
-				                                  csum_partial((char *)tcph, skb->len, 0));
-				skb->ip_summed = CHECKSUM_UNNECESSARY;
-
-//				printk("r: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",(ip_hdr(skb))->id, skb->ip_summed, (tcp_hdr(skb))->check, (ip_hdr(skb))->check, __LINE__);
-			}
-
-			if((iph->protocol==IPPROTO_UDP) && sysctl_mpip_send)
-			{
-				udph->check = 0;
-				udph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
-												  skb->len, iph->protocol,
-												  csum_partial((char *)udph, skb->len, 0));
-				skb->ip_summed = CHECKSUM_UNNECESSARY;
-			}
-
-
-			if (sysctl_mpip_rcv)
-			{
-				ip_send_check(iph);
-			}
-		}
+		iph->saddr = daddr;
+		iph->daddr = saddr;
 	}
+	if(iph->protocol==IPPROTO_TCP)
+	{
+		tcph->check = 0;
+		tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+										  skb->len, iph->protocol,
+										  csum_partial((char *)tcph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
+	}
+
+	if(iph->protocol==IPPROTO_UDP)
+	{
+		udph->check = 0;
+		udph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+										  skb->len, iph->protocol,
+										  csum_partial((char *)udph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
+	}
+	ip_send_check(iph);
 
 	return 1;
 }
+
 
 void mpip_options_build(struct sk_buff *skb, struct ip_options *opt, bool pushed)
 {
