@@ -97,14 +97,13 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-
-	struct iphdr *iph = ip_hdr(skb);
 	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
 	{
 		insert_mpip_options(skb, false);
+
+		iph = ip_hdr(skb);
 	}
 
-	iph = ip_hdr(skb);
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
