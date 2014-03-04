@@ -1407,11 +1407,6 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
 		iph->ihl += opt->optlen>>2;
 		ip_options_build(skb, opt, cork->addr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled && (iph->ihl == 5))
-	{
-		insert_mpip_options(skb, false);
-		iph = ip_hdr(skb);
-	}
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
@@ -1436,6 +1431,12 @@ out:
 int ip_send_skb(struct net *net, struct sk_buff *skb)
 {
 	int err;
+
+	struct iphdr *iph = ip_hdr(skb);
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
+	{
+		insert_mpip_options(skb, false);
+	}
 
 	err = ip_local_out(skb);
 	if (err) {
