@@ -126,7 +126,7 @@ tee_tg4(struct sk_buff *skb, const struct xt_action_param *par)
 
 	if (tee_tg_route4(skb, info)) {
 		__this_cpu_write(tee_active, true);
-		ip_local_out(skb);
+		ip_local_out(skb, true);
 		__this_cpu_write(tee_active, false);
 	} else {
 		kfree_skb(skb);

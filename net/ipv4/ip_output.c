@@ -97,21 +97,20 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
-	{
-		insert_mpip_options(skb, false);
-	}
-
-	iph = ip_hdr(skb);
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
 }
 
-int ip_local_out(struct sk_buff *skb)
+int ip_local_out(struct sk_buff *skb, bool addopt)
 {
 	int err;
+	struct iphdr *iph = ip_hdr(skb);
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && addopt)
+	{
+		insert_mpip_options(skb, false);
+	}
 
 	err = __ip_local_out(skb);
 	if (likely(err == 1))
@@ -188,7 +187,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 
 	/* Send it out. */
-	return ip_local_out(skb);
+	return ip_local_out(skb, true);
 }
 EXPORT_SYMBOL_GPL(ip_build_and_send_pkt);
 
@@ -455,7 +454,7 @@ packet_routed:
 //		insert_mpip_options(skb);
 //	}
 
-	res = ip_local_out(skb);
+	res = ip_local_out(skb, true);
 	rcu_read_unlock();
 	return res;
 
@@ -1442,7 +1441,7 @@ out:
 	return skb;
 }
 
-int ip_send_skb(struct net *net, struct sk_buff *skb)
+int ip_send_skb(struct net *net, struct sk_buff *skb, bool addopt)
 {
 	int err;
 //	struct iphdr *iph = ip_hdr(skb);
@@ -1451,7 +1450,7 @@ int ip_send_skb(struct net *net, struct sk_buff *skb)
 //		insert_mpip_options(skb, false);
 //	}
 
-	err = ip_local_out(skb);
+	err = ip_local_out(skb, addopt);
 	if (err) {
 		if (err > 0)
 			err = net_xmit_errno(err);
@@ -1471,7 +1470,7 @@ int ip_push_pending_frames(struct sock *sk, struct flowi4 *fl4)
 		return 0;
 
 	/* Netfilter gets whole the not fragmented skb. */
-	return ip_send_skb(sock_net(sk), skb);
+	return ip_send_skb(sock_net(sk), skb, false);
 }
 
 /*
