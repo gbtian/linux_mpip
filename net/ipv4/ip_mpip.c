@@ -28,7 +28,7 @@ static struct ip_options_rcu *mp_opt = NULL;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 1;
+int sysctl_mpip_log __read_mostly = 0;
 int sysctl_mpip_bw_factor __read_mostly = 1000;
 int max_pkt_len = 65500;
 
@@ -385,8 +385,8 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 //		__be32 eaddr = convert_addr(192, 168, 1, 21);
 
 
-    	iph->saddr = saddr;
-    	iph->daddr = daddr;
+//    	iph->saddr = saddr;
+//    	iph->daddr = daddr;
 
 //		if (iph->saddr == waddr)
 //		{
@@ -652,6 +652,31 @@ int insert_mpip_options(struct sk_buff *skb, bool pushed)
 
 	//kfree(options);
 	//kfree(mp_opt);
+	return 1;
+}
+
+
+
+int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
+{
+	int res, i;
+	struct iphdr *iph = ip_hdr(skb);
+
+	printk("%d, %s\n", __LINE__, __FILE__);
+
+	get_mpip_options(skb, options);
+
+//	printk("%d, %s\n", __LINE__, __FILE__);
+//	if (!mp_opt)
+//		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
+//			       GFP_ATOMIC);
+
+	printk("%d, %s\n", __LINE__, __FILE__);
+//	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
+//	iph->ihl += (mp_opt->opt.optlen)>>2;
+//
+//	mpip_options_build(skb, &(mp_opt->opt), pushed);
+
 	return 1;
 }
 

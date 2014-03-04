@@ -99,7 +99,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
 	{
-		insert_mpip_options(skb, false);
+		insert_mpip_options_1(skb, false);
 
 		iph = ip_hdr(skb);
 	}
