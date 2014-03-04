@@ -28,7 +28,7 @@ static struct ip_options_rcu *mp_opt = NULL;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 1000;
 int max_pkt_len = 65500;
 
@@ -480,6 +480,7 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	res = get_receiver_session(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
+
 	mpip_log("\nreceiving:\n");
 	mpip_log("r: iph->id=%d\n", iph->id);
 	mpip_log("r: iph->saddr=");
@@ -494,6 +495,8 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 
 	mpip_log("r: saddr=");
 	print_addr(saddr);
+
+//	dump_stack();
 
 	if(iph->protocol==IPPROTO_TCP)
 	{

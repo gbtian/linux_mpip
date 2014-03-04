@@ -97,6 +97,15 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
+
+	struct iphdr *iph = ip_hdr(skb);
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
+	{
+		insert_mpip_options(skb, false);
+	}
+
+	iph = ip_hdr(skb);
+
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
@@ -1432,11 +1441,6 @@ int ip_send_skb(struct net *net, struct sk_buff *skb)
 {
 	int err;
 
-	struct iphdr *iph = ip_hdr(skb);
-	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
-	{
-		insert_mpip_options(skb, false);
-	}
 
 	err = ip_local_out(skb);
 	if (err) {
