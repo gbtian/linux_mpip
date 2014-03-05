@@ -258,7 +258,22 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh,
 	return find_earliest_stat_path_id(dest_node_id, rcvh, rcv);
 }
 
+static bool check_bad_addr(__be32 saddr, __be32 daddr)
+{
+	__be32 addr = convert_addr(127, 0, 0, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
 
+	addr = convert_addr(127, 0, 1, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
+
+	addr = convert_addr(192, 168, 1, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
+
+	return true;
+}
 
 int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 {
@@ -271,6 +286,9 @@ int get_mpip_options(struct sk_buff *skb, unsigned char *options)
 	{
 		return 0;
 	}
+
+	if (!check_bad_addr(iph->saddr, iph->daddr))
+		return 0;
 
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
@@ -667,7 +685,8 @@ int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
 
 	printk("%s, %d\n", __FILE__, __LINE__);
 
-	get_mpip_options(skb, options);
+	if (!get_mpip_options(skb, options))
+		return 0;
 
 	printk("%d, %s\n", __LINE__, __FILE__);
 	if (!mp_opt)
@@ -675,10 +694,14 @@ int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
 			       GFP_ATOMIC);
 
 	printk("%s, %d\n", __FILE__, __LINE__);
+
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
-//	iph->ihl += (mp_opt->opt.optlen)>>2;
-//
-//	mpip_options_build(skb, &(mp_opt->opt), pushed);
+
+	iph = ip_hdr(skb);
+
+	iph->ihl += (mp_opt->opt.optlen)>>2;
+
+	mpip_options_build(skb, &(mp_opt->opt), pushed);
 
 	return 1;
 }
