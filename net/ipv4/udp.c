@@ -111,6 +111,7 @@
 #include <trace/events/skb.h>
 #include <net/busy_poll.h>
 #include "udp_impl.h"
+#include <linux/ip_mpip.h>
 
 struct udp_table udp_table __read_mostly;
 EXPORT_SYMBOL(udp_table);
@@ -829,6 +830,12 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	struct udp_sock *up = udp_sk(sk);
 	struct flowi4 fl4_stack;
 	struct flowi4 *fl4;
+
+	if (sysctl_mpip_enabled)
+	{
+		len -= 12;
+	}
+
 	int ulen = len;
 	struct ipcm_cookie ipc;
 	struct rtable *rt = NULL;
