@@ -669,13 +669,13 @@ int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
 
 	get_mpip_options(skb, options);
 
-//	printk("%d, %s\n", __LINE__, __FILE__);
-//	if (!mp_opt)
-//		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
-//			       GFP_ATOMIC);
+	printk("%d, %s\n", __LINE__, __FILE__);
+	if (!mp_opt)
+		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
+			       GFP_ATOMIC);
 
 	printk("%s, %d\n", __FILE__, __LINE__);
-//	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
+	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 //	iph->ihl += (mp_opt->opt.optlen)>>2;
 //
 //	mpip_options_build(skb, &(mp_opt->opt), pushed);
