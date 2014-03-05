@@ -533,29 +533,29 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	print_mpip_options(opt);
 
 
-//	mpip_log("r: unwrapping options\n");
-//	tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
-//
-//	if (!tmp)
-//	{
-//		mpip_log("tmp == NULL\n");
-//		return 0;
-//	}
-//
-//	iph_addr = skb_network_header(skb);
-//	memcpy(tmp, iph_addr, sizeof(struct iphdr));
-//	memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
-//	kfree(tmp);
-//
-//	skb_pull(skb, opt->optlen);
-//	skb_reset_network_header(skb);
-//
-//	if (sysctl_mpip_send)
-//		skb_reset_transport_header(skb);
-//
-//	iph = ip_hdr(skb);
-//	iph->ihl -= opt->optlen>>2;
-//	iph->tot_len = htons(skb->len);
+	mpip_log("r: unwrapping options\n");
+	tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+
+	if (!tmp)
+	{
+		mpip_log("tmp == NULL\n");
+		return 0;
+	}
+
+	iph_addr = skb_network_header(skb);
+	memcpy(tmp, iph_addr, sizeof(struct iphdr));
+	memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
+	kfree(tmp);
+
+	skb_pull(skb, opt->optlen);
+	skb_reset_network_header(skb);
+
+	if (sysctl_mpip_send)
+		skb_reset_transport_header(skb);
+
+	iph = ip_hdr(skb);
+	iph->ihl -= opt->optlen>>2;
+	iph->tot_len = htons(skb->len);
 
 
 	if (res)
