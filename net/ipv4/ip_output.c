@@ -97,7 +97,7 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
 	{
 		insert_mpip_options_1(skb, false);
 
