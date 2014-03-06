@@ -96,22 +96,23 @@ EXPORT_SYMBOL(ip_send_check);
 int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
-	struct ip_options *sopt;
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
-	{
-		if (iph->protocol==IPPROTO_UDP)
-		{
-			insert_mpip_options_1(skb, false);
 
-			iph = ip_hdr(skb);
-		}
-		else
-		{
-			sopt = &(IPCB(skb)->opt);
-			printk("%d, %s, %d\n", sopt->optlen, __FILE__, __LINE__);
-			print_mpip_options(sopt);
-		}
-	}
+//	struct ip_options *sopt;
+//	if (sysctl_mpip_enabled && (iph->ihl == 5))
+//	{
+//		if (iph->protocol==IPPROTO_UDP)
+//		{
+//			insert_mpip_options_1(skb, false);
+//
+//			iph = ip_hdr(skb);
+//		}
+//		else
+//		{
+//			sopt = &(IPCB(skb)->opt);
+//			printk("%d, %s, %d\n", sopt->optlen, __FILE__, __LINE__);
+//			print_mpip_options(sopt);
+//		}
+//	}
 
 
 	iph->tot_len = htons(skb->len);
@@ -194,7 +195,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5))
 	{
-		insert_mpip_options(skb, true);
+		insert_mpip_options_1(skb, true);
 	}
 
 
@@ -378,6 +379,14 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	unsigned int optlen = 0;
 //	struct mpip_options_rcu *mp_opt = NULL;
 
+	printk("before:\n");
+	print_addr(fl->u.ip4.saddr);
+	print_addr(fl->u.ip4.daddr);
+	if (sysctl_mpip_enabled)
+	{
+		insert_mpip_options(skb, fl, true);
+	}
+
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.
@@ -386,6 +395,11 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	inet_opt = rcu_dereference(inet->inet_opt);
 
 	fl4 = &fl->u.ip4;
+
+	printk("after:\n");
+	print_addr(fl4->saddr);
+	print_addr(fl4->daddr);
+
 	rt = skb_rtable(skb);
 	if (rt != NULL)
 		goto packet_routed;
@@ -427,8 +441,8 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-	else if (sysctl_mpip_enabled)
-		optlen = ((MPIP_OPT_LEN + 3) & ~3);
+//	else if (sysctl_mpip_enabled)
+//		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
@@ -458,13 +472,6 @@ packet_routed:
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
-
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
-
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
-	{
-		insert_mpip_options(skb, true);
-	}
 
 	res = ip_local_out(skb);
 	rcu_read_unlock();
