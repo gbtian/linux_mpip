@@ -688,7 +688,6 @@ int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
 	if (!get_mpip_options(skb, options))
 		return 0;
 
-	printk("%d, %s\n", __LINE__, __FILE__);
 	if (!mp_opt)
 		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
 			       GFP_ATOMIC);

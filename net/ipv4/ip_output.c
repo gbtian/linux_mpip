@@ -96,12 +96,21 @@ EXPORT_SYMBOL(ip_send_check);
 int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
-
-	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
+	struct ip_options *sopt;
+	if (sysctl_mpip_enabled && (iph->ihl == 5))
 	{
-		insert_mpip_options_1(skb, false);
+		if (iph->protocol==IPPROTO_UDP)
+		{
+			insert_mpip_options_1(skb, false);
 
-		iph = ip_hdr(skb);
+			iph = ip_hdr(skb);
+		}
+		else
+		{
+			sopt = &(IPCB(skb)->opt);
+			printk("%d, %s, %d\n", sopt->optlen, __FILE__, __LINE__);
+			print_mpip_options(sopt);
+		}
 	}
 
 
