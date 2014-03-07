@@ -822,8 +822,11 @@ int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 	int res;
 
 	if (inet->inet_opt && inet->inet_opt->opt.optlen)
-		return 0;
+	{
 
+		mpip_log("%d, %s, %d\n", inet->inet_opt->opt.optlen, __FILE__, __LINE__);
+		return 0;
+	}
 
 	//options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
