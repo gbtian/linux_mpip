@@ -192,11 +192,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
 
-
-	if (sysctl_mpip_enabled && (iph->ihl == 5))
-	{
-		insert_mpip_options_1(skb, true);
-	}
+//
+//	if (sysctl_mpip_enabled && (iph->ihl == 5))
+//	{
+//		insert_mpip_options_1(skb, true);
+//	}
 
 
 	/* Send it out. */

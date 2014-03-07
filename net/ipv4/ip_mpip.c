@@ -283,6 +283,8 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
+	mpip_log("\nsending:\n");
+
 	mpip_log("s: inet->inet_saddr=");
 	print_addr(inet->inet_saddr);
 
@@ -620,6 +622,7 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
 
+	mpip_log("\nreceiving:\n");
 
 	if (!opt || !skb)
 		return 0;
@@ -678,7 +681,7 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 							  &saddr, &sport, &daddr, &dport);
 
 
-	mpip_log("\nreceiving:\n");
+
 	mpip_log("r: iph->id=%d\n", iph->id);
 	mpip_log("r: iph->saddr=");
 	print_addr(iph->saddr);
@@ -831,7 +834,7 @@ int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 
 	res = ip_options_get(sock_net(skb->sk), &(inet->inet_opt), options, MPIP_OPT_LEN);
 
-	mpip_log("\nsending:\n");
+
 	print_mpip_options(&(inet->inet_opt->opt));
 
 	//kfree(options);
