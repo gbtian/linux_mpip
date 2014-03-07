@@ -815,18 +815,14 @@ int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 {
 	struct sock *sk = skb->sk;
 	struct inet_sock *inet = inet_sk(sk);
-	struct ip_options_rcu *inet_opt;
-	struct flowi4 *fl4;
-	struct rtable *rt;
-	struct iphdr *iph;
 	int res;
 
-	if (inet->inet_opt && inet->inet_opt->opt.optlen)
-	{
-
-		mpip_log("%d, %s, %d\n", inet->inet_opt->opt.optlen, __FILE__, __LINE__);
-		return 0;
-	}
+//	if (inet->inet_opt && inet->inet_opt->opt.optlen)
+//	{
+//
+//		mpip_log("%d, %s, %d\n", inet->inet_opt->opt.optlen, __FILE__, __LINE__);
+//		return 0;
+//	}
 
 	//options = kzalloc(MPIP_OPT_LEN, GFP_ATOMIC);
 
