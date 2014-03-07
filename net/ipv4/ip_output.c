@@ -438,12 +438,17 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		}
 		sk_setup_caps(sk, &rt->dst);
 	}
+	printk("i: %s, %d\n", __FILE__, __LINE__);
 	skb_dst_set_noref(skb, &rt->dst);
+	printk("gateway: ");
+	print_addr(rt->rt_gateway);
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto no_route;
-
+	}
 
 	/* OK, we know where to send it, allocate and build IP header. */
 	if (inet_opt && inet_opt->opt.optlen)
@@ -487,7 +492,7 @@ packet_routed:
 	return res;
 
 no_route:
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+	printk("i: %s, %d\n", __FILE__, __LINE__);
 	rcu_read_unlock();
 	IP_INC_STATS(sock_net(sk), IPSTATS_MIB_OUTNOROUTES);
 	kfree_skb(skb);
