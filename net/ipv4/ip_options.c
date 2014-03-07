@@ -56,7 +56,10 @@ void ip_options_build(struct sk_buff *skb, struct ip_options *opt,
 		return;
 
 	if (opt->srr)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		memcpy(iph+opt->srr+iph[opt->srr+1]-4, &daddr, 4);
+	}
 
 	if (!is_frag) {
 		if (opt->rr_needaddr)
@@ -72,12 +75,16 @@ void ip_options_build(struct sk_buff *skb, struct ip_options *opt,
 		}
 		return;
 	}
-	if (opt->rr) {
+	if (opt->rr)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		memset(iph+opt->rr, IPOPT_NOP, iph[opt->rr+1]);
 		opt->rr = 0;
 		opt->rr_needaddr = 0;
 	}
-	if (opt->ts) {
+	if (opt->ts)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		memset(iph+opt->ts, IPOPT_NOP, iph[opt->ts+1]);
 		opt->ts = 0;
 		opt->ts_needaddr = opt->ts_needtime = 0;

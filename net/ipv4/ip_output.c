@@ -379,7 +379,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	unsigned int optlen = 0;
 //	struct mpip_options_rcu *mp_opt = NULL;
 
-	printk("before:\n");
+	printk("\nbefore:\n");
 	print_addr(fl->u.ip4.saddr);
 	print_addr(fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled)
@@ -402,18 +402,24 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	rt = skb_rtable(skb);
 	if (rt != NULL)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto packet_routed;
-
+	}
 	/* Make sure we can route this packet. */
 	rt = (struct rtable *)__sk_dst_check(sk, 0);
-	if (rt == NULL) {
+	if (rt == NULL)
+	{
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		__be32 daddr;
 
 		/* Use correct destination address if we have options. */
 		daddr = inet->inet_daddr;
 		if (inet_opt && inet_opt->opt.srr)
+		{
+			printk("i: %s, %d\n", __FILE__, __LINE__);
 			daddr = inet_opt->opt.faddr;
-
+		}
 		/* If this fails, retransmit mechanism of transport layer will
 		 * keep trying until route appears or the connection times
 		 * itself out.
@@ -426,7 +432,10 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 					   RT_CONN_FLAGS(sk),
 					   sk->sk_bound_dev_if);
 		if (IS_ERR(rt))
+		{
+			printk("i: %s, %d\n", __FILE__, __LINE__);
 			goto no_route;
+		}
 		sk_setup_caps(sk, &rt->dst);
 	}
 	skb_dst_set_noref(skb, &rt->dst);
