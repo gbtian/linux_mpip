@@ -766,7 +766,7 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 }
 
 
-void mpip_options_build(struct sk_buff *skb, struct ip_options *opt, bool pushed)
+void mpip_options_build(struct sk_buff *skb, bool pushed)
 {
 	unsigned char *tmp = NULL;
 	unsigned char *iph = skb_network_header(skb);
@@ -775,17 +775,17 @@ void mpip_options_build(struct sk_buff *skb, struct ip_options *opt, bool pushed
 	{
 		tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
 		memcpy(tmp, iph, sizeof(struct iphdr));
-		memcpy(iph - opt->optlen, tmp, sizeof(struct iphdr));
+		memcpy(iph - mp_opt->opt.optlen, tmp, sizeof(struct iphdr));
 		kfree(tmp);
 
-		skb_push(skb, opt->optlen);
+		skb_push(skb, mp_opt->opt.optlen);
 		skb_reset_network_header(skb);
 
 		iph = skb_network_header(skb);
 	}
 
-	memcpy(&(IPCB(skb)->opt), opt, sizeof(struct ip_options));
-	memcpy(iph+sizeof(struct iphdr), opt->__data, opt->optlen);
+	memcpy(&(IPCB(skb)->opt), &(mp_opt->opt), sizeof(struct ip_options));
+	memcpy(iph+sizeof(struct iphdr), mp_opt->opt.__data, mp_opt->opt.optlen);
 }
 
 
@@ -813,6 +813,23 @@ static int mpip_options_get(struct net *net, struct ip_options_rcu *opt,
 	return 0;
 }
 
+int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl)
+{
+	struct sock *sk = skb->sk;
+	struct inet_sock *inet = inet_sk(sk);
+	int res;
+
+	if (!get_mpip_options(skb, fl, options))
+		return 0;
+
+	if (!mp_opt)
+	{
+		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
+				   GFP_ATOMIC);
+	}
+
+	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
+}
 
 int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 {
@@ -841,29 +858,3 @@ int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 	//kfree(mp_opt);
 	return 1;
 }
-
-
-
-int insert_mpip_options_1(struct sk_buff *skb, bool pushed)
-{
-	int res, i;
-	struct iphdr *iph = ip_hdr(skb);
-
-	if (!get_mpip_options_1(skb, options))
-		return 0;
-
-	if (!mp_opt)
-		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
-			       GFP_ATOMIC);
-
-	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
-
-	iph = ip_hdr(skb);
-
-	iph->ihl += (mp_opt->opt.optlen)>>2;
-
-	mpip_options_build(skb, &(mp_opt->opt), pushed);
-
-	return 1;
-}
-

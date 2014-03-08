@@ -384,9 +384,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	print_addr(fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled)
 	{
-		insert_mpip_options(skb, fl, true);
+		mpip_compose_opt(skb, fl);
 	}
-
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.
@@ -455,8 +454,8 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-//	else if (sysctl_mpip_enabled)
-//		optlen = ((MPIP_OPT_LEN + 3) & ~3);
+	else if (sysctl_mpip_enabled)
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
@@ -479,6 +478,11 @@ packet_routed:
 	{
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
+	}
+	else if (sysctl_mpip_enabled)
+	{
+		iph->ihl += optlen >> 2;
+		mpip_options_build(skb, true);
 	}
 
 	ip_select_ident_more(skb, &rt->dst, sk,

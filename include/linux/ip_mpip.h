@@ -72,7 +72,9 @@ void print_mpip_options(struct ip_options *opt);
 
 int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed);
 
-int insert_mpip_options_1(struct sk_buff *skb, bool pushed);
+int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl);
+
+void mpip_options_build(struct sk_buff *skb, bool pushed);
 
 int process_mpip_options(struct sk_buff *skb, struct ip_options *opt);
 
