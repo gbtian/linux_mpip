@@ -612,6 +612,8 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	struct net_device *dev = skb->dev;
+	struct sock *sk = skb->sk;
+	struct inet_sock *inet = inet_sk(sk);
 	unsigned char *optptr;
 	int i, res;
 	unsigned char *tmp = NULL;
@@ -743,6 +745,9 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
+		inet->inet_saddr = daddr;
+		inet->inet_daddr = saddr;
+
 		if(iph->protocol==IPPROTO_TCP)
 		{
 			tcph->check = 0;
@@ -829,6 +834,7 @@ int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl)
 	}
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
+	print_mpip_options(&(mp_opt->opt));
 }
 
 int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
