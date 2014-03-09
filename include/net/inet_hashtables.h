@@ -401,7 +401,7 @@ static inline struct sock *__inet_lookup_skb(struct inet_hashinfo *hashinfo,
 {
 	struct sock *sk = skb_steal_sock(skb);
 	const struct iphdr *iph = ip_hdr(skb);
-	__be32 addr = convert_addr(192, 168, 2, 21);
+	__be32 addr = my_convert_addr(192, 168, 2, 21);
 
 	if (sk)
 	{
