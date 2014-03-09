@@ -267,7 +267,7 @@ int ip_local_deliver(struct sk_buff *skb)
 static inline bool ip_rcv_options(struct sk_buff *skb)
 {
 	struct ip_options *opt;
-	const struct iphdr *iph;
+	struct iphdr *iph;
 	struct net_device *dev = skb->dev;
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	/* It looks as overkill, because not all
@@ -291,6 +291,12 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 		process_mpip_options(skb, opt);
+
+	iph = ip_hdr(skb);
+
+	mpip_log("After the modification: %s, %d\n", __FILE__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
