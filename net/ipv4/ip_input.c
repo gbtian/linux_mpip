@@ -339,11 +339,16 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		}
 	}
 
+	mpip_log("After modification: %s, %d\n", __FILE__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
+
 	/*
 	 *	Initialise the virtual path cache for the packet. It describes
 	 *	how the packet travels inside Linux networking.
 	 */
 	if (!skb_dst(skb)) {
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
 		if (unlikely(err)) {
