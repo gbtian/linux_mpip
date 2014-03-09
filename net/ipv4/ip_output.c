@@ -149,19 +149,27 @@ static inline int ip_select_ttl(struct inet_sock *inet, struct dst_entry *dst)
 int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 			  __be32 saddr, __be32 daddr, struct ip_options_rcu *opt)
 {
-	struct inet_sock *inet = inet_sk(sk);
-	struct rtable *rt = skb_rtable(skb);
+	struct inet_sock *inet;
+	struct rtable *rt;
 	struct iphdr *iph;
 	unsigned int optlen = 0;
 
 	struct iphdr *ih;
 	struct tcphdr *th;
 
+	if (sysctl_mpip_enabled)
+	{
+		mpip_compose_opt(skb, NULL);
+	}
+
+	inet = inet_sk(sk);
+	rt = skb_rtable(skb);
+
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-//	else if (sysctl_mpip_enabled)
-//		optlen = ((MPIP_OPT_LEN + 3) & ~3);
+	else if (sysctl_mpip_enabled)
+		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
 	skb_reset_network_header(skb);
@@ -187,7 +195,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-
+	else if (sysctl_mpip_enabled)
+	{
+		iph->ihl += optlen >> 2;
+		mpip_options_build(skb, true);
+	}
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;

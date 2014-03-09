@@ -324,7 +324,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	if (iph->ihl > 5 && sysctl_mpip_enabled)
 	{
 		process_mpip_options(skb);
-		iph = ip_hdr(skb);
 	}
 
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {

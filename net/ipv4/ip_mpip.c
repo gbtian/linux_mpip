@@ -420,9 +420,11 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 		inet->inet_saddr = saddr;
 		inet->inet_daddr = daddr;
 
-		fl->u.ip4.saddr = saddr;
-		fl->u.ip4.daddr = daddr;
-
+		if (fl)
+		{
+			fl->u.ip4.saddr = saddr;
+			fl->u.ip4.daddr = daddr;
+		}
 //		__be32 waddr = convert_addr(192, 168, 1, 20);
 //		__be32 eaddr = convert_addr(192, 168, 1, 21);
 
