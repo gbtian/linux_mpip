@@ -606,15 +606,13 @@ int get_mpip_options_1(struct sk_buff *skb, unsigned char *options)
 }
 EXPORT_SYMBOL(get_mpip_options_1);
 
-int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
+int process_mpip_options(struct sk_buff *skb)
 {
+	struct ip_options *opt;
 	struct iphdr *iph;
+	struct net_device *dev;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
-	struct net_device *dev = skb->dev;
-	struct sock *sk = NULL;
-	struct inet_sock *inet = NULL;
-	unsigned char *optptr;
 	int i, res;
 	unsigned char *tmp = NULL;
 	unsigned char *iph_addr;
@@ -624,37 +622,20 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
 
-	mpip_log("\nreceiving:\n");
-
-	if (!opt || !skb)
+	if (!skb)
 		return 0;
 
+	dev = skb->dev;
 	iph = ip_hdr(skb);
-
-
-	if (iph->ihl <= 5)
+	opt = &(IPCB(skb)->opt);
+	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
+	if (ip_options_compile(dev_net(dev), opt, skb)) {
+		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 		return 0;
+	}
 
-	sk = skb->sk;
-	if (sk)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		inet = inet_sk(sk);
-		if (inet)
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			print_addr(inet->inet_saddr);
-			print_addr(inet->inet_daddr);
-		}
-		else
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-		}
-	}
-	else
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-	}
+
+	mpip_log("\nreceiving:\n");
 
 	//if TCP PACKET
 	if(iph->protocol==IPPROTO_TCP)
@@ -733,32 +714,6 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	}
 
 	print_mpip_options(opt);
-
-
-//	mpip_log("r: unwrapping options\n");
-//	tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
-
-//	if (!tmp)
-//	{
-//		mpip_log("tmp == NULL\n");
-//		return 0;
-//	}
-
-//	iph_addr = skb_network_header(skb);
-//	memcpy(tmp, iph_addr, sizeof(struct iphdr));
-//	memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
-//	kfree(tmp);
-
-//	skb_pull(skb, opt->optlen);
-//	skb_reset_network_header(skb);
-
-//	if (sysctl_mpip_send)
-//		skb_reset_transport_header(skb);
-
-//	iph = ip_hdr(skb);
-//	iph->ihl -= opt->optlen>>2;
-//	iph->tot_len = htons(skb->len);
-
 
 	if (res)
 	{

@@ -267,7 +267,7 @@ int ip_local_deliver(struct sk_buff *skb)
 static inline bool ip_rcv_options(struct sk_buff *skb)
 {
 	struct ip_options *opt;
-	struct iphdr *iph;
+	const struct iphdr *iph;
 	struct net_device *dev = skb->dev;
 	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	/* It looks as overkill, because not all
@@ -289,15 +289,6 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		goto drop;
 	}
 
-	if (sysctl_mpip_enabled)
-		process_mpip_options(skb, opt);
-
-	iph = ip_hdr(skb);
-
-	mpip_log("After the modification: %s, %d\n", __FILE__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-
 	if (unlikely(opt->srr)) {
 		struct in_device *in_dev = __in_dev_get_rcu(dev);
 
@@ -314,10 +305,8 @@ static inline bool ip_rcv_options(struct sk_buff *skb)
 		if (ip_options_rcv_srr(skb))
 			goto drop;
 	}
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	return false;
 drop:
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
 	return true;
 }
 
@@ -331,8 +320,13 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	struct rtable *rt;
 
 	iph = ip_hdr(skb);
-//	printk("i: id=%d, skb->ip_summed=%d, %d\n", iph->id, skb->ip_summed, __LINE__);
-	//printk("%s:%d - %s\n", __FILE__, __LINE__, __FUNCTION__ );
+
+	if (iph->ihl > 5 && sysctl_mpip_enabled)
+	{
+		process_mpip_options(skb);
+		iph = ip_hdr(skb);
+	}
+
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
 		int protocol = iph->protocol;
@@ -372,7 +366,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 #endif
 
 
-	if (iph->ihl > 5 && ip_rcv_options(skb))
+	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
 
 	rt = skb_rtable(skb);

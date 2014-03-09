@@ -76,7 +76,7 @@ int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl);
 
 void mpip_options_build(struct sk_buff *skb, bool pushed);
 
-int process_mpip_options(struct sk_buff *skb, struct ip_options *opt);
+int process_mpip_options(struct sk_buff *skb);
 
 
 struct working_ip_table {
