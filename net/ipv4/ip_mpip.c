@@ -209,10 +209,10 @@ char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 
 	if (session_id == 0)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+		//printk("%s, %d\n", __FILE__, __LINE__);
 		print_addr(saddr);
 		print_addr(daddr);
-		printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+		//printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
 		if (dest_node_id)
@@ -283,12 +283,12 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
-	mpip_log("\nsending:\n");
+	printk("\nsending:\n");
 
-	mpip_log("s: inet->inet_saddr=");
+	printk("s: inet->inet_saddr=");
 	print_addr(inet->inet_saddr);
 
-	mpip_log("s: inet->inet_daddr=");
+	printk("s: inet->inet_daddr=");
 	print_addr(inet->inet_daddr);
 
 	int i;

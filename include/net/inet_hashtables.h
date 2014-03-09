@@ -383,6 +383,17 @@ static inline struct sock *inet_lookup(struct net *net,
 	return sk;
 }
 
+static __be32 my_convert_addr(char a1, char a2, char a3, char a4)
+{
+	__be32 addr;
+	char *p = (char *) &addr;
+	p[0] = a1;
+	p[1] = a2;
+	p[2] = a3;
+	p[3] = a4;
+
+	return (__be32)addr;
+}
 static inline struct sock *__inet_lookup_skb(struct inet_hashinfo *hashinfo,
 					     struct sk_buff *skb,
 					     const __be16 sport,
@@ -390,10 +401,14 @@ static inline struct sock *__inet_lookup_skb(struct inet_hashinfo *hashinfo,
 {
 	struct sock *sk = skb_steal_sock(skb);
 	const struct iphdr *iph = ip_hdr(skb);
+	__be32 addr = convert_addr(192, 168, 2, 21);
 
 	if (sk)
 	{
-		//printk("i: %d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
+		printk("i: %d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
+		if (iph->saddr == addr || iph->daddr == addr)
+			dump_stack();
+
 		return sk;
 	}
 	else

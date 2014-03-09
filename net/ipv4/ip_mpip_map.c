@@ -51,7 +51,7 @@ bool is_lan_addr(__be32 addr)
 void print_addr(__be32 addr)
 {
 	char *p = (char *) &addr;
-	mpip_log( "%d.%d.%d.%d\n",
+	printk( "%d.%d.%d.%d\n",
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 }
 
