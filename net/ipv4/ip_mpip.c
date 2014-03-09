@@ -612,6 +612,8 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	struct net_device *dev = skb->dev;
+	struct sock *sk = NULL;
+	struct inet_sock *inet = NULL;
 	unsigned char *optptr;
 	int i, res;
 	unsigned char *tmp = NULL;
@@ -632,6 +634,27 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 
 	if (iph->ihl <= 5)
 		return 0;
+
+	sk = skb->sk;
+	if (sk)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		inet = inet_sk(sk);
+		if (inet)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			print_addr(inet->inet_saddr);
+			print_addr(inet->inet_daddr);
+		}
+		else
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+		}
+	}
+	else
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+	}
 
 	//if TCP PACKET
 	if(iph->protocol==IPPROTO_TCP)
