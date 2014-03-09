@@ -612,8 +612,6 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	struct net_device *dev = skb->dev;
-	struct sock *sk = skb->sk;
-	struct inet_sock *inet = inet_sk(sk);
 	unsigned char *optptr;
 	int i, res;
 	unsigned char *tmp = NULL;
@@ -744,9 +742,6 @@ int process_mpip_options(struct sk_buff *skb, struct ip_options *opt)
 		mpip_log("r: modifying header\n");
 		iph->saddr = daddr;
 		iph->daddr = saddr;
-
-		inet->inet_saddr = daddr;
-		inet->inet_daddr = saddr;
 
 		if(iph->protocol==IPPROTO_TCP)
 		{
