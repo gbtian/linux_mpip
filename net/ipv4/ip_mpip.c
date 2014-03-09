@@ -417,10 +417,12 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
     {
 		mpip_log("s: modifying header\n");
 
-		inet->inet_saddr = saddr;
-		inet->inet_daddr = daddr;
-
-		if (fl)
+		if (sysctl_mpip_send)
+		{
+			inet->inet_saddr = saddr;
+			inet->inet_daddr = daddr;
+		}
+		if (sysctl_mpip_rcv && fl)
 		{
 			fl->u.ip4.saddr = saddr;
 			fl->u.ip4.daddr = daddr;
@@ -795,8 +797,8 @@ static int mpip_options_get(struct net *net, struct ip_options_rcu *opt,
 
 int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl)
 {
-	struct sock *sk = skb->sk;
-	struct inet_sock *inet = inet_sk(sk);
+//	struct sock *sk = skb->sk;
+//	struct inet_sock *inet = inet_sk(sk);
 	int res;
 
 	if (!get_mpip_options(skb, fl, options))
