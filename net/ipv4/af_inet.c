@@ -524,6 +524,10 @@ int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 		goto out_release_sock;
 
 	inet->inet_rcv_saddr = inet->inet_saddr = addr->sin_addr.s_addr;
+
+	printk("i: %s, %d\n", __FILE__, __LINE__);
+	print_addr(inet->inet_saddr);
+
 	if (chk_addr_ret == RTN_MULTICAST || chk_addr_ret == RTN_BROADCAST)
 		inet->inet_saddr = 0;  /* Use device */
 
@@ -1179,6 +1183,8 @@ static int inet_sk_reselect_saddr(struct sock *sk)
 
 	inet->inet_saddr = inet->inet_rcv_saddr = new_saddr;
 
+	printk("i: %s, %d\n", __FILE__, __LINE__);
+	print_addr(inet->inet_saddr);
 	/*
 	 * XXX The only one ugly spot where we need to
 	 * XXX really change the sockets identity after
