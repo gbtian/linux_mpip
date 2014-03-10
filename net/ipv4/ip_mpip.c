@@ -209,8 +209,8 @@ char get_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 	if (!src_node_id || !dst_node_id)
 		return 0;
 
-	unsigned char session_id = get_sender_session(src_node_id, sport,
-										  		  dst_node_id, dport);
+	unsigned char session_id = get_sender_session(saddr, sport,
+										  		  daddr, dport);
 
 	if (session_id == 0)
 	{
@@ -223,7 +223,7 @@ char get_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 		if (src_node_id && dst_node_id)
 		{
 			add_sender_session(src_node_id, dst_node_id, saddr, sport, daddr, dport);
-			session_id = get_sender_session(src_node_id, sport, dst_node_id, dport);
+			session_id = get_sender_session(saddr, sport, daddr, dport);
 		}
 	}
 	else

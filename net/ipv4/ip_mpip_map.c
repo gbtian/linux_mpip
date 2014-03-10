@@ -364,16 +364,16 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 }
 
 
-unsigned char get_sender_session(unsigned char *src_node_id, __be16 sport,
-								 unsigned char *dst_node_id, __be16 dport)
+unsigned char get_sender_session(__be32 saddr, __be16 sport,
+								 __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *socket_session;
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if (is_equal_node_id(socket_session->src_node_id, src_node_id) &&
+		if ((socket_session->saddr == saddr) &&
 			(socket_session->sport == sport) &&
-			is_equal_node_id(socket_session->src_node_id, src_node_id) &&
+			(socket_session->daddr == daddr) &&
 			(socket_session->dport == dport))
 		{
 			return socket_session->session_id;
@@ -472,7 +472,7 @@ unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *ds
 	if (sid > 0)
 		return sid;
 
-	sid = get_sender_session(src_node_id, sport, dst_node_id, dport);
+	sid = get_sender_session(saddr, sport, daddr, dport);
 	if (sid > 0)
 		return sid;
 

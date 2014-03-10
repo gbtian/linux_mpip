@@ -197,8 +197,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned char *rcvh,
 										 u16 *rcv);
 
-unsigned char get_sender_session(unsigned char *src_node_id, __be16 sport,
-								 unsigned char *dst_node_id, __be16 dport);
+unsigned char get_sender_session(__be32 saddr, __be16 sport,
+								 __be32 daddr, __be16 dport);
 
 int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 					   __be32 saddr, __be16 sport,
