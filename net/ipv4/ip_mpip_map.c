@@ -364,16 +364,16 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 }
 
 
-unsigned char get_sender_session(__be32 saddr, __be16 sport,
-								 __be32 daddr, __be16 dport)
+unsigned char get_sender_session(unsigned char *src_node_id, __be16 sport,
+								 unsigned char *dst_node_id, __be16 dport)
 {
 	struct socket_session_table *socket_session;
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if ((socket_session->saddr == saddr) &&
+		if (is_equal_node_id(socket_session->src_node_id, src_node_id) &&
 			(socket_session->sport == sport) &&
-			(socket_session->daddr == daddr) &&
+			is_equal_node_id(socket_session->src_node_id, src_node_id) &&
 			(socket_session->dport == dport))
 		{
 			return socket_session->session_id;
@@ -383,32 +383,34 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 	return 0;
 }
 
-int add_sender_session(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
-					  __be32 daddr, __be16 dport)
+int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
+					   __be32 saddr, __be16 sport,
+					   __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
 	int i;
 
-	if (!is_lan_addr(daddr))
+	if (!is_lan_addr(saddr) || !is_lan_addr(daddr))
 	{
 		return 0;
 	}
 
-	if (!dest_node_id)
+	if (!src_node_id || !dst_node_id)
 		return 0;
 
-	if (dest_node_id[0] == dest_node_id[1])
+	if ((src_node_id[0] == src_node_id[1]) || (dst_node_id[0] == dst_node_id[1]))
 	{
 		return 0;
 	}
 
-	if (get_sender_session(saddr, sport, daddr, dport) > 0)
+	if (get_sender_session(src_node_id, sport, dst_node_id, dport) > 0)
 		return 0;
 
 
 	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, dest_node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -437,7 +439,7 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if (is_equal_node_id(socket_session->node_id, node_id) &&
+		if (is_equal_node_id(socket_session->dst_node_id, node_id) &&
 			(socket_session->session_id == session_id))
 		{
 			return socket_session->session_id;
@@ -447,7 +449,7 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 	return 0;
 }
 
-unsigned char add_receiver_session(unsigned char *node_id,
+unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id)
@@ -456,28 +458,29 @@ unsigned char add_receiver_session(unsigned char *node_id,
 	int i, sid;
 
 
-	if (!node_id || !session_id)
+	if (!src_node_id || !dst_node_id || !session_id)
 		return 0;
 
-	if (node_id[0] == node_id[1])
+	if ((src_node_id[0] == src_node_id[1]) || (dst_node_id[0] == dst_node_id[1]))
 	{
 		return 0;
 	}
 
 	static_session_id = (static_session_id > session_id) ? static_session_id : session_id;
 
-	sid = find_receiver_session(node_id, session_id);
+	sid = find_receiver_session(dst_node_id, session_id);
 	if (sid > 0)
 		return sid;
 
-	sid = get_sender_session(saddr, sport, daddr, dport);
+	sid = get_sender_session(src_node_id, sport, dst_node_id, dport);
 	if (sid > 0)
 		return sid;
 
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -512,7 +515,7 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		if (is_equal_node_id(socket_session->node_id, node_id) &&
+		if (is_equal_node_id(socket_session->dst_node_id, node_id) &&
 				(socket_session->session_id == session_id))
 		{
 			*saddr = socket_session->saddr;
@@ -934,7 +937,10 @@ asmlinkage long sys_mpip(void)
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
 		printk( "%02x-%02x  ",
-				socket_session->node_id[0], socket_session->node_id[1]);
+				socket_session->src_node_id[0], socket_session->src_node_id[1]);
+
+		printk( "%02x-%02x  ",
+						socket_session->dst_node_id[0], socket_session->dst_node_id[1]);
 
 		printk("%d  ", socket_session->session_id);
 

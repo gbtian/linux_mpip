@@ -118,7 +118,8 @@ struct path_info_table {
 //static LIST_HEAD(ss_head);
 
 struct socket_session_table {
-	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
+	unsigned char	src_node_id[MPIP_OPT_NODE_ID_LEN]; /* local node id*/
+	unsigned char	dst_node_id[MPIP_OPT_NODE_ID_LEN]; /* remote node id*/
 	unsigned char   session_id; /* sender's session id*/
 
 	/* socket information seen at the receiver side*/
@@ -173,7 +174,7 @@ unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 											 __be32 saddr, __be16 sport,
 											 __be32 daddr, __be16 dport);
 
-unsigned char add_receiver_session(unsigned char *node_id,
+unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id);
@@ -196,11 +197,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned char *rcvh,
 										 u16 *rcv);
 
-unsigned char get_sender_session(__be32 saddr, __be16 sport,
-								 __be32 daddr, __be16 dport);
+unsigned char get_sender_session(unsigned char *src_node_id, __be16 sport,
+								 unsigned char *dst_node_id, __be16 dport);
 
-int add_sender_session(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
-					  __be32 daddr, __be16 dport);
+int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
+					   __be32 saddr, __be16 sport,
+					   __be32 daddr, __be16 dport);
 
 __be32 find_local_addr(__be32 addr);
 

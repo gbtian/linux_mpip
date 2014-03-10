@@ -201,11 +201,16 @@ unsigned char *get_node_id(void)
 	return NULL;
 }
 
-char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
+char get_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
+					__be32 saddr, __be16 sport,
 					__be32 daddr, __be16 dport, bool *is_new)
 {
-	unsigned char session_id = get_sender_session(saddr, sport,
-										  		  daddr, dport);
+
+	if (!src_node_id || !dst_node_id)
+		return 0;
+
+	unsigned char session_id = get_sender_session(src_node_id, sport,
+										  		  dst_node_id, dport);
 
 	if (session_id == 0)
 	{
@@ -215,10 +220,10 @@ char get_session_id(unsigned char *dest_node_id, __be32 saddr, __be16 sport,
 		//printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
-		if (dest_node_id)
+		if (src_node_id && dst_node_id)
 		{
-			add_sender_session(dest_node_id, saddr, sport, daddr, dport);
-			session_id = get_sender_session(saddr, sport, daddr, dport);
+			add_sender_session(src_node_id, dst_node_id, saddr, sport, daddr, dport);
+			session_id = get_sender_session(src_node_id, sport, dst_node_id, dport);
 		}
 	}
 	else
@@ -292,7 +297,7 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 	print_addr(inet->inet_daddr);
 
 	int i;
-	unsigned char *dest_node_id = find_node_id_in_working_ip(inet->inet_daddr);
+	unsigned char *dst_node_id = find_node_id_in_working_ip(inet->inet_daddr);
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
@@ -367,18 +372,18 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
     for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
     	options[2 + i] =  static_node_id[i];
 
-    options[4] = get_session_id(dest_node_id,
+    options[4] = get_session_id(static_node_id, dst_node_id,
     							inet->inet_saddr, sport,
     							inet->inet_daddr, dport, &is_new);
 
     if (!is_new)
     {
     	mpip_log("%s, %d\n", __FILE__, __LINE__);
-    	path_id = get_path_id(dest_node_id, &saddr, &daddr,
+    	path_id = get_path_id(dst_node_id, &saddr, &daddr,
     				inet->inet_saddr, inet->inet_daddr, pkt_len);
     }
 
-    path_stat_id = get_path_stat_id(dest_node_id, &rcvh, &rcv);
+    path_stat_id = get_path_stat_id(dst_node_id, &rcvh, &rcv);
 
     //printk("%d, %d, %s, %d\n", rcvh, rcv, __FILE__, __LINE__);
 
@@ -453,163 +458,6 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 EXPORT_SYMBOL(get_mpip_options);
 
 
-int get_mpip_options_1(struct sk_buff *skb, unsigned char *options)
-{
-
-	if (!skb)
-	{
-		return 0;
-	}
-
-	struct iphdr *iph = ip_hdr(skb);
-	if (!iph)
-	{
-		return 0;
-	}
-
-	if (!check_bad_addr(iph->saddr, iph->daddr))
-		return 0;
-
-	struct tcphdr *tcph = NULL;
-	struct udphdr *udph = NULL;
-
-	int i;
-	unsigned char *dest_node_id = find_node_id_in_working_ip(iph->daddr);
-	__be32 saddr = 0, daddr = 0;
-	__be16 sport = 0, dport = 0;
-	__be16 osport = 0, odport = 0;
-	unsigned char path_id = 0;
-	unsigned char path_stat_id = 0;
-	int pkt_len = skb->len + 12;
-	unsigned char rcvh = 0;
-	u16 rcv = 0;
-//	int mtu = ip_skb_dst_mtu(skb);
-//	int pkt_count = pkt_len / mtu + ((pkt_len % mtu) ? 1 : 0);
-	bool is_new = true;
-
-
-	//if TCP PACKET
-	if(iph->protocol==IPPROTO_TCP)
-	{
-	    //tcp_header = (struct tcphdr *)skb_transport_header(sock_buff); //doing the cast this way gave me the same problem
-
-//		tcph= (struct tcphdr *)((__u32 *)iph + iph->ihl); //this fixed the problem
-		tcph = tcp_hdr(skb); //this fixed the problem
-		if (!tcph)
-		{
-			return 0;
-		}
-		osport = htons((unsigned short int) tcph->source); //sport now has the source port
-		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
-		sport = tcph->source; //sport now has the source port
-		dport = tcph->dest;   //dport now has the dest port
-
-	}
-	else if(iph->protocol==IPPROTO_UDP)
-	{
-		udph = udp_hdr(skb); //this fixed the problem
-		if (!udph)
-		{
-			return 0;
-		}
-		osport = htons((unsigned short int) udph->source); //sport now has the source port
-		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
-		sport = udph->source; //sport now has the source port
-		dport = udph->dest;   //dport now has the dest port
-	}
-	else
-	{
-		return 0;
-	}
-
-	get_node_id();
-	get_available_local_addr();
-
-
-	options[0] = IPOPT_MPIP;
-	options[1] = MPIP_OPT_LEN;
-
-    for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
-    	options[2 + i] =  static_node_id[i];
-
-    options[4] = get_session_id(dest_node_id,
-    							iph->saddr, sport,
-    							iph->daddr, dport, &is_new);
-
-    if (!is_new)
-    {
-    	mpip_log("%s, %d\n", __FILE__, __LINE__);
-    	path_id = get_path_id(dest_node_id, &saddr, &daddr,
-    				iph->saddr, iph->daddr, pkt_len);
-    }
-
-    path_stat_id = get_path_stat_id(dest_node_id, &rcvh, &rcv);
-
-    //printk("%d, %d, %s, %d\n", rcvh, rcv, __FILE__, __LINE__);
-
-    options[5] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
-
-    options[6] = rcvh;
-
-    options[7] = rcv & 0xff; //packet_count
-    options[8] = (rcv>>8) & 0xff; //packet_count
-
-
-    //mpip_log("\ns: iph->id=%d\n", iph->id);
-    mpip_log("s: iph->saddr=");
-	print_addr(iph->saddr);
-
-	mpip_log("s: saddr=");
-	print_addr(saddr);
-
-	mpip_log("s: iph->daddr=");
-	print_addr(iph->daddr);
-
-	mpip_log("s: daddr=");
-	print_addr(daddr);
-
-	if(iph->protocol==IPPROTO_TCP)
-	{
-		mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
-		mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
-	}
-	else if(iph->protocol==IPPROTO_UDP)
-	{
-		mpip_log("s: udph->source= %d, osport=%d, sport=%d\n", udph->source, osport, sport);
-		mpip_log("s: udph->dest= %d, odport=%d, dport=%d\n", udph->dest, odport, dport);
-	}
-    if (path_id > 0)
-    {
-		mpip_log("s: modifying header\n");
-
-		iph->saddr = saddr;
-		iph->daddr = daddr;
-
-//		__be32 waddr = convert_addr(192, 168, 1, 20);
-//		__be32 eaddr = convert_addr(192, 168, 1, 21);
-
-//
-//    	iph->saddr = saddr;
-//    	iph->daddr = daddr;
-
-//		if (iph->saddr == waddr)
-//		{
-//			iph->saddr = eaddr;
-//		}
-//
-//		if (iph->daddr == waddr)
-//		{
-//			iph->daddr = eaddr;
-//		}
-
-//    	mpip_log("s: id=%d, skb->ip_summed=%d, tcph->check=%d, iph->check=%d, %d\n",iph->id, skb->ip_summed, tcph->check, iph->check, __LINE__);
-    }
-
-    return 1;
-
-}
-EXPORT_SYMBOL(get_mpip_options_1);
-
 int process_mpip_options(struct sk_buff *skb)
 {
 	struct ip_options *opt;
@@ -682,7 +530,7 @@ int process_mpip_options(struct sk_buff *skb)
 	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
 	update_path_info();
 
-	session_id = add_receiver_session(opt->node_id, iph->daddr, dport,
+	session_id = add_receiver_session(static_node_id, opt->node_id, iph->daddr, dport,
 										iph->saddr, sport, opt->session_id);
 
 	res = get_receiver_session(opt->node_id, session_id,
