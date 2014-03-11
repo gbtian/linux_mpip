@@ -398,8 +398,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 {
 	const struct iphdr *iph;
 	u32 len;
-	struct iphdr *ih;
-	struct tcphdr *th;
+
 	/* When the interface is in promisc. mode, drop all the crap
 	 * that it receives, do not try to analyse it.
 	 */
@@ -477,8 +476,10 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
 
+	printk("%d, %d, %s, %d\n", iph->id, iph->ihl, __FILE__, __LINE__);
 	if (iph->ihl > 5 && sysctl_mpip_enabled)
 	{
+		printk("%d, %d, %s, %d\n", iph->id, iph->ihl, __FILE__, __LINE__);
 		process_mpip_options(skb);
 	}
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,

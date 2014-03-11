@@ -163,7 +163,21 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	}
 
 	inet = inet_sk(sk);
+	inet->inet_saddr = inet_sk(skb->sk)->inet_saddr;
+	inet->inet_rcv_saddr = inet_sk(skb->sk)->inet_rcv_saddr;
+	inet->inet_daddr = inet_sk(skb->sk)->inet_daddr;
+
 	rt = skb_rtable(skb);
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(saddr);
+	print_addr(daddr);
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(inet->inet_saddr);
+	print_addr(inet->inet_rcv_saddr);
+	print_addr(inet->inet_daddr);
+
+	print_addr(rt->rt_gateway);
 
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
@@ -185,8 +199,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	//iph->frag_off = 0;
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
-	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
-	iph->saddr    = saddr;
+//	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
+//	iph->saddr    = saddr;
+	iph->daddr    = inet->inet_daddr;
+	iph->saddr    = inet->inet_saddr;
+
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
 
@@ -387,13 +404,12 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct iphdr *ih;
 	struct tcphdr *th;
 
-//	char options[MPIP_OPT_LEN];
 	unsigned int optlen = 0;
-//	struct mpip_options_rcu *mp_opt = NULL;
 
-//	printk("\nbefore:\n");
-//	print_addr(fl->u.ip4.saddr);
-//	print_addr(fl->u.ip4.daddr);
+	printk("%s, %d\n", __FILE__, __LINE__);
+	printk("\nbefore:\n");
+	print_addr(fl->u.ip4.saddr);
+	print_addr(fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled)
 	{
 		mpip_compose_opt(skb, fl);
@@ -407,28 +423,29 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	fl4 = &fl->u.ip4;
 
-//	printk("after:\n");
-//	print_addr(fl4->saddr);
-//	print_addr(fl4->daddr);
+	printk("%s, %d\n", __FILE__, __LINE__);
+	printk("after:\n");
+	print_addr(fl4->saddr);
+	print_addr(fl4->daddr);
 
 	rt = skb_rtable(skb);
 	if (rt != NULL)
 	{
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		goto packet_routed;
 	}
 	/* Make sure we can route this packet. */
 	rt = (struct rtable *)__sk_dst_check(sk, 0);
 	if (rt == NULL)
 	{
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		__be32 daddr;
 
 		/* Use correct destination address if we have options. */
 		daddr = inet->inet_daddr;
 		if (inet_opt && inet_opt->opt.srr)
 		{
-//			printk("i: %s, %d\n", __FILE__, __LINE__);
+			printk("%s, %d\n", __FILE__, __LINE__);
 			daddr = inet_opt->opt.faddr;
 		}
 		/* If this fails, retransmit mechanism of transport layer will
@@ -444,20 +461,20 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 					   sk->sk_bound_dev_if);
 		if (IS_ERR(rt))
 		{
-//			printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 			goto no_route;
 		}
 		sk_setup_caps(sk, &rt->dst);
 	}
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
+	printk("%s, %d\n", __FILE__, __LINE__);
 	skb_dst_set_noref(skb, &rt->dst);
-//	printk("gateway: ");
-//	print_addr(rt->rt_gateway);
+	printk("gateway: ");
+	print_addr(rt->rt_gateway);
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
 	{
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
+		printk("i: %s, %d\n", __FILE__, __LINE__);
 		goto no_route;
 	}
 
@@ -483,6 +500,11 @@ packet_routed:
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
 	ip_copy_addrs(iph, fl4);
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+	printk("Here:\n");
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 
 	/* Transport layer set skb->h.foo itself. */
 

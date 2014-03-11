@@ -474,13 +474,18 @@ int process_mpip_options(struct sk_buff *skb)
 	unsigned char session_id = 0;
 
 	if (!skb)
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		return 0;
+	}
 
 	dev = skb->dev;
 	iph = ip_hdr(skb);
 	opt = &(IPCB(skb)->opt);
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
-	if (ip_options_compile(dev_net(dev), opt, skb)) {
+	if (ip_options_compile(dev_net(dev), opt, skb))
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 		return 0;
 	}
@@ -496,6 +501,7 @@ int process_mpip_options(struct sk_buff *skb)
 		tcph= tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
 		{
+			printk("%s, %d\n", __FILE__, __LINE__);
 			return 0;
 		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
@@ -508,6 +514,7 @@ int process_mpip_options(struct sk_buff *skb)
 		udph= udp_hdr(skb); //this fixed the problem
 		if (!udph)
 		{
+			printk("%s, %d\n", __FILE__, __LINE__);
 			return 0;
 		}
 		osport = htons((unsigned short int) udph->source); //sport now has the source port
@@ -568,6 +575,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	if (res)
 	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		mpip_log("r: modifying header\n");
 		iph->saddr = daddr;
 		iph->daddr = saddr;
