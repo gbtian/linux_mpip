@@ -153,7 +153,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct rtable *rt;
 	struct iphdr *iph;
 	unsigned int optlen = 0;
-
+	__be32 new_saddr, new_daddr;
 	struct iphdr *ih;
 	struct tcphdr *th;
 
@@ -175,20 +175,14 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled)
 	{
-		mpip_compose_opt(skb, NULL);
+		mpip_compose_opt_1(skb, saddr, daddr, &new_saddr, &new_daddr);
 	}
 
-	inet->inet_saddr = inet_sk(skb->sk)->inet_saddr;
-	inet->inet_rcv_saddr = inet_sk(skb->sk)->inet_rcv_saddr;
-	inet->inet_daddr = inet_sk(skb->sk)->inet_daddr;
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(new_saddr);
+	print_addr(new_daddr);
 
 	rt = skb_rtable(skb);
-
-
-	printk("%s, %d\n", __FILE__, __LINE__);
-	print_addr(inet->inet_saddr);
-	print_addr(inet->inet_rcv_saddr);
-	print_addr(inet->inet_daddr);
 
 	print_addr(rt->rt_gateway);
 
@@ -214,8 +208,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 //	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
 //	iph->saddr    = saddr;
-	iph->daddr    = inet->inet_daddr;
-	iph->saddr    = inet->inet_saddr;
+	iph->daddr    = new_daddr;
+	iph->saddr    = new_saddr;
 
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
