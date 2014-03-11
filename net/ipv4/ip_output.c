@@ -164,7 +164,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	inet = inet_sk(sk);
 
 
-	printk("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	print_addr(saddr);
 	print_addr(daddr);
 
@@ -173,7 +173,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		mpip_compose_opt_1(skb, saddr, daddr, &new_saddr, &new_daddr);
 	}
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__， __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	print_addr(new_saddr);
 	print_addr(new_daddr);
 
