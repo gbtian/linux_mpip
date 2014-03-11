@@ -173,12 +173,13 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		mpip_compose_opt_1(skb, saddr, daddr, &new_saddr, &new_daddr);
 	}
 
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__， __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__， __LINE__);
 	print_addr(new_saddr);
 	print_addr(new_daddr);
 
 	rt = skb_rtable(skb);
 
+	mpip_log("gateway: \n");
 	print_addr(rt->rt_gateway);
 
 	/* Build the IP header. */
