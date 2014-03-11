@@ -157,21 +157,34 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct iphdr *ih;
 	struct tcphdr *th;
 
+	inet = inet_sk(sk);
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(inet->inet_saddr);
+	print_addr(inet->inet_rcv_saddr);
+	print_addr(inet->inet_daddr);
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(inet_sk(skb->sk)->inet_saddr);
+	print_addr(inet_sk(skb->sk)->inet_rcv_saddr);
+	print_addr(inet_sk(skb->sk)->inet_daddr);
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(saddr);
+	print_addr(daddr);
+
 	if (sysctl_mpip_enabled)
 	{
 		mpip_compose_opt(skb, NULL);
 	}
 
-	inet = inet_sk(sk);
 	inet->inet_saddr = inet_sk(skb->sk)->inet_saddr;
 	inet->inet_rcv_saddr = inet_sk(skb->sk)->inet_rcv_saddr;
 	inet->inet_daddr = inet_sk(skb->sk)->inet_daddr;
 
 	rt = skb_rtable(skb);
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-	print_addr(saddr);
-	print_addr(daddr);
+
 	printk("%s, %d\n", __FILE__, __LINE__);
 	print_addr(inet->inet_saddr);
 	print_addr(inet->inet_rcv_saddr);
