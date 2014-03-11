@@ -419,7 +419,8 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-	printk("Received: %d, %s, %d\n", iph->id, __FILE__, __LINE__);
+
+	mpip_log("\nReceived: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	/*
 	 *	RFC1122: 3.2.1.2 MUST silently discard any IP frame that fails the checksum.
@@ -478,10 +479,11 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
 
-	printk("%d, %d, %s, %d\n", iph->id, iph->ihl, __FILE__, __LINE__);
+
+	mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__,  __LINE__);
 	if (iph->ihl > 5 && sysctl_mpip_enabled)
 	{
-		printk("%d, %d, %s, %d\n", iph->id, iph->ihl, __FILE__, __LINE__);
+		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
 		process_mpip_options(skb);
 	}
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,

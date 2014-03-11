@@ -117,8 +117,9 @@ int __ip_local_out(struct sk_buff *skb)
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
-
-	printk("Sent: %d, %s, %d\n", iph->id, __FILE__, __LINE__);
+	mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
@@ -162,17 +163,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	inet = inet_sk(sk);
 
-//	printk("%s, %d\n", __FILE__, __LINE__);
-//	print_addr(inet->inet_saddr);
-//	print_addr(inet->inet_rcv_saddr);
-//	print_addr(inet->inet_daddr);
-//
-//	printk("%s, %d\n", __FILE__, __LINE__);
-//	print_addr(inet_sk(skb->sk)->inet_saddr);
-//	print_addr(inet_sk(skb->sk)->inet_rcv_saddr);
-//	print_addr(inet_sk(skb->sk)->inet_daddr);
 
-	printk("\n\n%s, %d\n", __FILE__, __LINE__);
+	printk("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	print_addr(saddr);
 	print_addr(daddr);
 
@@ -181,7 +173,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		mpip_compose_opt_1(skb, saddr, daddr, &new_saddr, &new_daddr);
 	}
 
-	printk("%s, %d\n", __FILE__, __LINE__);
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__， __LINE__);
 	print_addr(new_saddr);
 	print_addr(new_daddr);
 
@@ -423,8 +415,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	unsigned int optlen = 0;
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-	printk("\nbefore:\n");
+	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("before:\n");
 	print_addr(fl->u.ip4.saddr);
 	print_addr(fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled)
@@ -440,29 +432,29 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	fl4 = &fl->u.ip4;
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-	printk("after:\n");
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("after:\n");
 	print_addr(fl4->saddr);
 	print_addr(fl4->daddr);
 
 	rt = skb_rtable(skb);
 	if (rt != NULL)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		goto packet_routed;
 	}
 	/* Make sure we can route this packet. */
 	rt = (struct rtable *)__sk_dst_check(sk, 0);
 	if (rt == NULL)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		__be32 daddr;
 
 		/* Use correct destination address if we have options. */
 		daddr = inet->inet_daddr;
 		if (inet_opt && inet_opt->opt.srr)
 		{
-			printk("%s, %d\n", __FILE__, __LINE__);
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			daddr = inet_opt->opt.faddr;
 		}
 		/* If this fails, retransmit mechanism of transport layer will
@@ -478,20 +470,20 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 					   sk->sk_bound_dev_if);
 		if (IS_ERR(rt))
 		{
-		printk("%s, %d\n", __FILE__, __LINE__);
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			goto no_route;
 		}
 		sk_setup_caps(sk, &rt->dst);
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	skb_dst_set_noref(skb, &rt->dst);
-	printk("gateway: ");
+	mpip_log("gateway: ");
 	print_addr(rt->rt_gateway);
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
 	{
-		printk("i: %s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		goto no_route;
 	}
 
@@ -518,8 +510,8 @@ packet_routed:
 	iph->protocol = sk->sk_protocol;
 	ip_copy_addrs(iph, fl4);
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-	printk("Here:\n");
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("Here:\n");
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);
 
