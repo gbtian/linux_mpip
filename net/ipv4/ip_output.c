@@ -117,6 +117,9 @@ int __ip_local_out(struct sk_buff *skb)
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
+
+	printk("Sent: %d, %s, %d\n", iph->id, __FILE__, __LINE__);
+
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
 }
@@ -169,7 +172,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 //	print_addr(inet_sk(skb->sk)->inet_rcv_saddr);
 //	print_addr(inet_sk(skb->sk)->inet_daddr);
 
-	printk("%s, %d\n", __FILE__, __LINE__);
+	printk("\n\n%s, %d\n", __FILE__, __LINE__);
 	print_addr(saddr);
 	print_addr(daddr);
 

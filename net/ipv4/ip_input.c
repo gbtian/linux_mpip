@@ -419,6 +419,8 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
+	printk("Received: %d, %s, %d\n", iph->id, __FILE__, __LINE__);
+
 	/*
 	 *	RFC1122: 3.2.1.2 MUST silently discard any IP frame that fails the checksum.
 	 *

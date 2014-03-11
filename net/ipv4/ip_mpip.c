@@ -591,8 +591,8 @@ int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	mpip_log("s: modifying header\n");
 	*new_saddr = saddr;
 	*new_daddr = daddr;
-	print_addr(new_saddr);
-	print_addr(new_daddr);
+	print_addr(*new_saddr);
+	print_addr(*new_daddr);
 
     return 1;
 
