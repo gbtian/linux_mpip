@@ -120,6 +120,12 @@ int __ip_local_out(struct sk_buff *skb)
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 	mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	if (iph->ihl == 5 && sysctl_mpip_enabled)
+	{
+		mpip_log("Call Stack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		dump_stack();
+
+	}
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);
 
