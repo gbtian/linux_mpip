@@ -348,6 +348,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 */
 	if (!skb_dst(skb)) {
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		printk("%d, %d, %s, %d\n", iph->saddr, iph->daddr, __FILE__, __LINE__);
+		dump_stack();
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
 		if (unlikely(err)) {

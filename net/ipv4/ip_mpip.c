@@ -28,7 +28,7 @@ static struct ip_options_rcu *mp_opt = NULL;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 1000;
 int max_pkt_len = 65500;
 
