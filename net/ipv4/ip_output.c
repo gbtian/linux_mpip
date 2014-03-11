@@ -153,21 +153,21 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct rtable *rt;
 	struct iphdr *iph;
 	unsigned int optlen = 0;
-	__be32 new_saddr, new_daddr;
+	__be32 new_saddr=0, new_daddr=0;
 	struct iphdr *ih;
 	struct tcphdr *th;
 
 	inet = inet_sk(sk);
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-	print_addr(inet->inet_saddr);
-	print_addr(inet->inet_rcv_saddr);
-	print_addr(inet->inet_daddr);
-
-	printk("%s, %d\n", __FILE__, __LINE__);
-	print_addr(inet_sk(skb->sk)->inet_saddr);
-	print_addr(inet_sk(skb->sk)->inet_rcv_saddr);
-	print_addr(inet_sk(skb->sk)->inet_daddr);
+//	printk("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(inet->inet_saddr);
+//	print_addr(inet->inet_rcv_saddr);
+//	print_addr(inet->inet_daddr);
+//
+//	printk("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(inet_sk(skb->sk)->inet_saddr);
+//	print_addr(inet_sk(skb->sk)->inet_rcv_saddr);
+//	print_addr(inet_sk(skb->sk)->inet_daddr);
 
 	printk("%s, %d\n", __FILE__, __LINE__);
 	print_addr(saddr);
@@ -206,10 +206,17 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	//iph->frag_off = 0;
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
-//	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
-//	iph->saddr    = saddr;
-	iph->daddr    = new_daddr;
-	iph->saddr    = new_saddr;
+
+	if (new_saddr > 0 && new_daddr > 0)
+	{
+		iph->daddr    = new_daddr;
+		iph->saddr    = new_saddr;
+	}
+	else
+	{
+		iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
+		iph->saddr    = saddr;
+	}
 
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
