@@ -405,15 +405,12 @@ static inline struct sock *__inet_lookup_skb(struct inet_hashinfo *hashinfo,
 
 	if (sk)
 	{
-		printk("i: %d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
-		if (iph->saddr == addr || iph->daddr == addr)
-			dump_stack();
-
+		printk("%d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
 		return sk;
 	}
 	else
 	{
-		//printk("i: %d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
+		printk("%d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
 		return __inet_lookup(dev_net(skb_dst(skb)->dev), hashinfo,
 				     iph->saddr, sport,
 				     iph->daddr, dport, inet_iif(skb));
