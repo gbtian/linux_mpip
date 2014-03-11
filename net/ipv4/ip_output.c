@@ -80,6 +80,8 @@
 #include <linux/mroute.h>
 #include <linux/netlink.h>
 #include <linux/tcp.h>
+#include <linux/netdevice.h>
+#include <linux/inetdevice.h>
 #include <linux/ip_mpip.h>
 
 int sysctl_ip_default_ttl __read_mostly = IPDEFTTL;
@@ -157,7 +159,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct rtable *rt;
 	struct iphdr *iph;
 	unsigned int optlen = 0;
-	__be32 new_saddr=0, new_daddr=0;
+	__be32 new_saddr=0, new_daddr=0, gwaddr = 0;
 	struct iphdr *ih;
 	struct tcphdr *th;
 
@@ -179,8 +181,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	rt = skb_rtable(skb);
 
-	mpip_log("gateway: \n");
+	mpip_log("gateway: ");
 	print_addr(rt->rt_gateway);
+	mpip_log("next dev: ");
+	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
+	print_addr(gwaddr);
 
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
@@ -409,7 +414,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
-
+	__be32 gwaddr = 0;
 
 	struct iphdr *ih;
 	struct tcphdr *th;
@@ -480,6 +485,9 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	skb_dst_set_noref(skb, &rt->dst);
 	mpip_log("gateway: ");
 	print_addr(rt->rt_gateway);
+	mpip_log("next dev: ");
+	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
+	print_addr(gwaddr);
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
