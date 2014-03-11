@@ -321,10 +321,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	if (iph->ihl > 5 && sysctl_mpip_enabled)
-	{
-		process_mpip_options(skb);
-	}
+//	if (iph->ihl > 5 && sysctl_mpip_enabled)
+//	{
+//		process_mpip_options(skb);
+//	}
 
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
@@ -475,6 +475,10 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
 
+	if (iph->ihl > 5 && sysctl_mpip_enabled)
+	{
+		process_mpip_options(skb);
+	}
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,
 		       ip_rcv_finish);
 

@@ -422,12 +422,10 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
     {
 		mpip_log("s: modifying header\n");
 
-		if (sysctl_mpip_send)
-		{
-			inet->inet_saddr = saddr;
-			inet->inet_daddr = daddr;
-		}
-		if (sysctl_mpip_rcv && fl)
+//		inet->inet_saddr = saddr;
+//		inet->inet_daddr = daddr;
+
+		if (fl)
 		{
 			fl->u.ip4.saddr = saddr;
 			fl->u.ip4.daddr = daddr;
