@@ -27,13 +27,21 @@ bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 	return true;
 }
 
-void print_node_id(unsigned char *node_id)
+void print_node_id(const char *prefix, unsigned char *node_id)
 {
 	if (!node_id)
 		return;
 
-	mpip_log( "%02x-%02x\n",
-			node_id[0], node_id[1]);
+	if (prefix)
+	{
+		mpip_log("%s: %02x-%02x\n", prefix,
+					node_id[0], node_id[1]);
+	}
+	else
+	{
+		mpip_log( "%02x-%02x\n",
+				node_id[0], node_id[1]);
+	}
 }
 
 bool is_lan_addr(__be32 addr)
@@ -48,11 +56,19 @@ bool is_lan_addr(__be32 addr)
 	return false;
 }
 
-void print_addr(__be32 addr)
+void print_addr(const char *prefix, __be32 addr)
 {
 	char *p = (char *) &addr;
-	mpip_log( "%d.%d.%d.%d\n",
-		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	if (prefix)
+	{
+		mpip_log("%s: %d.%d.%d.%d\n", prefix,
+					(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	}
+	else
+	{
+		mpip_log( "%d.%d.%d.%d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	}
 }
 
 
@@ -87,7 +103,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct working_ip_table *item = NULL;
-	int i;
+
 
 	if (!node_id)
 		return 0;
@@ -110,8 +126,8 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	mpip_log( "wi:");
 
-	print_node_id(node_id);
-	print_addr(addr);
+	print_node_id(__FUNCTION__, node_id);
+	print_addr(__FUNCTION__, addr);
 
 
 	return 1;
@@ -219,7 +235,7 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info;
 	int sec = 1;
-	int minbw = 1000;
+//	int minbw = 1000;
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
@@ -330,7 +346,6 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
 int add_path_stat(unsigned char *node_id, unsigned char path_id)
 {
 	struct path_stat_table *item = NULL;
-	int i;
 
 	if (!node_id || (path_id == 0))
 		return 0;
@@ -388,7 +403,6 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 					   __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
-	int i;
 
 	if (!is_lan_addr(saddr) || !is_lan_addr(daddr))
 	{
@@ -403,7 +417,7 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 		return 0;
 	}
 
-	if (get_sender_session(src_node_id, sport, dst_node_id, dport) > 0)
+	if (get_sender_session(saddr, sport, daddr, dport) > 0)
 		return 0;
 
 
@@ -455,7 +469,7 @@ unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *ds
 		 	 	 	 	unsigned char session_id)
 {
 	struct socket_session_table *item = NULL;
-	int i, sid;
+	int sid;
 
 
 	if (!src_node_id || !dst_node_id || !session_id)
@@ -569,7 +583,6 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
 	struct path_info_table *item = NULL;
-	int i;
 
 	if (!node_id)
 		return 0;
@@ -607,8 +620,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 		mpip_log( "pi: %d\n", item->path_id);
 
-		print_node_id(node_id);
-		print_addr(addr);
+		print_node_id(__FUNCTION__, node_id);
+		print_addr(__FUNCTION__, addr);
 	}
 
 	return 1;
@@ -736,7 +749,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
 	unsigned char e_path_stat_id = 0;
-	unsigned long e_fbtime = 0;
+//	unsigned long e_fbtime = 0;
 	int totalrcv = 0;
 	int max_rcv = 0;
 
@@ -818,8 +831,7 @@ void get_available_local_addr(void)
 			list_add(&(item->list), &la_head);
 
 			mpip_log( "local addr:");
-			__be32 addr = dev->ip_ptr->ifa_list->ifa_address;
-			print_addr(addr);
+			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		}
 	}
 }

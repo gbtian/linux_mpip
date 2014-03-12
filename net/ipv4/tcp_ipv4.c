@@ -86,6 +86,10 @@
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
 
+#include <linux/netdevice.h>
+#include <linux/inetdevice.h>
+#include <linux/ip_mpip.h>
+
 int sysctl_tcp_tw_reuse __read_mostly;
 int sysctl_tcp_low_latency __read_mostly;
 EXPORT_SYMBOL(sysctl_tcp_low_latency);
@@ -244,6 +248,12 @@ int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 	inet->inet_id = tp->write_seq ^ jiffies;
 
 	err = tcp_connect(sk);
+
+	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	print_addr(__FUNCTION__, inet->inet_saddr);
+	print_addr(__FUNCTION__, inet->inet_rcv_saddr);
+	print_addr(__FUNCTION__, inet->inet_daddr);
+	print_addr(__FUNCTION__, rt->dst.dev->ip_ptr->ifa_list->ifa_address);
 
 	rt = NULL;
 	if (err)
@@ -1660,6 +1670,12 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 		inet_csk(newsk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
 	newinet->inet_id = newtp->write_seq ^ jiffies;
 
+	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	print_addr(__FUNCTION__, newinet->inet_saddr);
+	print_addr(__FUNCTION__, newinet->inet_rcv_saddr);
+	print_addr(__FUNCTION__, newinet->inet_daddr);
+
+
 	if (!dst) {
 		dst = inet_csk_route_child_sock(sk, newsk, req);
 		if (!dst)
@@ -1668,6 +1684,8 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 		/* syncookie case : see end of cookie_v4_check() */
 	}
 	sk_setup_caps(newsk, dst);
+	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	print_addr(__FUNCTION__, dst->dev->ip_ptr->ifa_list->ifa_address);
 
 	tcp_mtup_init(newsk);
 	tcp_sync_mss(newsk, dst_mtu(dst));

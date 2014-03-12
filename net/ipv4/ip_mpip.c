@@ -138,16 +138,30 @@ void mpip_log(const char *fmt, ...)
 }
 EXPORT_SYMBOL(mpip_log);
 
-void print_mpip_options(struct ip_options *opt)
+void print_mpip_options(const char *prefix, struct ip_options *opt)
 {
-	mpip_log("optlen: %d\n", opt->optlen);
-	mpip_log("node_id: ");
-	print_node_id(opt->node_id);
-	mpip_log("session_id: %d\n", opt->session_id);
-	mpip_log("path_id: %d\n", opt->path_id);
-	mpip_log("stat_path_id: %d\n", opt->stat_path_id);
-	mpip_log("rcvh: %d\n", opt->rcvh);
-	mpip_log("rcv: %d\n", opt->rcv);
+	if (prefix)
+	{
+		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
+		mpip_log("%s: node_id= ");
+		print_node_id(NULL, opt->node_id);
+		mpip_log("%s: session_id = %d\n", prefix, opt->session_id);
+		mpip_log("%s: path_id = %d\n",  prefix, opt->path_id);
+		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
+		mpip_log("%s: rcvh = %d\n",  prefix, opt->rcvh);
+		mpip_log("%s: rcv = %d\n",  prefix, opt->rcv);
+	}
+	else
+	{
+		mpip_log("optlen = %d\n", opt->optlen);
+		mpip_log("node_id = ");
+		print_node_id(NULL, opt->node_id);
+		mpip_log("session_id = %d\n", opt->session_id);
+		mpip_log("path_id = %d\n", opt->path_id);
+		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
+		mpip_log("rcvh = %d\n", opt->rcvh);
+		mpip_log("rcv = %d\n", opt->rcv);
+	}
 }
 EXPORT_SYMBOL(print_mpip_options);
 
@@ -215,8 +229,8 @@ char get_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 	if (session_id == 0)
 	{
 		//printk("%s, %d\n", __FILE__, __LINE__);
-		print_addr(saddr);
-		print_addr(daddr);
+		print_addr(__FUNCTION__, saddr);
+		print_addr(__FUNCTION__, daddr);
 		//printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
@@ -291,10 +305,10 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 	printk("\nsending:\n");
 
 	printk("s: inet->inet_saddr=");
-	print_addr(inet->inet_saddr);
+	print_addr(__FUNCTION__, inet->inet_saddr);
 
 	printk("s: inet->inet_daddr=");
-	print_addr(inet->inet_daddr);
+	print_addr(__FUNCTION__, inet->inet_daddr);
 
 	int i;
 	unsigned char *dst_node_id = find_node_id_in_working_ip(inet->inet_daddr);
@@ -397,16 +411,16 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 
     //mpip_log("\ns: iph->id=%d\n", iph->id);
     mpip_log("s: iph->saddr=");
-	print_addr(inet->inet_saddr);
+	print_addr(__FUNCTION__, inet->inet_saddr);
 
 	mpip_log("s: saddr=");
-	print_addr(saddr);
+	print_addr(__FUNCTION__, saddr);
 
 	mpip_log("s: iph->daddr=");
-	print_addr(inet->inet_daddr);
+	print_addr(__FUNCTION__, inet->inet_daddr);
 
 	mpip_log("s: daddr=");
-	print_addr(daddr);
+	print_addr(__FUNCTION__, daddr);
 
 	if(sk->sk_protocol==IPPROTO_TCP)
 	{
@@ -566,16 +580,16 @@ int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     //mpip_log("\ns: iph->id=%d\n", iph->id);
     mpip_log("s: old_saddr=");
-	print_addr(old_saddr);
+	print_addr(__FUNCTION__, old_saddr);
 
 	mpip_log("s: new_saddr=");
-	print_addr(saddr);
+	print_addr(__FUNCTION__, saddr);
 
 	mpip_log("s: old_daddr=");
-	print_addr(old_daddr);
+	print_addr(__FUNCTION__, old_daddr);
 
 	mpip_log("s: new_daddr=");
-	print_addr(daddr);
+	print_addr(__FUNCTION__, daddr);
 
 	if(sk->sk_protocol==IPPROTO_TCP)
 	{
@@ -591,8 +605,8 @@ int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	mpip_log("s: modifying header\n");
 	*new_saddr = saddr;
 	*new_daddr = daddr;
-	print_addr(*new_saddr);
-	print_addr(*new_daddr);
+	print_addr(__FUNCTION__, *new_saddr);
+	print_addr(__FUNCTION__, *new_daddr);
 
     return 1;
 
@@ -690,17 +704,17 @@ int process_mpip_options(struct sk_buff *skb)
 
 	mpip_log("r: iph->id=%d\n", iph->id);
 	mpip_log("r: iph->saddr=");
-	print_addr(iph->saddr);
+	print_addr(__FUNCTION__, iph->saddr);
 
 	mpip_log("r: daddr=");
-	print_addr(daddr);
+	print_addr(__FUNCTION__, daddr);
 
 	mpip_log("r: iph->daddr=");
-	print_addr(iph->daddr);
+	print_addr(__FUNCTION__, iph->daddr);
 
 
 	mpip_log("r: saddr=");
-	print_addr(saddr);
+	print_addr(__FUNCTION__, saddr);
 
 //	dump_stack();
 
@@ -715,7 +729,7 @@ int process_mpip_options(struct sk_buff *skb)
 		mpip_log("r: udph->dest= %d, odport=%d, sport=%d\n", udph->dest, odport, sport);
 	}
 
-	print_mpip_options(opt);
+	print_mpip_options(__FUNCTION__, opt);
 
 	if (res)
 	{
@@ -810,7 +824,9 @@ int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl)
 	}
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
-	print_mpip_options(&(mp_opt->opt));
+	print_mpip_options(__FUNCTION__, &(mp_opt->opt));
+
+	return 1;
 }
 
 int mpip_compose_opt_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
@@ -818,7 +834,7 @@ int mpip_compose_opt_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 {
 	int res;
 
-	if (!get_mpip_options_1(skb, old_saddr, old_daddr, &new_saddr, &new_daddr, options))
+	if (!get_mpip_options_1(skb, old_saddr, old_daddr, new_saddr, new_daddr, options))
 		return 0;
 
 	if (!mp_opt)
@@ -828,7 +844,9 @@ int mpip_compose_opt_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	}
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
-	print_mpip_options(&(mp_opt->opt));
+	print_mpip_options(__FUNCTION__, &(mp_opt->opt));
+
+	return 1;
 }
 
 
@@ -841,7 +859,7 @@ int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 	if (inet->inet_opt && inet->inet_opt->opt.optlen)
 	{
 		mpip_log("%d, %s, %d\n", inet->inet_opt->opt.optlen, __FILE__, __LINE__);
-		print_mpip_options(&(inet->inet_opt->opt));
+		print_mpip_options(__FUNCTION__, &(inet->inet_opt->opt));
 		return 0;
 	}
 
@@ -853,7 +871,7 @@ int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed)
 	res = ip_options_get(sock_net(skb->sk), &(inet->inet_opt), options, MPIP_OPT_LEN);
 
 
-	print_mpip_options(&(inet->inet_opt->opt));
+	print_mpip_options(__FUNCTION__, &(inet->inet_opt->opt));
 
 	//kfree(options);
 	//kfree(mp_opt);

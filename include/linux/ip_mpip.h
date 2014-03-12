@@ -52,9 +52,9 @@ void mpip_log(const char *fmt, ...);
 
 void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr);
 
-void print_node_id(unsigned char *node_id);
+void print_node_id(const char *prefix, unsigned char *node_id);
 
-void print_addr(__be32 addr);
+void print_addr(const char *prefix, __be32 addr);
 
 __be32 convert_addr(char a1, char a2, char a3, char a4);
 
@@ -71,7 +71,7 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 			__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
-void print_mpip_options(struct ip_options *opt);
+void print_mpip_options(const char *prefix, struct ip_options *opt);
 
 int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed);
 
