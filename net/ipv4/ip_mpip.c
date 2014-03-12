@@ -732,6 +732,29 @@ int process_mpip_options(struct sk_buff *skb)
 
 	print_mpip_options(__FUNCTION__, opt);
 
+	mpip_log("r: unwrapping options\n");
+	tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+
+	if (!tmp)
+	{
+		mpip_log("tmp == NULL\n");
+		return 0;
+	}
+
+	iph_addr = skb_network_header(skb);
+	memcpy(tmp, iph_addr, sizeof(struct iphdr));
+	memcpy(iph_addr + opt->optlen, tmp, sizeof(struct iphdr));
+	kfree(tmp);
+
+	skb_pull(skb, opt->optlen);
+	skb_reset_network_header(skb);
+
+	skb_reset_transport_header(skb);
+
+	iph = ip_hdr(skb);
+	iph->ihl -= opt->optlen>>2;
+	iph->tot_len = htons(skb->len);
+
 	if (res)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
