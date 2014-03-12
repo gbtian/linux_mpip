@@ -489,9 +489,9 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	}
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	skb_dst_set_noref(skb, &rt->dst);
-	mpip_log("gateway: ");
+	mpip_log("gateway:\n ");
 	print_addr(__FUNCTION__, rt->rt_gateway);
-	mpip_log("next dev: ");
+	mpip_log("next dev:\n ");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 

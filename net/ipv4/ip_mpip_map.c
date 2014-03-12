@@ -32,6 +32,7 @@ void print_node_id(const char *prefix, unsigned char *node_id)
 	if (!node_id)
 		return;
 
+	prefix = NULL;
 	if (prefix)
 	{
 		mpip_log("%s: %02x-%02x\n", prefix,
@@ -59,6 +60,7 @@ bool is_lan_addr(__be32 addr)
 void print_addr(const char *prefix, __be32 addr)
 {
 	char *p = (char *) &addr;
+	prefix = NULL;
 	if (prefix)
 	{
 		mpip_log("%s: %d.%d.%d.%d\n", prefix,

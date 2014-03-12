@@ -140,6 +140,7 @@ EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(const char *prefix, struct ip_options *opt)
 {
+	prefix = NULL;
 	if (prefix)
 	{
 		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
@@ -411,16 +412,16 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
 
     //mpip_log("\ns: iph->id=%d\n", iph->id);
     mpip_log("s: iph->saddr=");
-	print_addr(__FUNCTION__, inet->inet_saddr);
+	print_addr(NULL, inet->inet_saddr);
 
 	mpip_log("s: saddr=");
-	print_addr(__FUNCTION__, saddr);
+	print_addr(NULL, saddr);
 
 	mpip_log("s: iph->daddr=");
-	print_addr(__FUNCTION__, inet->inet_daddr);
+	print_addr(NULL, inet->inet_daddr);
 
 	mpip_log("s: daddr=");
-	print_addr(__FUNCTION__, daddr);
+	print_addr(NULL, daddr);
 
 	if(sk->sk_protocol==IPPROTO_TCP)
 	{
@@ -580,16 +581,16 @@ int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     //mpip_log("\ns: iph->id=%d\n", iph->id);
     mpip_log("s: old_saddr=");
-	print_addr(__FUNCTION__, old_saddr);
+	print_addr(NULL, old_saddr);
 
 	mpip_log("s: new_saddr=");
-	print_addr(__FUNCTION__, saddr);
+	print_addr(NULL, saddr);
 
 	mpip_log("s: old_daddr=");
 	print_addr(__FUNCTION__, old_daddr);
 
 	mpip_log("s: new_daddr=");
-	print_addr(__FUNCTION__, daddr);
+	print_addr(NULL, daddr);
 
 	if(sk->sk_protocol==IPPROTO_TCP)
 	{
@@ -605,8 +606,8 @@ int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	mpip_log("s: modifying header\n");
 	*new_saddr = saddr;
 	*new_daddr = daddr;
-	print_addr(__FUNCTION__, *new_saddr);
-	print_addr(__FUNCTION__, *new_daddr);
+	print_addr(NULL, *new_saddr);
+	print_addr(NULL, *new_daddr);
 
     return 1;
 
