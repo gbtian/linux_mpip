@@ -206,7 +206,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		}
 	}
 
-	mpip_log("new_dst_dev_1: "\n);
+	mpip_log("new_dst_dev_1: \n");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
