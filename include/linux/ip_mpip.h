@@ -66,19 +66,20 @@ int		mpip_rcv(struct sk_buff *skb);
 
 int		mpip_xmit(struct sk_buff *skb);
 
-int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *options);
+int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
-int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-			__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
+//int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+//			__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
 void print_mpip_options(const char *prefix, struct ip_options *opt);
 
 int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed);
 
-int mpip_compose_opt(struct sk_buff *skb, struct flowi *fl);
-
-int mpip_compose_opt_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-						__be32 *new_saddr, __be32 *new_daddr);
+int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+					__be32 *new_saddr, __be32 *new_daddr);
+//int mpip_compose_opt_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+//						__be32 *new_saddr, __be32 *new_daddr);
 
 void mpip_options_build(struct sk_buff *skb, bool pushed);
 

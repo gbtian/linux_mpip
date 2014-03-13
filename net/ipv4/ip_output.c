@@ -178,7 +178,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled)
 	{
-		mpip_compose_opt_1(skb, saddr, daddr, &new_saddr, &new_daddr);
+		mpip_compose_opt(skb, saddr, daddr, &new_saddr, &new_daddr);
 	}
 
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -214,12 +214,12 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 
-	if (new_saddr > 0 && new_daddr > 0)
-	{
-		iph->daddr    = new_daddr;
-		iph->saddr    = new_saddr;
-	}
-	else
+//	if (new_saddr > 0 && new_daddr > 0)
+//	{
+//		iph->daddr    = new_daddr;
+//		iph->saddr    = new_saddr;
+//	}
+//	else
 	{
 		iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
 		iph->saddr    = saddr;
@@ -420,7 +420,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
-	__be32 gwaddr = 0;
+	__be32 new_saddr=0, new_daddr=0, gwaddr = 0;
 
 	struct iphdr *ih;
 	struct tcphdr *th;
@@ -429,11 +429,11 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	mpip_log("before:\n");
-	print_addr(__FUNCTION__, fl->u.ip4.saddr);
-	print_addr(__FUNCTION__, fl->u.ip4.daddr);
+	print_addr(NULL, fl->u.ip4.saddr);
+	print_addr(NULL, fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled)
 	{
-		mpip_compose_opt(skb, fl);
+		mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr);
 	}
 
 	/* Skip all of this if the packet is already routed,
