@@ -749,11 +749,14 @@ int process_mpip_options(struct sk_buff *skb)
 	skb_pull(skb, opt->optlen);
 	skb_reset_network_header(skb);
 
-	skb_reset_transport_header(skb);
+//	skb_reset_transport_header(skb);
+
 
 	iph = ip_hdr(skb);
 	iph->ihl -= opt->optlen>>2;
 	iph->tot_len = htons(skb->len);
+
+	skb->transport_header = skb->network_header + iph->ihl*4;
 
 	if (res)
 	{
