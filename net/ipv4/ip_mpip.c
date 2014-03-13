@@ -762,24 +762,26 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
-		if(iph->protocol==IPPROTO_TCP)
-		{
-			tcph->check = 0;
-			tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
-											  skb->len, iph->protocol,
-											  csum_partial((char *)tcph, skb->len, 0));
-			skb->ip_summed = CHECKSUM_UNNECESSARY;
-		}
-		else if(iph->protocol==IPPROTO_UDP)
-		{
-			udph->check = 0;
-			udph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
-											  skb->len, iph->protocol,
-											  csum_partial((char *)udph, skb->len, 0));
-			skb->ip_summed = CHECKSUM_UNNECESSARY;
-		}
-		ip_send_check(iph);
 	}
+
+	if(iph->protocol==IPPROTO_TCP)
+        {
+                tcph->check = 0;
+                tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+                                                skb->len, iph->protocol,
+                                                csum_partial((char *)tcph, skb->len, 0));
+                skb->ip_summed = CHECKSUM_UNNECESSARY;
+        }
+        else if(iph->protocol==IPPROTO_UDP)
+        {
+                udph->check = 0;
+                udph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+                                               skb->len, iph->protocol,
+                                               csum_partial((char *)udph, skb->len, 0));
+                skb->ip_summed = CHECKSUM_UNNECESSARY;
+        }
+        ip_send_check(iph);
+
 
 	return 1;
 }
