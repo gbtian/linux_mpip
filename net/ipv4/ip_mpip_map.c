@@ -839,6 +839,24 @@ void get_available_local_addr(void)
 }
 
 
+struct net_device *find_dev_by_addr(__be32 addr)
+{
+	struct net_device *dev;
+
+	for_each_netdev(&init_net, dev)
+	{
+		if (strstr(dev->name, "lo"))
+			continue;
+
+		if (dev->ip_ptr && dev->ip_ptr->ifa_list)
+		{
+			if (dev->ip_ptr->ifa_list->ifa_address == addr)
+				return dev;
+		}
+	}
+	return NULL;
+}
+
 
 static void reset_mpip(void)
 {

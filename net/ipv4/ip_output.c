@@ -420,7 +420,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
-	__be32 new_saddr=0, new_daddr=0, gwaddr = 0;
+	__be32 new_saddr = 0, new_daddr = 0, gwaddr = 0;
+	struct net_device *new_dst_dev = NULL;
 
 	struct iphdr *ih;
 	struct tcphdr *th;
@@ -549,6 +550,17 @@ packet_routed:
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
 
+	if (sysctl_mpip_enabled && new_daddr != 0)
+	{
+		new_dst_dev = find_dev_by_addr(new_daddr);
+		if (new_dst_dev)
+		{
+			mpip_log("new_dst_dev: %d, %s, %s, %s, %d\n", iph->id, new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+			rt->dst.dev = new_dst_dev;
+			skb_dst(skb)->dev = new_dst_dev;
+		}
+
+	}
 	res = ip_local_out(skb);
 	rcu_read_unlock();
 	return res;

@@ -66,6 +66,8 @@ int		mpip_rcv(struct sk_buff *skb);
 
 int		mpip_xmit(struct sk_buff *skb);
 
+struct net_device *find_dev_by_addr(__be32 addr);
+
 int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
