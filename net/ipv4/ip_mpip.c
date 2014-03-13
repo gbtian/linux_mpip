@@ -437,9 +437,9 @@ int get_mpip_options(struct sk_buff *skb, struct flowi *fl, unsigned char *optio
     {
 		mpip_log("s: modifying header\n");
 
-		inet->inet_saddr = saddr;
-		inet->inet_rcv_saddr = saddr;
-		inet->inet_daddr = daddr;
+//		inet->inet_saddr = saddr;
+//		inet->inet_rcv_saddr = saddr;
+//		inet->inet_daddr = daddr;
 
 		if (fl)
 		{

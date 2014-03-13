@@ -187,9 +187,9 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	rt = skb_rtable(skb);
 
-	mpip_log("gateway: ");
+	mpip_log("gateway_1: ");
 	print_addr(__FUNCTION__, rt->rt_gateway);
-	mpip_log("next dev: ");
+	mpip_log("next dev_1: ");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 
