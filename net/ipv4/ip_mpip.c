@@ -278,7 +278,7 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh,
 	return find_earliest_stat_path_id(dest_node_id, rcvh, rcv);
 }
 
-static bool check_bad_addr(__be32 saddr, __be32 daddr)
+bool check_bad_addr(__be32 saddr, __be32 daddr)
 {
 	__be32 addr = convert_addr(127, 0, 0, 1);
 	if ((addr == saddr) || (addr == daddr))
@@ -289,6 +289,10 @@ static bool check_bad_addr(__be32 saddr, __be32 daddr)
 		return false;
 
 	addr = convert_addr(192, 168, 1, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
+
+	addr = convert_addr(192, 168, 2, 1);
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 

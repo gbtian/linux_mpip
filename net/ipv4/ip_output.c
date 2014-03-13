@@ -120,7 +120,7 @@ int __ip_local_out(struct sk_buff *skb)
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 	mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	if (iph->ihl == 5 && sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr) && iph->ihl == 5)
 	{
 		mpip_log("Call Stack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		dump_stack();
@@ -188,16 +188,16 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	rt = skb_rtable(skb);
 
-	mpip_log("old_dst_dev_1: ");
+	mpip_log("old_dst_dev_1: \n");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 
 
-	if (sysctl_mpip_enabled && new_daddr != 0)
+	if (sysctl_mpip_enabled && new_saddr != 0)
 	{
-		new_dst_dev = find_dev_by_addr(new_daddr);
+		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
 			mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
@@ -206,7 +206,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		}
 	}
 
-	mpip_log("new_dst_dev_1: ");
+	mpip_log("new_dst_dev_1: "\n);
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
@@ -510,15 +510,16 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	skb_dst_set_noref(skb, &rt->dst);
 
-	mpip_log("old_dst dev: ");
+	mpip_log("old_dst_dev: \n");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 
-	if (sysctl_mpip_enabled && new_daddr != 0)
+	if (sysctl_mpip_enabled && new_saddr != 0)
 	{
-		new_dst_dev = find_dev_by_addr(new_daddr);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
 			mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
@@ -527,7 +528,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		}
 	}
 
-	mpip_log("new_dst dev: ");
+	mpip_log("new_dst_dev: \n");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;

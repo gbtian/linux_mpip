@@ -74,6 +74,8 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //			__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
+bool check_bad_addr(__be32 saddr, __be32 daddr);
+
 void print_mpip_options(const char *prefix, struct ip_options *opt);
 
 int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed);
