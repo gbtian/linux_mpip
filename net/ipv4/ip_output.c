@@ -120,12 +120,14 @@ int __ip_local_out(struct sk_buff *skb)
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 
-	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr) && iph->ihl == 5)
+	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
 	{
-		mpip_log("Call Stack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(__FUNCTION__, iph->saddr);
 		print_addr(__FUNCTION__, iph->daddr);
-		dump_stack();
+
+		if (iph->ihl == 5)
+			dump_stack();
 
 	}
 
@@ -196,14 +198,27 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	print_addr(__FUNCTION__, gwaddr);
 
 
-	if (sysctl_mpip_enabled && new_saddr != 0)
+	if (sysctl_mpip_enabled)
 	{
-		new_dst_dev = find_dev_by_addr(new_saddr);
-		if (new_dst_dev)
+		if (new_saddr != 0)
 		{
-			mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
-			rt->dst.dev = new_dst_dev;
-			skb_dst(skb)->dev = new_dst_dev;
+			new_dst_dev = find_dev_by_addr(new_saddr);
+			if (new_dst_dev)
+			{
+				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+				rt->dst.dev = new_dst_dev;
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+		else
+		{
+			new_dst_dev = find_dev_by_addr(saddr);
+			if (new_dst_dev)
+			{
+				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+				rt->dst.dev = new_dst_dev;
+				skb_dst(skb)->dev = new_dst_dev;
+			}
 		}
 	}
 
@@ -517,15 +532,27 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 
-	if (sysctl_mpip_enabled && new_saddr != 0 && new_saddr != fl4->saddr)
+	if (sysctl_mpip_enabled)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		new_dst_dev = find_dev_by_addr(new_saddr);
-		if (new_dst_dev)
+		if (new_saddr != 0)
 		{
-			mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
-			rt->dst.dev = new_dst_dev;
-			skb_dst(skb)->dev = new_dst_dev;
+			new_dst_dev = find_dev_by_addr(new_saddr);
+			if (new_dst_dev)
+			{
+				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+				rt->dst.dev = new_dst_dev;
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+		else
+		{
+			new_dst_dev = find_dev_by_addr(fl4->saddr);
+			if (new_dst_dev)
+			{
+				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+				rt->dst.dev = new_dst_dev;
+				skb_dst(skb)->dev = new_dst_dev;
+			}
 		}
 	}
 

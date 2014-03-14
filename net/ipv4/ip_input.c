@@ -382,8 +382,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	} else if (rt->rt_type == RTN_BROADCAST)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
-//	printk("i: id=%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 
+	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 	return dst_input(skb);
 
 drop:
