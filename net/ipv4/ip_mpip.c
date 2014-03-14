@@ -296,6 +296,10 @@ bool check_bad_addr(__be32 saddr, __be32 daddr)
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 
+	addr = convert_addr(224, 0, 0, 251);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
+
 	return true;
 }
 

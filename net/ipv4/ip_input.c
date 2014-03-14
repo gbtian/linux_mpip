@@ -347,8 +347,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	how the packet travels inside Linux networking.
 	 */
 	if (!skb_dst(skb)) {
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
-		printk("%d, %d, %s, %s, %d\n", iph->saddr, iph->daddr, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		//dump_stack();
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
@@ -356,6 +355,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 			if (err == -EXDEV)
 				NET_INC_STATS_BH(dev_net(skb->dev),
 						 LINUX_MIB_IPRPFILTER);
+
+			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 			goto drop;
 		}
 	}
@@ -387,6 +388,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	return dst_input(skb);
 
 drop:
+	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
