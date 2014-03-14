@@ -762,7 +762,6 @@ int process_mpip_options(struct sk_buff *skb)
 		mpip_log("r: modifying header\n");
 		iph->saddr = daddr;
 		iph->daddr = saddr;
-
 	}
 
 	if(iph->protocol==IPPROTO_TCP)

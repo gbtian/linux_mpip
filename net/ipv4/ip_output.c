@@ -119,15 +119,16 @@ int __ip_local_out(struct sk_buff *skb)
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
-	mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr) && iph->ihl == 5)
 	{
 		mpip_log("Call Stack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(__FUNCTION__, iph->saddr);
+		print_addr(__FUNCTION__, iph->daddr);
 		dump_stack();
 
 	}
-	print_addr(__FUNCTION__, iph->saddr);
-	print_addr(__FUNCTION__, iph->daddr);
+
 
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
@@ -516,7 +517,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 
-	if (sysctl_mpip_enabled && new_saddr != 0)
+	if (sysctl_mpip_enabled && new_saddr != 0 && new_saddr != fl4->saddr)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		new_dst_dev = find_dev_by_addr(new_saddr);
@@ -558,15 +559,13 @@ packet_routed:
 	else
 		iph->frag_off = 0;
 
-	//iph->frag_off = 0;
-
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
 
 	if (new_saddr > 0 && new_daddr > 0)
 	{
-		iph->daddr = new_daddr;
 		iph->saddr = new_saddr;
+		iph->daddr = new_daddr;
 	}
 	else
 	{

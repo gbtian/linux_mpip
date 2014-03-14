@@ -419,9 +419,10 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-
-	mpip_log("\nReceived: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
+	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
+	{
+		mpip_log("\nReceived: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	}
 	/*
 	 *	RFC1122: 3.2.1.2 MUST silently discard any IP frame that fails the checksum.
 	 *
@@ -446,12 +447,20 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	if (!pskb_may_pull(skb, iph->ihl*4))
 		goto inhdr_error;
 
+
 	iph = ip_hdr(skb);
+
+	skb->transport_header = skb->network_header + iph->ihl*4;
+
+	if (iph->ihl > 5 && sysctl_mpip_enabled)
+	{
+		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
+		process_mpip_options(skb);
+		iph = ip_hdr(skb);
+	}
 
 	if (unlikely(ip_fast_csum((u8 *)iph, iph->ihl)))
 		goto csum_error;
-
-//	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 
 	len = ntohs(iph->tot_len);
 	if (skb->len < len) {
@@ -460,7 +469,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	} else if (len < (iph->ihl*4))
 		goto inhdr_error;
 
-//	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 	/* Our transport medium may have padded the buffer out. Now we know it
 	 * is IP we can trim to the true length of the frame.
 	 * Note this now means skb->len holds ntohs(iph->tot_len).
@@ -469,7 +477,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INDISCARDS);
 		goto drop;
 	}
-//	printk("i: id=%d, skb->ip_summed=%d, th->check=%d, ih->check=%d, %d\n", ih->id, skb->ip_summed, th->check, ih->check, __LINE__);
 
 	skb->transport_header = skb->network_header + iph->ihl*4;
 
@@ -479,17 +486,11 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
 
-
-	mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__,  __LINE__);
-	if (iph->ihl > 5 && sysctl_mpip_enabled)
-	{
-		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
-		process_mpip_options(skb);
-	}
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,
 		       ip_rcv_finish);
 
 csum_error:
+	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_CSUMERRORS);
 inhdr_error:
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
