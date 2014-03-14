@@ -756,14 +756,14 @@ int process_mpip_options(struct sk_buff *skb)
 //
 //	skb->transport_header = skb->network_header + iph->ihl*4;
 
-//	if (res)
-//	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//		mpip_log("r: modifying header\n");
-//		iph->saddr = daddr;
-//		iph->daddr = saddr;
-//
-//	}
+	if (res)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("r: modifying header\n");
+		iph->saddr = daddr;
+		iph->daddr = saddr;
+
+	}
 
 	if(iph->protocol==IPPROTO_TCP)
 	{

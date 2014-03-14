@@ -233,12 +233,12 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 
-//	if (new_saddr > 0 && new_daddr > 0)
-//	{
-//		iph->daddr    = new_daddr;
-//		iph->saddr    = new_saddr;
-//	}
-//	else
+	if (new_saddr > 0 && new_daddr > 0)
+	{
+		iph->daddr    = new_daddr;
+		iph->saddr    = new_saddr;
+	}
+	else
 	{
 		iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
 		iph->saddr    = saddr;
@@ -562,7 +562,16 @@ packet_routed:
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
-	ip_copy_addrs(iph, fl4);
+
+	if (new_saddr > 0 && new_daddr > 0)
+	{
+		iph->daddr = new_daddr;
+		iph->saddr = new_saddr;
+	}
+	else
+	{
+		ip_copy_addrs(iph, fl4);
+	}
 
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	mpip_log("Here:\n");
