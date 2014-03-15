@@ -98,24 +98,48 @@ EXPORT_SYMBOL(ip_send_check);
 int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
+	__be32 new_saddr = 0, new_daddr = 0;
+	struct net_device *new_dst_dev = NULL;
 
-//	struct ip_options *sopt;
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		if (iph->protocol==IPPROTO_UDP)
-//		{
-//			insert_mpip_options_1(skb, false);
-//
-//			iph = ip_hdr(skb);
-//		}
-//		else
-//		{
-//			sopt = &(IPCB(skb)->opt);
-//			printk("%d, %s, %d\n", sopt->optlen, __FILE__, __LINE__);
-//			print_mpip_options(sopt);
-//		}
-//	}
+	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
+	{
+		insert_mpip_options_udp(skb, *new_saddr, *new_daddr);
+		iph = ip_hdr(skb);
+	}
 
+	mpip_log("old_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+	if (sysctl_mpip_enabled && (iph->protocol == IPPROTO_UDP))
+	{
+		if (new_saddr != 0)
+		{
+			new_dst_dev = find_dev_by_addr(new_saddr);
+			if (new_dst_dev)
+			{
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+		else
+		{
+			new_dst_dev = find_dev_by_addr(iph->saddr);
+			if (new_dst_dev)
+			{
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+	}
+	else
+	{
+		if (skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address != iph->saddr)
+		{
+			new_dst_dev = find_dev_by_addr(iph->saddr);
+			if (new_dst_dev)
+			{
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+	}
+
+	mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
@@ -128,9 +152,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 		if (iph->ihl == 5)
 			dump_stack();
-
 	}
-
 
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
@@ -288,12 +310,6 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
-
-//
-//	if (sysctl_mpip_enabled && (iph->ihl == 5))
-//	{
-//		insert_mpip_options_1(skb, true);
-//	}
 
 
 	/* Send it out. */

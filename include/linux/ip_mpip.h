@@ -89,6 +89,9 @@ void mpip_options_build(struct sk_buff *skb, bool pushed);
 
 int process_mpip_options(struct sk_buff *skb);
 
+int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
+
+int insert_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
 
 struct working_ip_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
