@@ -107,7 +107,7 @@ int __ip_local_out(struct sk_buff *skb)
 		iph = ip_hdr(skb);
 	}
 
-	mpip_log("old_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	if (sysctl_mpip_enabled && (iph->protocol == IPPROTO_UDP))
 	{
 		if (new_saddr != 0)
@@ -116,6 +116,8 @@ int __ip_local_out(struct sk_buff *skb)
 			if (new_dst_dev)
 			{
 				skb_dst(skb)->dev = new_dst_dev;
+				iph->saddr = new_saddr;
+				iph->daddr = new_daddr;
 			}
 		}
 		else
@@ -139,7 +141,7 @@ int __ip_local_out(struct sk_buff *skb)
 		}
 	}
 
-	mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
