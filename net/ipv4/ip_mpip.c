@@ -768,14 +768,14 @@ int process_mpip_options(struct sk_buff *skb)
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
-		mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		new_dst_dev = find_dev_by_addr(iph->daddr);
 		if (new_dst_dev)
 		{
-			skb_dst(skb)->dev = new_dst_dev;
+			skb->dev = new_dst_dev;
 		}
 
-		mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	if(iph->protocol==IPPROTO_TCP)
