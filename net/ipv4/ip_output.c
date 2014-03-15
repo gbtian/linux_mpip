@@ -221,6 +221,18 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 			}
 		}
 	}
+	else
+	{
+		if (rt->dst.dev->ip_ptr->ifa_list->ifa_address != saddr)
+		{
+			new_dst_dev = find_dev_by_addr(saddr);
+			if (new_dst_dev)
+			{
+				rt->dst.dev = new_dst_dev;
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+	}
 
 	mpip_log("new_dst_dev_1: \n");
 	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
@@ -249,7 +261,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 
-	if (new_saddr > 0 && new_daddr > 0)
+	if (sysctl_mpip_enabled && new_saddr > 0 && new_daddr > 0)
 	{
 		iph->daddr    = new_daddr;
 		iph->saddr    = new_saddr;

@@ -452,11 +452,11 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-	skb->transport_header = skb->network_header + iph->ihl*4;
 
 	if (iph->ihl > 5 && sysctl_mpip_enabled)
 	{
 		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
+		skb->transport_header = skb->network_header + iph->ihl*4;
 		process_mpip_options(skb);
 		iph = ip_hdr(skb);
 	}
@@ -480,7 +480,8 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		goto drop;
 	}
 
-	skb->transport_header = skb->network_header + iph->ihl*4;
+	if (!sysctl_mpip_enabled)
+		skb->transport_header = skb->network_header + iph->ihl*4;
 
 	/* Remove any debris in the socket control block */
 	memset(IPCB(skb), 0, sizeof(struct inet_skb_parm));
