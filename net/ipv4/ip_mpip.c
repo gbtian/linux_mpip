@@ -340,8 +340,6 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return 0;
 	}
 
-
-
 	//if TCP PACKET
 	if(sk->sk_protocol==IPPROTO_TCP)
 	{
@@ -433,7 +431,6 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		mpip_log("s: udph->source= %d, osport=%d, sport=%d\n", udph->source, osport, sport);
 		mpip_log("s: udph->dest= %d, odport=%d, dport=%d\n", udph->dest, odport, dport);
 	}
-        }
 
     return 1;
 
@@ -767,7 +764,7 @@ int insert_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_
 
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 
-	mpip_options_build(skb, &(mp_opt->opt), false);
+	mpip_options_build(skb, false);
 
 	return 1;
 }

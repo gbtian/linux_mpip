@@ -103,7 +103,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
 	{
-		insert_mpip_options_udp(skb, *new_saddr, *new_daddr);
+		insert_mpip_options_udp(skb, &new_saddr, &new_daddr);
 		iph = ip_hdr(skb);
 	}
 
