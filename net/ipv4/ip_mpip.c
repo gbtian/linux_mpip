@@ -631,6 +631,7 @@ int process_mpip_options(struct sk_buff *skb)
 	unsigned char *tmp = NULL;
 	unsigned char *iph_addr;
 
+	struct net_device *new_dst_dev = NULL;
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
@@ -766,6 +767,15 @@ int process_mpip_options(struct sk_buff *skb)
 		mpip_log("r: modifying header\n");
 		iph->saddr = daddr;
 		iph->daddr = saddr;
+
+		mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		new_dst_dev = find_dev_by_addr(iph->daddr);
+		if (new_dst_dev)
+		{
+			skb_dst(skb)->dev = new_dst_dev;
+		}
+
+		mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	if(iph->protocol==IPPROTO_TCP)
