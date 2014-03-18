@@ -466,10 +466,10 @@ int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 	int chk_addr_ret;
 	int err;
 
-	mpip_log("Bind: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-
-	print_addr(__FUNCTION__, addr->sin_addr.s_addr);
-	print_addr(__FUNCTION__, inet->inet_daddr);
+//	mpip_log("Bind: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//
+//	print_addr(__FUNCTION__, addr->sin_addr.s_addr);
+//	print_addr(__FUNCTION__, inet->inet_daddr);
 
 	/* If the socket has its own bind function then use it. (RAW) */
 	if (sk->sk_prot->bind) {
@@ -530,8 +530,8 @@ int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 
 	inet->inet_rcv_saddr = inet->inet_saddr = addr->sin_addr.s_addr;
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, inet->inet_saddr);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(__FUNCTION__, inet->inet_saddr);
 
 	if (chk_addr_ret == RTN_MULTICAST || chk_addr_ret == RTN_BROADCAST)
 		inet->inet_saddr = 0;  /* Use device */

@@ -98,6 +98,9 @@ int mpip_init(void)
 
 void mpip_log(const char *fmt, ...)
 {
+	if (!sysctl_mpip_enabled)
+		return;
+
 	va_list args;
 	int r;
 
