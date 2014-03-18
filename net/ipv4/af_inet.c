@@ -466,7 +466,7 @@ int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 	int chk_addr_ret;
 	int err;
 
-	mpip_log("Bind: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("Bind: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	print_addr(__FUNCTION__, addr->sin_addr.s_addr);
 	print_addr(__FUNCTION__, inet->inet_daddr);

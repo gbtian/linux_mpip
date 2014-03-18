@@ -1522,7 +1522,7 @@ SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen)
 				err = sock->ops->bind(sock,
 						      (struct sockaddr *)
 						      &address, addrlen);
-				mpip_log("Bind: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+				mpip_log("Bind: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 			}
 		}

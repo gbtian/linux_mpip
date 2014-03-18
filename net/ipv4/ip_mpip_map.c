@@ -280,23 +280,23 @@ int update_path_info()
 	int rcv = 0;
 	int sent = 0;
 
-	__be32 waddr = convert_addr(192, 168, 1, 20);
-	__be32 eaddr = convert_addr(192, 168, 1, 21);
-
-
-	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
-	{
-		if ((path_info->saddr == eaddr) || (path_info->daddr == eaddr))
-		{
-			path_info->bw = 90;
-		}
-		else if ((path_info->saddr == waddr) || (path_info->daddr == waddr))
-		{
-			path_info->bw = 30;
-		}
-	}
-
-	return 1;
+//	__be32 waddr = convert_addr(192, 168, 1, 20);
+//	__be32 eaddr = convert_addr(192, 168, 1, 21);
+//
+//
+//	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+//	{
+//		if ((path_info->saddr == eaddr) || (path_info->daddr == eaddr))
+//		{
+//			path_info->bw = 90;
+//		}
+//		else if ((path_info->saddr == waddr) || (path_info->daddr == waddr))
+//		{
+//			path_info->bw = 30;
+//		}
+//	}
+//
+//	return 1;
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
