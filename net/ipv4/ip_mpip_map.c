@@ -320,6 +320,8 @@ int update_path_info()
 //			path_info->bw = rcv / sysctl_mpip_bw_factor;
 //			path_info->bw = path_info->lossrate;
 		}
+
+		path_info->bw = 10;
 	}
 
 	return 1;
