@@ -30,10 +30,10 @@ int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
 int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 3;
-int sysctl_mpip_bw_1 __read_mostly = 30;
-int sysctl_mpip_bw_2 __read_mostly = 60;
+int sysctl_mpip_bw_1 __read_mostly = 120;
+int sysctl_mpip_bw_2 __read_mostly = 30;
 int sysctl_mpip_bw_3 __read_mostly = 30;
-int sysctl_mpip_bw_4 __read_mostly = 60;
+int sysctl_mpip_bw_4 __read_mostly = 30;
 int max_pkt_len = 65500;
 
 

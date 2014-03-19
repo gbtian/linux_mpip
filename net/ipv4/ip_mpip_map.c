@@ -285,17 +285,18 @@ int update_path_info()
 	int rcv = 0;
 	int sent = 0;
 
-	__be32 waddr = convert_addr(192, 168, 2, 20);
+	__be32 waddr = convert_addr(192, 168, 2, 23);
 	__be32 eaddr = convert_addr(192, 168, 2, 21);
 
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-		if ((path_info->saddr == waddr) || (path_info->daddr == waddr))
+		if ((path_info->saddr == waddr) && (path_info->daddr == eaddr) ||
+			(path_info->saddr == eaddr) && (path_info->daddr == waddr))
 		{
 			path_info->bw = sysctl_mpip_bw_1;
 		}
-		else if ((path_info->saddr == eaddr) || (path_info->daddr == eaddr))
+		else
 		{
 			path_info->bw = sysctl_mpip_bw_2;
 		}
@@ -622,19 +623,19 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->rcv = 0;
 		item->lossrate = 20;
 
-		if (item->saddr == waddr)
-		{
-			item->bw = sysctl_mpip_bw_1;
-		}
-		else if (item->saddr == eaddr)
-		{
-			item->bw = sysctl_mpip_bw_2;
-		}
-		else
-		{
-			item->bw = 30;
-		}
-
+//		if (item->saddr == waddr)
+//		{
+//			item->bw = sysctl_mpip_bw_1;
+//		}
+//		else if (item->saddr == eaddr)
+//		{
+//			item->bw = sysctl_mpip_bw_2;
+//		}
+//		else
+//		{
+//			item->bw = 30;
+//		}
+		item->bw = 30;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
