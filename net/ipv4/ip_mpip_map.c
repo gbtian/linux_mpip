@@ -285,19 +285,19 @@ int update_path_info()
 	int rcv = 0;
 	int sent = 0;
 
-//	__be32 waddr = convert_addr(192, 168, 1, 20);
-//	__be32 eaddr = convert_addr(192, 168, 1, 21);
+//	__be32 waddr = convert_addr(192, 168, 2, 20);
+//	__be32 eaddr = convert_addr(192, 168, 2, 21);
 //
 //
 //	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 //	{
-//		if ((path_info->saddr == eaddr) || (path_info->daddr == eaddr))
-//		{
-//			path_info->bw = 90;
-//		}
-//		else if ((path_info->saddr == waddr) || (path_info->daddr == waddr))
+//		if ((path_info->saddr == waddr) || (path_info->daddr == waddr))
 //		{
 //			path_info->bw = 30;
+//		}
+//		else if ((path_info->saddr == eaddr) || (path_info->daddr == eaddr))
+//		{
+//			path_info->bw = 30 * sysctl_mpip_bw_factor;
 //		}
 //	}
 //
@@ -592,6 +592,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
 	struct path_info_table *item = NULL;
+	__be32 waddr = convert_addr(192, 168, 2, 20);
+	__be32 eaddr = convert_addr(192, 168, 2, 21);
 
 	if (!node_id)
 		return 0;
@@ -619,13 +621,23 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->rcvh = 0;
 		item->rcv = 0;
 		item->lossrate = 20;
-		item->bw = 10;
+
+		if (item->saddr == waddr)
+		{
+			item->bw = sysctl_mpip_bw_1;
+		}
+		else if (item->saddr == eaddr)
+		{
+			item->bw = sysctl_mpip_bw_2;
+		}
+		else
+		{
+			item->bw = 30;
+		}
+
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
-
-		printk("%d, %s, %d\n", item->sent, __FILE__, __LINE__);
-		printk("%d, %d, %s, %d\n", item->rcvh, item->rcv, __FILE__, __LINE__);
 
 		mpip_log( "pi: %d\n", item->path_id);
 
@@ -645,7 +657,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	struct path_info_table *f_path;
 	unsigned char f_path_id = 0;
 	unsigned char f_bw = 0;
-	int totalbw = 0;
+	int totalbw = 0, tmptotal = 0;
 	int random = 0;
 
 	if (!node_id)
@@ -702,19 +714,25 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (totalbw > 0)
 	{
+		random = get_random_int() % totalbw;
+		random = (random > 0) ? random : -random;
+		tmptotal = 0;
+
 		list_for_each_entry(path, &pi_head, list)
 		{
 			if (!is_equal_node_id(path->node_id, node_id))
 				continue;
 
-			random = get_random_int() % totalbw;
-			random = (random > 0) ? random : -random;
-			if (path->bw >= random)
+			if (random < (path->bw + tmptotal))
 			{
 				f_path_id = path->path_id;
 				f_path = path;
 
 				break;
+			}
+			else
+			{
+				tmptotal += path->bw;
 			}
 		}
 	}
@@ -843,6 +861,10 @@ void get_available_local_addr(void)
 			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		}
 	}
+
+	add_working_ip("1234", convert_addr(192,168,2,1));
+	add_path_info("1234", convert_addr(192,168,2,1));
+	add_path_stat("1234", 2);
 }
 
 

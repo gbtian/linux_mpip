@@ -29,7 +29,11 @@ int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
 int sysctl_mpip_log __read_mostly = 1;
-int sysctl_mpip_bw_factor __read_mostly = 1000;
+int sysctl_mpip_bw_factor __read_mostly = 3;
+int sysctl_mpip_bw_1 __read_mostly = 30;
+int sysctl_mpip_bw_2 __read_mostly = 60;
+int sysctl_mpip_bw_3 __read_mostly = 30;
+int sysctl_mpip_bw_4 __read_mostly = 60;
 int max_pkt_len = 65500;
 
 
@@ -66,6 +70,34 @@ static struct ctl_table mpip_table[] =
  	{
  	 		.procname = "mpip_bw_factor",
  	 		.data = &sysctl_mpip_bw_factor,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_bw_1",
+ 	 		.data = &sysctl_mpip_bw_1,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_bw_2",
+ 	 		.data = &sysctl_mpip_bw_2,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_bw_3",
+ 	 		.data = &sysctl_mpip_bw_3,
+ 	 		.maxlen = sizeof(int),
+ 	 		.mode = 0644,
+ 	 		.proc_handler = &proc_dointvec
+ 	},
+ 	{
+ 	 		.procname = "mpip_bw_4",
+ 	 		.data = &sysctl_mpip_bw_4,
  	 		.maxlen = sizeof(int),
  	 		.mode = 0644,
  	 		.proc_handler = &proc_dointvec
@@ -292,9 +324,9 @@ bool check_bad_addr(__be32 saddr, __be32 daddr)
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 
-	addr = convert_addr(192, 168, 2, 1);
-	if ((addr == saddr) || (addr == daddr))
-		return false;
+//	addr = convert_addr(192, 168, 2, 1);
+//	if ((addr == saddr) || (addr == daddr))
+//		return false;
 
 	addr = convert_addr(224, 0, 0, 251);
 	if ((addr == saddr) || (addr == daddr))
@@ -659,7 +691,7 @@ int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 	int res;
 	struct udphdr *udph = NULL;
 
-	printk("\nsending udp:\n");
+	mpip_log("\nsending udp:\n");
 
 
 	int i;
