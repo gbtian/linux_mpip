@@ -11,6 +11,11 @@ static LIST_HEAD(ss_head);
 static LIST_HEAD(la_head);
 static LIST_HEAD(ps_head);
 
+int global_stat_1 = 0;
+int global_stat_2 = 0;
+int global_stat_3 = 0;
+
+
 bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 {
 	int i;
@@ -910,6 +915,11 @@ static void reset_mpip(void)
 
 	static_session_id = 1;
 	static_path_id = 1;
+
+	global_stat_1 = 0;
+	global_stat_2 = 0;
+	global_stat_3 = 0;
+
 }
 
 

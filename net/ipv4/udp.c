@@ -833,6 +833,7 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 
 	if (sysctl_mpip_enabled)
 	{
+		++global_stat_1;
 		len -= 12;
 	}
 

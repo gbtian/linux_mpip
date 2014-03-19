@@ -38,6 +38,9 @@ extern int sysctl_mpip_rcv;
 extern int sysctl_mpip_log;
 extern int sysctl_mpip_bw_factor;
 extern int max_pkt_len;
+extern int global_stat_1;
+extern int global_stat_2;
+extern int global_stat_3;
 
 //
 //extern struct list_head wi_head;

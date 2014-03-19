@@ -98,7 +98,7 @@ int mpip_init(void)
 
 void mpip_log(const char *fmt, ...)
 {
-	if (!sysctl_mpip_enabled)
+	if (!sysctl_mpip_enabled || !sysctl_mpip_log)
 		return;
 
 	va_list args;
@@ -108,9 +108,6 @@ void mpip_log(const char *fmt, ...)
     struct inode *inode = NULL;
 	mm_segment_t fs;
 	loff_t pos;
-
-	if (!sysctl_mpip_log)
-		return;
 
 	memset(log_buf, 0, 256);
 	va_start(args, fmt);
