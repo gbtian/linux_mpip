@@ -945,38 +945,6 @@ asmlinkage long sys_mpip(void)
 		printk("+++++++++\n");
 	}
 
-	printk("******************pi*************\n");
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		printk( "%02x-%02x  ",
-				path_info->node_id[0], path_info->node_id[1]);
-
-		printk("%d  ", path_info->path_id);
-
-		p = (char *) &(path_info->saddr);
-
-		printk( "%d.%d.%d.%d  ",
-				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-
-		p = (char *) &(path_info->daddr);
-		printk( "%d.%d.%d.%d  ",
-				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-
-		printk("%d  ", path_info->lossrate);
-
-		printk("%d  ", path_info->bw);
-
-		printk("%d  ", path_info->sentc);
-
-		printk("%d  ", path_info->sent);
-
-		printk("%d  ", path_info->rcvh);
-
-		printk("%d\n", path_info->rcv);
-
-		printk("+++++++++\n");
-	}
-
 	printk("******************ss*************\n");
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
@@ -1029,6 +997,40 @@ asmlinkage long sys_mpip(void)
 
 		printk("+++++++++\n");
 	}
+
+
+	printk("******************pi*************\n");
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		printk( "%02x-%02x  ",
+				path_info->node_id[0], path_info->node_id[1]);
+
+		printk("%d  ", path_info->path_id);
+
+		p = (char *) &(path_info->saddr);
+
+		printk( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		p = (char *) &(path_info->daddr);
+		printk( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		printk("%d  ", path_info->lossrate);
+
+		printk("%d  ", path_info->bw);
+
+		printk("%d  ", path_info->sentc);
+
+		printk("%d  ", path_info->sent);
+
+		printk("%d  ", path_info->rcvh);
+
+		printk("%d\n", path_info->rcv);
+
+		printk("+++++++++\n");
+	}
+
 
 	printk("******************global stat*************\n");
 	printk("%d  %d  %d\n", global_stat_1, global_stat_2, global_stat_3);
