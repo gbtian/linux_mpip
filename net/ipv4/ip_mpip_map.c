@@ -1030,6 +1030,10 @@ asmlinkage long sys_mpip(void)
 		printk("+++++++++\n");
 	}
 
+	printk("******************global stat*************\n");
+	printk("%d  %d  %d\n", global_stat_1, global_stat_2, global_stat_3);
+
+
 	return 0;
 
 }
