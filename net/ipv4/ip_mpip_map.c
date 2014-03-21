@@ -237,7 +237,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 {
 	struct path_info_table *path_info = NULL;
-	struct path_info_table *tmp_info;
+	struct path_info_table *tmp_info = NULL;
 	int sec = 1;
 
 	list_for_each_entry(path_info, &pi_head, list)
@@ -245,12 +245,13 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 		if (path_info->path_id == path_id)
 		{
 			path_info->bw += 1;
+			tmp_info = path_info;
 			printk("%d, %d, %s, %d\n", path_info->path_id, path_info->bw, __FILE__, __LINE__);
 			break;
 		}
 	}
 
-	if (path_info != NULL && path_info->bw >= 1000)
+	if ((tmp_info != NULL) && (tmp_info->bw >= 1000))
 	{
 		list_for_each_entry(path_info, &pi_head, list)
 		{

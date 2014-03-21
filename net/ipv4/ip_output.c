@@ -152,7 +152,7 @@ int __ip_local_out(struct sk_buff *skb)
 		print_addr(__FUNCTION__, iph->saddr);
 		print_addr(__FUNCTION__, iph->daddr);
 
-		if (iph->ihl == 5)
+		if ((iph->ihl == 5) && sysctl_mpip_log)
 			dump_stack();
 	}
 

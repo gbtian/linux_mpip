@@ -28,7 +28,7 @@ static struct ip_options_rcu *mp_opt = NULL;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 1;
+int sysctl_mpip_log __read_mostly = 0;
 int sysctl_mpip_bw_factor __read_mostly = 3;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -344,7 +344,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
-	printk("\nsending:\n");
+	mpip_log("\nsending:\n");
 
 
 	int i;
