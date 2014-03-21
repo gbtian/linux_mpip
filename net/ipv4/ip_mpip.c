@@ -546,7 +546,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	update_packet_rcv(opt->stat_path_id, opt->rcvh, opt->rcv);
 	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
-	update_path_info();
+	//update_path_info();
 
 	session_id = add_receiver_session(static_node_id, opt->node_id, iph->daddr, dport,
 										iph->saddr, sport, opt->session_id);

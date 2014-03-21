@@ -218,18 +218,15 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 
 			if (path_stat->rcv >= 60000)
 			{
-//				printk("%d, %d, %d, %s, %d\n", pkt_len, path_stat->rcvh, path_stat->rcv, __FILE__, __LINE__);
 				path_stat->rcvh += 1;
 				path_stat->rcv = 0;
 			}
-
-//			break;
 		}
-		else
-		{
-			path_stat->rcvc = 0;
-			path_stat->rcv = 0;
-		}
+//		else
+//		{
+//			path_stat->rcvc = 0;
+//			path_stat->rcv = 0;
+//		}
 	}
 
 	return 1;
@@ -237,41 +234,26 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 
 int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 {
-	/* todo: need sanity checks, leave it for now */
-	/* todo: need locks */
-	struct path_info_table *path_info;
+	struct path_info_table *path_info = NULL;
 	struct path_info_table *tmp_info;
 	int sec = 1;
-//	int minbw = 1000;
 
-	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if (path_info->path_id == path_id)
 		{
-		//	printk("%d, %d, %d, %s, %d\n", pkt_len, path_info->rcvh, path_info->rcv, __FILE__, __LINE__);
-			path_info->rcvh = rcvh;
-			path_info->rcv = rcv;
-
-			sec = (jiffies - path_info->ts);// / HZ;
-			if (sec == 0)
-				sec = 1;
-
-			//the unit is Mbitps
-			path_info->bw = (rcvh * 60000 + rcv) * 64 / (sec * 1024 * 1024);
-
-			path_info->sent = 0;
-
-//			minbw = path_info->bw / 4;
-
+			path_info->bw += 1;
 			break;
 		}
 	}
 
-//	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
-//	{
-//		if (path_info->bw == 20)
-//			path_info->bw = minbw;
-//	}
+	if (path_info != NULL && path_info->bw >= 1000)
+	{
+		list_for_each_entry(path_info, &pi_head, list)
+		{
+			path_info->bw /= 5;
+		}
+	}
 
 	return 1;
 }
@@ -643,7 +625,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 //		{
 //			item->bw = 30;
 //		}
-		item->bw = 30;
+		item->bw = 50;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
@@ -787,7 +769,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 	unsigned char e_path_stat_id = 0;
 //	unsigned long e_fbtime = 0;
 	int totalrcv = 0;
-	int max_rcv = 0;
+	int max_rcvc = 0;
 
 	if (!dest_node_id)
 		return 0;
@@ -800,23 +782,24 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 			continue;
 		}
 
-		totalrcv = (path_stat->rcvh * 60000 + path_stat->rcv) * 64 / (1024 * 1024);
-		if (path_stat->rcvc < sysctl_mpip_bw_factor && totalrcv < 10)
-		{
-			continue;
-		}
+//		totalrcv = (path_stat->rcvh * 60000 + path_stat->rcv) * 64 / (1024 * 1024);
+//		if (path_stat->rcvc < sysctl_mpip_bw_factor && totalrcv < 10)
+//		{
+//			continue;
+//		}
 
-		if (totalrcv > max_rcv)
+		if (path_stat->rcvc > max_rcvc)
 		{
 			e_path_stat_id = path_stat->path_id;
 			e_path_stat = path_stat;
+			max_rcvc = path_stat->rcvc;
 		}
 	}
 
 	if (e_path_stat_id > 0)
 	{
 		*rcvh = e_path_stat->rcvh;
-		*rcv = e_path_stat->rcv;
+		*rcv = e_path_stat->rcvc;
 
 		e_path_stat->rcvc = 0;
 		e_path_stat->rcvh = 0;
