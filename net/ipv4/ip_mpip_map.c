@@ -221,6 +221,8 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 				path_stat->rcvh += 1;
 				path_stat->rcv = 0;
 			}
+
+			break;
 		}
 //		else
 //		{
@@ -243,6 +245,7 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 		if (path_info->path_id == path_id)
 		{
 			path_info->bw += 1;
+			printk("%d, %d, %s, %d\n", path_info->path_id, path_info->bw, __FILE__, __LINE__);
 			break;
 		}
 	}
@@ -252,6 +255,7 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 		list_for_each_entry(path_info, &pi_head, list)
 		{
 			path_info->bw /= 5;
+			printk("%d, %d, %s, %d\n", path_info->path_id, path_info->bw, __FILE__, __LINE__);
 		}
 	}
 
