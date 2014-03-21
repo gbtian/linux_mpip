@@ -244,7 +244,7 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->bw += 1;
+			path_info->bw += rcv;
 			tmp_info = path_info;
 			printk("%d, %d, %s, %d\n", path_info->path_id, path_info->bw, __FILE__, __LINE__);
 			break;
