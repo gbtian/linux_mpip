@@ -784,7 +784,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 		e_path_stat->fbjiffies = jiffies;
 
 		*rcvh = e_path_stat->rcvh;
-		*rcv = e_path_stat->rcvc;
+		*rcv = e_path_stat->rcv;
 
 		e_path_stat->rcvc = 0;
 		e_path_stat->rcvh = 0;
