@@ -208,6 +208,8 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 	if (!node_id || (path_id == 0))
 		return 0;
 
+	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
+
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
 	{
 		if (is_equal_node_id(node_id, path_stat->node_id) &&
@@ -668,6 +670,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 //		return f_path_id;
 //	}
 //
+	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
 
 	//if comes here, it means all paths have been probed
 	list_for_each_entry(path, &pi_head, list)
