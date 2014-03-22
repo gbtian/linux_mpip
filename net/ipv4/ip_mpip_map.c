@@ -335,7 +335,7 @@ int update_path_info()
 		path_info->rcvrate = rcvrate;
 	}
 
-	if (mindelay == 9999999)
+	if (mindelay > 0)
 		goto out;
 
 	list_for_each_entry(path_info, &pi_head, list)
