@@ -217,7 +217,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 
 			if (path_stat->rcv >= 60000)
 			{
-				path_stat->rcvh += (1 + (path_stat->rcv / 60000));
+				path_stat->rcvh += (path_stat->rcv / 60000);
 				path_stat->rcv = (path_stat->rcv % 60000);
 			}
 
@@ -238,10 +238,10 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 	{
 		if (path_info->path_id == path_id)
 		{
-			printk("%d, %d, %d, %d, %s, %d\n", path_info->rcvh, path_info->rcv, rcvh, rcv, __FILE__, __LINE__);
+			mpip_log("%d, %d, %d, %d, %s, %d\n", path_info->rcvh, path_info->rcv, rcvh, rcv, __FILE__, __LINE__);
 			path_info->rcvh += (rcvh + (path_info->rcv + rcv) / 60000);
-			path_info->rcv += (path_info->rcv + rcv) % 60000;
-			printk("%d, %d, %d, %d, %s, %d\n", path_info->rcvh, path_info->rcv, rcvh, rcv, __FILE__, __LINE__);
+			path_info->rcv = (path_info->rcv + rcv) % 60000;
+			mpip_log("%d, %d, %d, %d, %s, %d\n", path_info->rcvh, path_info->rcv, rcvh, rcv, __FILE__, __LINE__);
 
 			break;
 		}
@@ -722,10 +722,10 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 		if (f_path->sent >= 60000)
 		{
-			printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 			f_path->senth += (f_path->sent / 60000);
 			f_path->sent = (f_path->sent % 60000);
-			printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 		}
 	}
 	else
@@ -746,10 +746,10 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 			if (f_path->sent >= 60000)
 			{
-				printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+				mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 				f_path->senth += (f_path->sent / 60000);
 				f_path->sent = (f_path->sent % 60000);
-				printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+				mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 			}
 		}
 	}
