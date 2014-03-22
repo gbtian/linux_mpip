@@ -356,7 +356,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	__be16 osport = 0, odport = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
-	int pkt_len = skb->len + 32;
+	int pkt_len = skb->len + ((MPIP_OPT_LEN + 3) & ~3) + 20;
 	unsigned char rcvh = 0;
 	u16 rcv = 0;
 	bool is_new = true;
@@ -714,7 +714,7 @@ int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 	__be16 osport = 0, odport = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
-	int pkt_len = skb->len + 32;
+	int pkt_len = skb->len + ((MPIP_OPT_LEN + 3) & ~3) + 20;
 	unsigned char rcvh = 0;
 	u16 rcv = 0;
 	bool is_new = true;

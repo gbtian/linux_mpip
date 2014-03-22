@@ -208,7 +208,7 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 	if (!node_id || (path_id == 0))
 		return 0;
 
-	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
+//	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
 
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
 	{
@@ -263,7 +263,10 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 		{
 			getnstimeofday(&tv);
 			midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
+			printk("%d, %s, %d\n", (midtime - delay), __FILE__, __LINE__);
 			path_info->delay = (path_info->delay + (midtime - delay)) / 2;
+
+			break;
 		}
 	}
 
@@ -689,7 +692,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 //		return f_path_id;
 //	}
 //
-	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
+//	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
 
 	//if comes here, it means all paths have been probed
 	list_for_each_entry(path, &pi_head, list)
