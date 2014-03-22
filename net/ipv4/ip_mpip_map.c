@@ -614,7 +614,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
-		item->delay = jiffies;
+		item->delay = 0;
 		item->sentc = 0;
 		item->senth = 0;
 		item->sent = 0;
