@@ -263,8 +263,9 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 		{
 			getnstimeofday(&tv);
 			midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
-			printk("%d, %s, %d\n", (midtime - delay), __FILE__, __LINE__);
+			printk("%d, %d, %s, %d\n", path_info->delay, (midtime - delay), __FILE__, __LINE__);
 			path_info->delay = (path_info->delay + (midtime - delay)) / 2;
+			printk("%d, %s, %d\n", path_info->delay, __FILE__, __LINE__);
 
 			break;
 		}
