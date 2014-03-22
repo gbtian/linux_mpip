@@ -29,7 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_OPT_LEN 10
+#define MPIP_OPT_LEN 13
 #define MPIP_OPT_NODE_ID_LEN 2
 
 extern int sysctl_mpip_enabled;
@@ -116,7 +116,7 @@ struct path_info_table {
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
 	unsigned char rcvrate; /* rcv rate */
-	unsigned long ts;
+	__u32   delay;
 	__u32	bw;  /* bandwidth */
 	__u32   sentc;
 	__u16   sent;  /* number of pkt sent on this path */
@@ -186,6 +186,8 @@ unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id);
 int add_path_stat(unsigned char *node_id, unsigned char path_id);
 
 int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len);
+
+int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay);
 
 int update_path_info(void);
 

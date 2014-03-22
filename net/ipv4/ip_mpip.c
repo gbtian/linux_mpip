@@ -341,6 +341,8 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	struct sock *sk = skb->sk;
 	struct inet_sock *inet = inet_sk(sk);
 	int res;
+    struct timespec tv;
+	u32  midtime;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
@@ -438,6 +440,14 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     options[7] = rcv & 0xff; //packet_count
     options[8] = (rcv>>8) & 0xff; //packet_count
+
+	getnstimeofday(&tv);
+	midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
+
+	options[9] = midtime & 0xff;
+	options[10] = (midtime>>8) & 0xff;
+	options[11] = (midtime>>16) & 0xff;
+	options[12] = (midtime>>24) & 0xff;
 
 
     //mpip_log("\ns: iph->id=%d\n", iph->id);
@@ -545,6 +555,8 @@ int process_mpip_options(struct sk_buff *skb)
 	add_path_stat(opt->node_id, opt->path_id);
 
 	update_packet_rcv(opt->stat_path_id, opt->rcvh, opt->rcv);
+	update_path_delay(iph->saddr, iph->daddr, opt->nexthop);
+
 	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
 	update_path_info();
 
@@ -689,6 +701,8 @@ int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 {
 	struct iphdr *iph = ip_hdr(skb);
 	int res;
+    struct timespec tv;
+	u32  midtime;
 	struct udphdr *udph = NULL;
 
 	mpip_log("\nsending udp:\n");
@@ -760,6 +774,13 @@ int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
     options[7] = rcv & 0xff; //packet_count
     options[8] = (rcv>>8) & 0xff; //packet_count
 
+	getnstimeofday(&tv);
+	midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
+
+	options[9] = midtime & 0xff;
+	options[10] = (midtime>>8) & 0xff;
+	options[11] = (midtime>>16) & 0xff;
+	options[12] = (midtime>>24) & 0xff;
 
     //mpip_log("\ns: iph->id=%d\n", iph->id);
     mpip_log("s: old_saddr=");

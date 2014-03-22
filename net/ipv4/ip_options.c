@@ -388,6 +388,8 @@ int ip_options_compile(struct net *net,
 		    	opt->stat_path_id = (optptr[5] & 0x0f);
 		    	opt->rcvh = optptr[6];
 		    	opt->rcv = (optptr[8]<<8)|optptr[7];
+		    	opt->nexthop = (optptr[12]<<24) | (optptr[11]<<16) |
+		    				   (optptr[10]<<8) | optptr[9];
 		    	break;
 		    case IPOPT_TIMESTAMP:
 		    	if (opt->ts)

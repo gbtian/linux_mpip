@@ -833,8 +833,7 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 
 	if (sysctl_mpip_enabled)
 	{
-		++global_stat_1;
-		len -= 12;
+		len -= ((MPIP_OPT_LEN + 3) & ~3);
 	}
 
 	int ulen = len;
@@ -1079,11 +1078,6 @@ int udp_sendpage(struct sock *sk, struct page *page, int offset,
 	struct inet_sock *inet = inet_sk(sk);
 	struct udp_sock *up = udp_sk(sk);
 	int ret;
-
-	if (sysctl_mpip_enabled)
-	{
-		++global_stat_2;
-	}
 
 	if (!up->pending) {
 		struct msghdr msg = {	.msg_flags = flags|MSG_MORE };

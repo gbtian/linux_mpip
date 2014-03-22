@@ -252,6 +252,24 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 	return 1;
 }
 
+int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
+{
+    struct timespec tv;
+	u32  midtime;
+	struct path_info_table *path_info;
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if ((path_info->saddr == daddr) && (path_info->daddr == saddr))
+		{
+			getnstimeofday(&tv);
+			midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
+			path_info->delay = (path_info->delay + (midtime - delay)) / 2;
+		}
+	}
+
+	return 1;
+}
+
 int update_path_info()
 {
 	/* todo: need sanity checks, leave it for now */
@@ -591,14 +609,13 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
-		item->ts = jiffies;
+		item->delay = jiffies;
 		item->sentc = 0;
 		item->senth = 0;
 		item->sent = 0;
 		item->rcvh = 0;
 		item->rcv = 0;
 		item->rcvrate = 0;
-
 //		if (item->saddr == waddr)
 //		{
 //			item->bw = sysctl_mpip_bw_1;
@@ -717,10 +734,6 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (f_path_id > 0)
 	{
-		if (f_path->sent == 0)
-		{
-			f_path->ts = jiffies;
-		}
 		f_path->sentc += 1;
 		f_path->sent += pkt_len>>3;
 		*saddr = f_path->saddr;
@@ -739,11 +752,6 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
-			if (f_path->sent == 0)
-			{
-				f_path->ts = jiffies;
-			}
-
 			f_path->sentc += 1;
 			f_path->sent += pkt_len>>3;
 			*saddr = f_path->saddr;
@@ -1027,6 +1035,9 @@ asmlinkage long sys_mpip(void)
 		p = (char *) &(path_info->daddr);
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+
+		printk("%d  ", path_info->delay);
 
 		printk("%d  ", path_info->rcvrate);
 
