@@ -290,6 +290,8 @@ int update_path_info()
 	{
 		rcv = path_info->rcvh * 60000 + path_info->rcv;
 		sent = path_info->senth * 60000 + path_info->sent;
+		if (sent <= 0)
+			continue;
 		rcvrate = (unsigned char)(rcv * 100 / sent);
 		if (path_info->rcvrate > rcvrate)
 		{
