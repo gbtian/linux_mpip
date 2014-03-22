@@ -299,6 +299,8 @@ int update_path_info()
 		if (path_info->rcvrate > rcvrate)
 		{
 			path_info->bw -= 1;
+			if (path_info->bw < 200)
+				path_info->bw = 200;
 		}
 		path_info->rcvrate = rcvrate;
 	}
@@ -595,7 +597,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->sent = 0;
 		item->rcvh = 0;
 		item->rcv = 0;
-		item->rcvrate = 100;
+		item->rcvrate = 0;
 
 //		if (item->saddr == waddr)
 //		{
