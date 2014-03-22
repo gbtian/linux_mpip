@@ -212,23 +212,17 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 		if (is_equal_node_id(node_id, path_stat->node_id) &&
 			(path_stat->path_id == path_id))
 		{
-			path_stat->fbjiffies = jiffies;
 			path_stat->rcvc += 1;
 			path_stat->rcv += pkt_len>>3;
 
 			if (path_stat->rcv >= 60000)
 			{
 				path_stat->rcvh += 1;
-				path_stat->rcv = 0;
+				path_stat->rcv = (path_stat->rcv % 60000);
 			}
 
 			break;
 		}
-//		else
-//		{
-//			path_stat->rcvc = 0;
-//			path_stat->rcv = 0;
-//		}
 	}
 
 	return 1;
@@ -244,22 +238,12 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->bw += rcv;
-			tmp_info = path_info;
-			printk("%d, %d, %s, %d\n", path_info->path_id, path_info->bw, __FILE__, __LINE__);
+			path_info->rcvh += (rcvh + (path_info->rcv + rcv) / 60000);
+			path_info->rcv += (path_info->rcv + rcv) % 60000;
+
 			break;
 		}
 	}
-
-	if ((tmp_info != NULL) && (tmp_info->bw >= 1000))
-	{
-		list_for_each_entry(path_info, &pi_head, list)
-		{
-			path_info->bw /= 5;
-			printk("%d, %d, %s, %d\n", path_info->path_id, path_info->bw, __FILE__, __LINE__);
-		}
-	}
-
 	return 1;
 }
 
@@ -268,61 +252,48 @@ int update_path_info()
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_info_table *path_info;
-	struct path_info_table *tmp_info;
-	int rcv = 0;
-	int sent = 0;
+	struct path_info_table *tmp_info = NULL;
+	__u64 rcv = 0;
+	__u64 sent = 0;
+	int rcvrate = 0;
 
-	__be32 eaddr = convert_addr(192, 168, 2, 23);
-	__be32 eaddr1 = convert_addr(192, 168, 2, 21);
-
-	__be32 waddr = convert_addr(192, 168, 2, 22);
-	__be32 waddr1 = convert_addr(192, 168, 2, 20);
-
-
-	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
-	{
-		if ((path_info->saddr == eaddr) && (path_info->daddr == eaddr1) ||
-			(path_info->saddr == eaddr1) && (path_info->daddr == eaddr))
-		{
-			path_info->bw = sysctl_mpip_bw_1;
-		}
-		else if ((path_info->saddr == waddr) && (path_info->daddr == waddr1) ||
-				 (path_info->saddr == waddr1) && (path_info->daddr == waddr))
-		{
-			path_info->bw = sysctl_mpip_bw_3;
-		}
-		else
-		{
-			path_info->bw = sysctl_mpip_bw_2;
-		}
-	}
-
-	return 1;
-
-	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
-	{
-//		if (path_info->sentc < 100)
+//	__be32 eaddr = convert_addr(192, 168, 2, 23);
+//	__be32 eaddr1 = convert_addr(192, 168, 2, 21);
+//
+//	__be32 waddr = convert_addr(192, 168, 2, 22);
+//	__be32 waddr1 = convert_addr(192, 168, 2, 20);
+//
+//
+//	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+//	{
+//		if ((path_info->saddr == eaddr) && (path_info->daddr == eaddr1) ||
+//			(path_info->saddr == eaddr1) && (path_info->daddr == eaddr))
 //		{
-//			path_info->bw = 20;
+//			path_info->bw = sysctl_mpip_bw_1;
 //		}
-		if (path_info->sent > 0)
+//		else if ((path_info->saddr == waddr) && (path_info->daddr == waddr1) ||
+//				 (path_info->saddr == waddr1) && (path_info->daddr == waddr))
+//		{
+//			path_info->bw = sysctl_mpip_bw_3;
+//		}
+//		else
+//		{
+//			path_info->bw = sysctl_mpip_bw_2;
+//		}
+//	}
+//
+//	return 1;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		rcv = path_info->rcvh * 60000 + path_info->rcv;
+		sent = path_info->senth * 60000 + path_info->sent;
+		rcvrate = (unsigned char)(rcv * 100 / sent);
+		if (path_info->rcvrate > rcvrate)
 		{
-			rcv = path_info->rcvh * 60000 + path_info->rcv;
-			sent = path_info->sent;
-			path_info->lossrate = (unsigned char)(rcv * 100 / sent);
-
-			if (path_info->lossrate < 20)
-				path_info->lossrate = 20;
-
-			if (sent < rcv)
-				path_info->bw = 0;
-			else
-				path_info->bw = (sent - rcv) * path_info->lossrate;
-//			path_info->bw = rcv / sysctl_mpip_bw_factor;
-//			path_info->bw = path_info->lossrate;
+			path_info->bw -= 1;
 		}
-
-		path_info->bw = 10;
+		path_info->rcvrate = rcvrate;
 	}
 
 	return 1;
@@ -613,10 +584,11 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->daddr = addr;
 		item->ts = jiffies;
 		item->sentc = 0;
+		item->senth = 0;
 		item->sent = 0;
 		item->rcvh = 0;
 		item->rcv = 0;
-		item->lossrate = 20;
+		item->rcvrate = 100;
 
 //		if (item->saddr == waddr)
 //		{
@@ -630,7 +602,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 //		{
 //			item->bw = 30;
 //		}
-		item->bw = 50;
+		item->bw = 1000;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
@@ -743,6 +715,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		f_path->sent += pkt_len>>3;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
+
+		if (f_path->sent >= 60000)
+		{
+			f_path->senth += 1;
+			f_path->sent = (f_path->sent % 60000);
+		}
 	}
 	else
 	{
@@ -759,6 +737,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
+
+			if (f_path->sent >= 60000)
+			{
+				f_path->senth += 1;
+				f_path->sent = (f_path->sent % 60000);
+			}
 		}
 	}
 
@@ -772,7 +756,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
 	unsigned char e_path_stat_id = 0;
-//	unsigned long e_fbtime = 0;
+	unsigned long e_fbtime = jiffies;
 	int totalrcv = 0;
 	int max_rcvc = 0;
 
@@ -787,22 +771,18 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 			continue;
 		}
 
-//		totalrcv = (path_stat->rcvh * 60000 + path_stat->rcv) * 64 / (1024 * 1024);
-//		if (path_stat->rcvc < sysctl_mpip_bw_factor && totalrcv < 10)
-//		{
-//			continue;
-//		}
-
-		if (path_stat->rcvc > max_rcvc)
+		if (path_stat->fbjiffies <= e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
 			e_path_stat = path_stat;
-			max_rcvc = path_stat->rcvc;
+			e_fbtime = path_stat->fbjiffies;
 		}
 	}
 
 	if (e_path_stat_id > 0)
 	{
+		e_path_stat->fbjiffies = jiffies;
+
 		*rcvh = e_path_stat->rcvh;
 		*rcv = e_path_stat->rcvc;
 
@@ -812,7 +792,6 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 
 	}
 
-	//mpip_log("final epathstatid = %d\n", e_path_stat_id);
 	return e_path_stat_id;
 }
 
@@ -1035,11 +1014,13 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-		printk("%d  ", path_info->lossrate);
+		printk("%d  ", path_info->rcvrate);
 
 		printk("%d  ", path_info->bw);
 
 		printk("%d  ", path_info->sentc);
+
+		printk("%d  ", path_info->senth);
 
 		printk("%d  ", path_info->sent);
 

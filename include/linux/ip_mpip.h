@@ -115,13 +115,14 @@ struct path_info_table {
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
-	unsigned char lossrate; /* loss rate */
+	unsigned char rcvrate; /* rcv rate */
 	unsigned long ts;
 	__u32	bw;  /* bandwidth */
 	__u32   sentc;
-	__u32   sent;  /* number of pkt sent on this path */
+	__u16   sent;  /* number of pkt sent on this path */
 	__u16   rcv;  /* number of pkt received on this path */
-	unsigned char	rcvh;  /* number of mega received on this path */
+	__u32   senth;
+	__u32	rcvh;  /* number of mega received on this path */
 	struct list_head list;
 };
 
