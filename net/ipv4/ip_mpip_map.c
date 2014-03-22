@@ -263,7 +263,7 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 		{
 			getnstimeofday(&tv);
 			midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
-//			printk("%d, %s, %d\n", (midtime - delay), __FILE__, __LINE__);
+			printk("%d, %s, %d\n", (midtime - delay), __FILE__, __LINE__);
 			path_info->delay = (path_info->delay + (midtime - delay)) / 2;
 
 			break;
@@ -282,7 +282,6 @@ int update_path_info()
 	__u64 rcv = 0;
 	__u64 sent = 0;
 	int rcvrate = 0;
-	int mindelay = 9999999;
 
 //	__be32 eaddr = convert_addr(192, 168, 2, 23);
 //	__be32 eaddr1 = convert_addr(192, 168, 2, 21);
@@ -313,13 +312,6 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (mindelay == 9999999)
-			mindelay = path_info->delay;
-		else if (path_info->delay < mindelay)
-		{
-			mindelay = path_info->delay;
-		}
-
 		rcv = path_info->rcvh * 60000 + path_info->rcv;
 		sent = path_info->senth * 60000 + path_info->sent;
 
@@ -329,21 +321,12 @@ int update_path_info()
 		if (path_info->rcvrate > rcvrate)
 		{
 			path_info->bw -= 1;
-			if (path_info->bw < 200)
-				path_info->bw = 200;
+			if (path_info->bw < 100)
+				path_info->bw = 100;
 		}
 		path_info->rcvrate = rcvrate;
 	}
 
-	if (mindelay > 0)
-		goto out;
-
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		path_info->delay += mindelay;
-	}
-
-out:
 	return 1;
 }
 
