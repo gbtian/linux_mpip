@@ -722,10 +722,10 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 		if (f_path->sent >= 60000)
 		{
-			printk("%d, %d, %d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+			printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 			f_path->senth += (f_path->sent / 60000);
 			f_path->sent = (f_path->sent % 60000);
-			printk("%d, %d, %d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+			printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 		}
 	}
 	else
@@ -746,10 +746,10 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 			if (f_path->sent >= 60000)
 			{
-				printk("%d, %d, %d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+				printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 				f_path->senth += (f_path->sent / 60000);
 				f_path->sent = (f_path->sent % 60000);
-				printk("%d, %d, %d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+				printk("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 			}
 		}
 	}
