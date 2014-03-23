@@ -313,12 +313,12 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		path_info->posdelay = path_info->delay - mindelay;
+		path_info->posdelay = path_info->delay - mindelay + 1;
 	}
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		path_info->bw = 1000 - (1000 * path_info->posdelay) / (path_info->posdelay + sysctl_mpip_bw_factor);
+		path_info->bw = 1000 - (1000 * path_info->posdelay - 1) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
 	}
 
 	return 1;
@@ -651,6 +651,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	unsigned char f_bw = 0;
 	int totalbw = 0, tmptotal = 0;
 	int random = 0;
+	bool path_done = true;
 
 	if (!node_id)
 		return 0;
@@ -674,9 +675,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			f_path_id = path->path_id;
 			f_path = path;
 		}
+
+		if (path->delay == 0)
+			path_done = false;
 	}
 
-	if ((totalbw > 0) && (pkt_len > 120))
+	if (((totalbw > 0) && (pkt_len > 120)) || !path_done)
 	{
 		random = get_random_int() % totalbw;
 		random = (random > 0) ? random : -random;
