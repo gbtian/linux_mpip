@@ -660,35 +660,6 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		return 0;
 	}
 
-//	//step 1: probing paths with bw 0
-//	list_for_each_entry(path, &pi_head, list)
-//	{
-//		if (!is_equal_node_id(path->node_id, node_id))
-//			continue;
-//
-//		if (path->bw == 0)
-//		{
-//			f_path_id = path->path_id;
-//			f_path = path;
-//		}
-//	}
-//
-//	if (f_path_id > 0)
-//	{
-//		if (f_path->sent == 0)
-//		{
-//			f_path->ts = jiffies;
-//		}
-//		f_path->sentc += 1;
-//		f_path->sent += pkt_len>>3;
-//		*saddr = f_path->saddr;
-//		*daddr = f_path->daddr;
-//
-//		return f_path_id;
-//	}
-//
-//	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
-
 	//if comes here, it means all paths have been probed
 	list_for_each_entry(path, &pi_head, list)
 	{
@@ -699,13 +670,13 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 		if (path->bw > f_bw)
 		{
-			f_path_id = path->path_id;
 			f_bw = path->bw;
+			f_path_id = path->path_id;
 			f_path = path;
 		}
 	}
 
-	if (totalbw > 0)
+	if ((totalbw > 0) && (pkt_len > 120))
 	{
 		random = get_random_int() % totalbw;
 		random = (random > 0) ? random : -random;
@@ -766,7 +737,6 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		}
 	}
 
-//	printk("%d, %d, %d, %s, %d\n", pkt_len, f_path->senth, f_path->sent, __FILE__, __LINE__);
 	return f_path_id;
 }
 
