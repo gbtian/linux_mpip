@@ -263,7 +263,14 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 		{
 			getnstimeofday(&tv);
 			midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
-			path_info->delay = ((int)(path_info->delay + midtime - delay)) / 2;
+			if (path_info->delay == 0)
+			{
+				path_info->delay = midtime - delay;
+			}
+			else
+			{
+				path_info->delay = ((int)(path_info->delay * 9 + midtime - delay)) / 10;
+			}
 
 			break;
 		}
