@@ -281,56 +281,44 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 
 int update_path_info()
 {
-	/* todo: need sanity checks, leave it for now */
-	/* todo: need locks */
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info = NULL;
 	__u64 rcv = 0;
 	__u64 sent = 0;
 	int rcvrate = 0;
+	int mindelay = 99999;
+	__u32 bw = 0;
 
-//	__be32 eaddr = convert_addr(192, 168, 2, 23);
-//	__be32 eaddr1 = convert_addr(192, 168, 2, 21);
-//
-//	__be32 waddr = convert_addr(192, 168, 2, 22);
-//	__be32 waddr1 = convert_addr(192, 168, 2, 20);
-//
-//
-//	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
-//	{
-//		if ((path_info->saddr == eaddr) && (path_info->daddr == eaddr1) ||
-//			(path_info->saddr == eaddr1) && (path_info->daddr == eaddr))
-//		{
-//			path_info->bw = sysctl_mpip_bw_1;
-//		}
-//		else if ((path_info->saddr == waddr) && (path_info->daddr == waddr1) ||
-//				 (path_info->saddr == waddr1) && (path_info->daddr == waddr))
-//		{
-//			path_info->bw = sysctl_mpip_bw_3;
-//		}
-//		else
-//		{
-//			path_info->bw = sysctl_mpip_bw_2;
-//		}
-//	}
-//
-//	return 1;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
+		if (mindelay == 99999)
+		{
+			mindelay = path_info->delay;
+		}
+		else if (path_info->delay < mindelay)
+		{
+			mindelay = path_info->delay;
+		}
+
 		rcv = path_info->rcvh * 60000 + path_info->rcv;
 		sent = path_info->senth * 60000 + path_info->sent;
 
 		if (sent <= 0)
 			continue;
 		rcvrate = (unsigned char)(rcv * 100 / sent);
-		if (path_info->rcvrate > rcvrate)
-		{
-			path_info->bw -= 1;
-			if (path_info->bw < 100)
-				path_info->bw = 100;
-		}
+
 		path_info->rcvrate = rcvrate;
+	}
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		path_info->posdelay = path_info->delay - mindelay;
+	}
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		path_info->bw = 1000 - (1000 * path_info->posdelay) / (path_info->posdelay + sysctl_mpip_bw_factor);
 	}
 
 	return 1;
@@ -1048,6 +1036,8 @@ asmlinkage long sys_mpip(void)
 
 
 		printk("%d  ", path_info->delay);
+
+		printk("%d  ", path_info->posdelay);
 
 		printk("%d  ", path_info->rcvrate);
 
