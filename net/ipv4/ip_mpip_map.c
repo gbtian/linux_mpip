@@ -318,7 +318,7 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		path_info->bw = 1000 - (1000 * path_info->posdelay - 1) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
+		path_info->bw = 1000 - (1000 * (path_info->posdelay - 1)) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
 	}
 
 	return 1;
