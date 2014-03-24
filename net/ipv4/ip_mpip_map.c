@@ -318,6 +318,9 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
+		if (path_info->posdelay + sysctl_mpip_bw_factor == 1)
+			continue;
+
 		path_info->bw = 1000 - (1000 * (path_info->posdelay - 1)) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
 	}
 
