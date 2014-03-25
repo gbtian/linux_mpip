@@ -737,7 +737,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			path_done = false;
 	}
 
-	if (((totalbw > 0) && (pkt_len > 120)) || !path_done)
+//	if (((totalbw > 0) && (pkt_len > 120)) || !path_done)
+	if ((totalbw > 0) || !path_done)
 	{
 		random = get_random_int() % totalbw;
 		random = (random > 0) ? random : -random;
