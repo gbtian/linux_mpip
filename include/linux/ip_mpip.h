@@ -158,6 +158,8 @@ struct socket_session_table {
 struct path_stat_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
+	__be32	saddr; /* source ip address*/
+	__be32	daddr; /* destination ip address*/
 //	atomic_t  rcv;  /* number of pkt received on this path */
 	__u16  rcvc;    /* number of pkt received on this path */
 	unsigned char	rcvh;  /* number of mega received on this path */
@@ -182,9 +184,11 @@ unsigned char * find_node_id_in_working_ip(__be32 addr);
 
 int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv);
 
-unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id);
+struct path_stat_table *find_path_stat(unsigned char *node_id, unsigned char path_id);
 
-int add_path_stat(unsigned char *node_id, unsigned char path_id);
+struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr);
+
+int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, __be32 daddr);
 
 int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len);
 
@@ -213,6 +217,10 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr);
 bool is_dest_added(unsigned char *node_id, __be32 add);
 
 int add_path_info(unsigned char *node_id, __be32 addr);
+
+unsigned char add_rcv_for_path(__be32 saddr, __be32 daddr, u16 pkt_len);
+
+unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,

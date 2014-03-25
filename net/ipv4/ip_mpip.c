@@ -130,16 +130,15 @@ int mpip_init(void)
 
 void mpip_log(const char *fmt, ...)
 {
-	if (!sysctl_mpip_enabled || !sysctl_mpip_log)
-		return;
-
 	va_list args;
 	int r;
-
 	struct file *fp;
     struct inode *inode = NULL;
 	mm_segment_t fs;
 	loff_t pos;
+
+	if (!sysctl_mpip_enabled || !sysctl_mpip_log)
+		return;
 
 	memset(log_buf, 0, 256);
 	va_start(args, fmt);
@@ -198,35 +197,6 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 }
 EXPORT_SYMBOL(print_mpip_options);
 
-static __sum16 mpip_tcp_v4_checksum_init(struct sk_buff *skb)
-{
-	const struct iphdr *iph = ip_hdr(skb);
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
-	if (skb->ip_summed == CHECKSUM_COMPLETE)
-	{
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
-		if (!tcp_v4_check(skb->len, iph->saddr,
-				  iph->daddr, skb->csum))
-		{
-			skb->ip_summed = CHECKSUM_UNNECESSARY;
-			return 0;
-		}
-	}
-
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
-	skb->csum = csum_tcpudp_nofold(iph->saddr, iph->daddr,
-				       skb->len, IPPROTO_TCP, 0);
-
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
-
-	if (skb->len <= 76)
-	{
-//		printk("i: %s, %d\n", __FILE__, __LINE__);
-		return __skb_checksum_complete(skb);
-	}
-	return 0;
-}
-
 unsigned char *get_node_id(void)
 {
 	struct net_device *dev;
@@ -253,11 +223,12 @@ char get_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 					__be32 daddr, __be16 dport, bool *is_new)
 {
 
+	unsigned char session_id;
+
 	if (!src_node_id || !dst_node_id)
 		return 0;
 
-	unsigned char session_id = get_sender_session(saddr, sport,
-										  		  daddr, dport);
+	session_id = get_sender_session(saddr, sport, daddr, dport);
 
 	if (session_id == 0)
 	{
@@ -296,6 +267,7 @@ unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
 	return find_fastest_path_id(node_id, saddr, daddr,
 								origin_saddr, origin_daddr, pkt_len);
 }
+
 
 unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh, u16 *rcv)
 {
@@ -340,17 +312,12 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 {
 	struct sock *sk = skb->sk;
 	struct inet_sock *inet = inet_sk(sk);
-	int res;
+	int res, i;
     struct timespec tv;
 	u32  midtime;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
-
-	mpip_log("\nsending:\n");
-
-
-	int i;
-	unsigned char *dst_node_id = find_node_id_in_working_ip(old_daddr);
+	unsigned char *dst_node_id = NULL;
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
@@ -360,6 +327,8 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	unsigned char rcvh = 0;
 	u16 rcv = 0;
 	bool is_new = true;
+
+	mpip_log("\nsending:\n");
 
 	if (!skb)
 	{
@@ -373,6 +342,8 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
 	}
+
+	dst_node_id = find_node_id_in_working_ip(old_daddr);
 
 	//if TCP PACKET
 	if(sk->sk_protocol==IPPROTO_TCP)
@@ -503,8 +474,13 @@ int process_mpip_options(struct sk_buff *skb)
 		return 0;
 	}
 
-	dev = skb->dev;
 	iph = ip_hdr(skb);
+
+	if (iph->ihl == 5)
+		return 0;
+
+
+	dev = skb->dev;
 	opt = &(IPCB(skb)->opt);
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
 	if (ip_options_compile(dev_net(dev), opt, skb))
@@ -552,7 +528,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	add_working_ip(opt->node_id, iph->saddr);
 	add_path_info(opt->node_id, iph->saddr);
-	add_path_stat(opt->node_id, opt->path_id);
+	add_path_stat(opt->node_id, opt->path_id, iph->saddr, iph->daddr);
 
 	update_packet_rcv(opt->stat_path_id, opt->rcvh, opt->rcv);
 	update_path_delay(iph->saddr, iph->daddr, opt->nexthop);
@@ -700,15 +676,11 @@ int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr, unsigned char *options)
 {
 	struct iphdr *iph = ip_hdr(skb);
-	int res;
+	int res, i;
     struct timespec tv;
 	u32  midtime;
 	struct udphdr *udph = NULL;
 
-	mpip_log("\nsending udp:\n");
-
-
-	int i;
 	unsigned char *dst_node_id = find_node_id_in_working_ip(iph->daddr);
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
@@ -718,6 +690,9 @@ int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 	unsigned char rcvh = 0;
 	u16 rcv = 0;
 	bool is_new = true;
+
+	mpip_log("\nsending udp:\n");
+
 
 	if (!skb)
 	{

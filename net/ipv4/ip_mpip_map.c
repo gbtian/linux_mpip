@@ -198,35 +198,61 @@ unsigned char * find_node_id_in_working_ip(__be32 addr)
 	return NULL;
 }
 
+struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
+{
+	struct path_stat_table *path_stat;
+
+	list_for_each_entry(path_stat, &ps_head, list)
+	{
+		if ((path_stat->saddr == saddr) &&
+			(path_stat->daddr == daddr))
+		{
+			return path_stat;
+		}
+	}
+	return NULL;
+}
+
+unsigned char add_rcv_for_path(__be32 saddr, __be32 daddr, u16 pkt_len)
+{
+	struct path_stat_table *path_stat = find_path_stat_by_addr(saddr, daddr);
+	if (path_stat)
+	{
+		path_stat->rcvc += 1;
+		path_stat->rcv += pkt_len>>3;
+
+		if (path_stat->rcv >= 60000)
+		{
+			path_stat->rcvh += (path_stat->rcv / 60000);
+			path_stat->rcv = (path_stat->rcv % 60000);
+		}
+	}
+
+	return 1;
+}
+
 int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_stat_table *path_stat;
-	struct path_stat_table *tmp_stat;
 
 	if (!node_id || (path_id == 0))
 		return 0;
 
-//	printk("%d, %s, %d\n", pkt_len, __FILE__, __LINE__);
-
-	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
+	path_stat = find_path_stat(node_id, path_id);
+	if (path_stat)
 	{
-		if (is_equal_node_id(node_id, path_stat->node_id) &&
-			(path_stat->path_id == path_id))
+		path_stat->rcvc += 1;
+		path_stat->rcv += pkt_len>>3;
+
+		if (path_stat->rcv >= 60000)
 		{
-			path_stat->rcvc += 1;
-			path_stat->rcv += pkt_len>>3;
-
-			if (path_stat->rcv >= 60000)
-			{
-				path_stat->rcvh += (path_stat->rcv / 60000);
-				path_stat->rcv = (path_stat->rcv % 60000);
-			}
-
-			break;
+			path_stat->rcvh += (path_stat->rcv / 60000);
+			path_stat->rcv = (path_stat->rcv % 60000);
 		}
 	}
+
 
 	return 1;
 }
@@ -328,26 +354,26 @@ int update_path_info()
 }
 
 
-unsigned char find_path_stat(unsigned char *node_id, unsigned char path_id)
+struct path_stat_table *find_path_stat(unsigned char *node_id, unsigned char path_id)
 {
 	struct path_stat_table *path_stat;
 
 	if (!node_id || (path_id == 0))
-		return 0;
+		return NULL;
 
 	list_for_each_entry(path_stat, &ps_head, list)
 	{
 		if (is_equal_node_id(node_id, path_stat->node_id) &&
 			(path_stat->path_id == path_id))
 		{
-			return path_stat->path_id;
+			return path_stat;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
-int add_path_stat(unsigned char *node_id, unsigned char path_id)
+int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, __be32 daddr)
 {
 	struct path_stat_table *item = NULL;
 
@@ -359,7 +385,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 		return 0;
 	}
 
-	if (find_path_stat(node_id, path_id) > 0)
+	if (find_path_stat(node_id, path_id))
 		return 0;
 
 
@@ -368,7 +394,8 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 
 	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->path_id = path_id;
-//	atomic_set(&(item->rcv), 0);
+	item->saddr = saddr;
+	item->daddr = daddr;
 	item->rcvc = 0;
 	item->rcvh = 0;
 	item->rcv = 0;
@@ -643,6 +670,28 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 	return 1;
 }
 
+
+unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len)
+{
+	struct path_info_table *f_path = find_path_info(saddr, daddr);
+	if (f_path)
+	{
+		f_path->sentc += 1;
+		f_path->sent += pkt_len>>3;
+
+		if (f_path->sent >= 60000)
+		{
+			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+			f_path->senth += (f_path->sent / 60000);
+			f_path->sent = (f_path->sent % 60000);
+			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
+		}
+	}
+
+	return 1;
+}
+
+
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
 								   __be32 origin_saddr, __be32 origin_daddr,
@@ -710,37 +759,17 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 	if (f_path_id > 0)
 	{
-		f_path->sentc += 1;
-		f_path->sent += pkt_len>>3;
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
-
-		if (f_path->sent >= 60000)
-		{
-			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
-			f_path->senth += (f_path->sent / 60000);
-			f_path->sent = (f_path->sent % 60000);
-			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
-		}
 	}
 	else
 	{
 		f_path = find_path_info(origin_saddr, origin_daddr);
 		if (f_path)
 		{
-			f_path->sentc += 1;
-			f_path->sent += pkt_len>>3;
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			f_path_id = f_path->path_id;
-
-			if (f_path->sent >= 60000)
-			{
-				mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
-				f_path->senth += (f_path->sent / 60000);
-				f_path->sent = (f_path->sent % 60000);
-				mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
-			}
 		}
 	}
 
