@@ -197,6 +197,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct iphdr *ih;
 	struct tcphdr *th;
 
+	bool mpip_opt_added = false;
+
 	inet = inet_sk(sk);
 
 
@@ -204,9 +206,10 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	print_addr(__FUNCTION__, saddr);
 	print_addr(__FUNCTION__, daddr);
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && (!(opt && opt->opt.optlen)))
 	{
 		mpip_compose_opt(skb, saddr, daddr, &new_saddr, &new_daddr);
+		mpip_opt_added = true;
 	}
 
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -222,7 +225,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	print_addr(__FUNCTION__, gwaddr);
 
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && mpip_opt_added)
 	{
 		if (new_saddr != 0)
 		{
@@ -267,7 +270,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
 		optlen = opt->opt.optlen;
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && mpip_opt_added)
 		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
@@ -285,7 +288,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 
-	if (sysctl_mpip_enabled && new_saddr > 0 && new_daddr > 0)
+	if (sysctl_mpip_enabled && new_saddr > 0 && new_daddr > 0 && mpip_opt_added)
 	{
 		iph->daddr    = new_daddr;
 		iph->saddr    = new_saddr;
@@ -304,7 +307,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		iph->ihl += opt->opt.optlen>>2;
 		ip_options_build(skb, &(opt->opt), daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && mpip_opt_added)
 	{
 		iph->ihl += optlen >> 2;
 		mpip_options_build(skb, true);
@@ -492,21 +495,24 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct tcphdr *th;
 
 	unsigned int optlen = 0;
+	bool mpip_opt_added = false;
 
-	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	mpip_log("before:\n");
-	print_addr(NULL, fl->u.ip4.saddr);
-	print_addr(NULL, fl->u.ip4.daddr);
-	if (sysctl_mpip_enabled)
-	{
-		mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr);
-	}
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.
 	 */
 	rcu_read_lock();
 	inet_opt = rcu_dereference(inet->inet_opt);
+
+	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("before:\n");
+	print_addr(NULL, fl->u.ip4.saddr);
+	print_addr(NULL, fl->u.ip4.daddr);
+	if (sysctl_mpip_enabled && !(inet_opt && inet_opt->opt.optlen))
+	{
+		mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr);
+		mpip_opt_added = true;
+	}
 
 	fl4 = &fl->u.ip4;
 
@@ -562,7 +568,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
 	print_addr(__FUNCTION__, gwaddr);
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && mpip_opt_added)
 	{
 		if (new_saddr != 0)
 		{
@@ -604,7 +610,7 @@ packet_routed:
 	{
 		optlen = inet_opt->opt.optlen;
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && mpip_opt_added)
 		optlen = ((MPIP_OPT_LEN + 3) & ~3);
 
 	skb_push(skb, sizeof(struct iphdr) + optlen);
@@ -641,7 +647,7 @@ packet_routed:
 		iph->ihl += inet_opt->opt.optlen >> 2;
 		ip_options_build(skb, &inet_opt->opt, inet->inet_daddr, rt, 0);
 	}
-	else if (sysctl_mpip_enabled)
+	else if (sysctl_mpip_enabled && mpip_opt_added)
 	{
 		iph->ihl += optlen >> 2;
 		mpip_options_build(skb, true);
