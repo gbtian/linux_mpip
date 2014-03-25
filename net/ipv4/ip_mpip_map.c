@@ -260,8 +260,6 @@ int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 
 int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 {
 	struct path_info_table *path_info = NULL;
-	struct path_info_table *tmp_info = NULL;
-	int sec = 1;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
@@ -335,6 +333,12 @@ int update_path_info()
 		rcvrate = (unsigned char)(rcv * 100 / sent);
 
 		path_info->rcvrate = rcvrate;
+		path_info->losspkt = sent - rcv;
+
+		if (rcv > sent)
+		{
+			printk("rcv > sent: %llu > %llu, %s, %d\n", rcv, sent, __FILE__, __LINE__);
+		}
 	}
 
 	list_for_each_entry(path_info, &pi_head, list)
@@ -644,6 +648,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->rcvh = 0;
 		item->rcv = 0;
 		item->rcvrate = 0;
+		item->losspkt = 0;
 //		if (item->saddr == waddr)
 //		{
 //			item->bw = sysctl_mpip_bw_1;
@@ -1044,6 +1049,8 @@ asmlinkage long sys_mpip(void)
 		printk("%d  ", path_info->delay);
 
 		printk("%d  ", path_info->posdelay);
+
+		printk("%d  ", path_info->losspkt);
 
 		printk("%d  ", path_info->rcvrate);
 

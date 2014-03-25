@@ -116,6 +116,7 @@ struct path_info_table {
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
 	unsigned char rcvrate; /* rcv rate */
+	__u32 losspkt; /*the amount of data that are lost*/
 	int     delay;
 	int 	posdelay;
 	__u32	bw;  /* bandwidth */
