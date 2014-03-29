@@ -107,6 +107,13 @@ int __ip_local_out(struct sk_buff *skb)
 		iph = ip_hdr(skb);
 	}
 
+	if (sysctl_mpip_enabled && (iph->protocol==IPPROTO_ICMP))
+	{
+		printk("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+		//insert_mpip_options_hb(skb);
+		//iph = ip_hdr(skb);
+	}
+
 //	mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	if (sysctl_mpip_enabled && (iph->protocol == IPPROTO_UDP))
 	{
@@ -200,8 +207,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	unsigned int optlen = 0;
 	__be32 new_saddr=0, new_daddr=0, gwaddr = 0;
 	struct net_device *new_dst_dev = NULL;
-	struct iphdr *ih;
-	struct tcphdr *th;
+//	struct iphdr *ih;
+//	struct tcphdr *th;
 
 	bool mpip_opt_added = false;
 
@@ -338,7 +345,7 @@ static inline int ip_finish_output2(struct sk_buff *skb)
 	u32 nexthop;
 
 	struct sock *sk = skb->sk;
-	struct inet_sock *inet = inet_sk(sk);
+//	struct inet_sock *inet = inet_sk(sk);
 
 	if (rt->rt_type == RTN_MULTICAST) {
 		IP_UPD_PO_STATS(dev_net(dev), IPSTATS_MIB_OUTMCAST, skb->len);
@@ -497,8 +504,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	__be32 new_saddr = 0, new_daddr = 0, gwaddr = 0;
 	struct net_device *new_dst_dev = NULL;
 
-	struct iphdr *ih;
-	struct tcphdr *th;
+//	struct iphdr *ih;
+//	struct tcphdr *th;
 
 	unsigned int optlen = 0;
 	bool mpip_opt_added = false;

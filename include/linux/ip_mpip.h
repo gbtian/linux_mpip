@@ -41,6 +41,7 @@ extern int sysctl_mpip_bw_1;
 extern int sysctl_mpip_bw_2;
 extern int sysctl_mpip_bw_3;
 extern int sysctl_mpip_bw_4;
+extern int sysctl_mpip_hb;
 extern int max_pkt_len;
 extern int global_stat_1;
 extern int global_stat_2;
@@ -99,6 +100,11 @@ int process_mpip_options(struct sk_buff *skb);
 int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
 int insert_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
+
+int icmp_send_mpip_hb(struct sk_buff *skb);
+
+int insert_mpip_options_hb(struct sk_buff *skb);
+
 
 struct working_ip_table {
 	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
@@ -215,11 +221,13 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 
 struct path_info_table *find_path_info(__be32 saddr, __be32 daddr);
 
+unsigned char find_path_id(__be32 saddr, __be32 daddr);
+
 bool is_dest_added(unsigned char *node_id, __be32 add);
 
 int add_path_info(unsigned char *node_id, __be32 addr);
 
-unsigned char add_rcv_for_path(__be32 saddr, __be32 daddr, u16 pkt_len);
+unsigned char add_rcv_for_path(struct sk_buff *skb, __be32 saddr, __be32 daddr, u16 pkt_len);
 
 unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len);
 

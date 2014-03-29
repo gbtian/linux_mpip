@@ -12,6 +12,7 @@
 #include <linux/syscalls.h>
 #include <net/route.h>
 #include <net/tcp.h>
+#include <net/icmp.h>
 
 #include <linux/ip_mpip.h>
 #include <net/ip.h>
@@ -34,6 +35,7 @@ int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
 int sysctl_mpip_bw_3 __read_mostly = 30;
 int sysctl_mpip_bw_4 __read_mostly = 30;
+int sysctl_mpip_hb __read_mostly = 3;
 int max_pkt_len = 65500;
 
 
@@ -102,6 +104,13 @@ static struct ctl_table mpip_table[] =
  	 		.mode = 0644,
  	 		.proc_handler = &proc_dointvec
  	},
+ 	{
+			.procname = "mpip_hb",
+			.data = &sysctl_mpip_hb,
+			.maxlen = sizeof(int),
+			.mode = 0644,
+			.proc_handler = &proc_dointvec
+	},
  	{ }
 };
 
@@ -132,10 +141,10 @@ void mpip_log(const char *fmt, ...)
 {
 	va_list args;
 	int r;
-	struct file *fp;
-    struct inode *inode = NULL;
-	mm_segment_t fs;
-	loff_t pos;
+//	struct file *fp;
+//    struct inode *inode = NULL;
+//	mm_segment_t fs;
+//	loff_t pos;
 
 	if (!sysctl_mpip_enabled || !sysctl_mpip_log)
 		return;
@@ -311,14 +320,14 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options)
 {
 	struct sock *sk = skb->sk;
-	struct inet_sock *inet = inet_sk(sk);
-	int res, i;
+//	struct inet_sock *inet = inet_sk(sk);
+	int  i;
     struct timespec tv;
 	u32  midtime;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	unsigned char *dst_node_id = NULL;
-	__be32 saddr = 0, daddr = 0;
+//	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
 	unsigned char path_id = 0;
@@ -458,9 +467,9 @@ int process_mpip_options(struct sk_buff *skb)
 	struct net_device *dev;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
-	int i, res;
-	unsigned char *tmp = NULL;
-	unsigned char *iph_addr;
+	int  res;
+//	unsigned char *tmp = NULL;
+//	unsigned char *iph_addr;
 
 	struct net_device *new_dst_dev = NULL;
 	__be32 saddr = 0, daddr = 0;
@@ -676,7 +685,7 @@ int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr, unsigned char *options)
 {
 	struct iphdr *iph = ip_hdr(skb);
-	int res, i;
+	int i;
     struct timespec tv;
 	u32  midtime;
 	struct udphdr *udph = NULL;
@@ -793,6 +802,118 @@ int insert_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 
 	mpip_options_build(skb, false);
+
+	return 1;
+}
+
+int get_mpip_options_hb(struct sk_buff *skb, __be32 saddr, __be32 daddr, unsigned char *options)
+{
+	struct sock *sk = skb->sk;
+	struct inet_sock *inet = inet_sk(sk);
+	int res, i;
+    struct timespec tv;
+	u32  midtime;
+//	struct tcphdr *tcph = NULL;
+//	struct udphdr *udph = NULL;
+	unsigned char *dst_node_id = NULL;
+	unsigned char path_id = 0;
+	unsigned char path_stat_id = 0;
+//	int pkt_len = skb->len + ((MPIP_OPT_LEN + 3) & ~3) + 20;
+	unsigned char rcvh = 0;
+	u16 rcv = 0;
+	bool is_new = true;
+
+	mpip_log("\nsending hb:\n");
+
+	if (!skb)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return 0;
+	}
+
+	dst_node_id = find_node_id_in_working_ip(saddr);
+
+
+	get_node_id();
+	get_available_local_addr();
+
+
+	options[0] = IPOPT_MPIP;
+	options[1] = MPIP_OPT_LEN;
+
+    for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
+    	options[2 + i] =  static_node_id[i];
+
+    options[4] = 0;
+
+    if (!is_new)
+    {
+    	mpip_log("%s, %d\n", __FILE__, __LINE__);
+    	path_id = find_path_id(daddr, saddr);
+    }
+
+    path_stat_id = get_path_stat_id(dst_node_id, &rcvh, &rcv);
+
+    options[5] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
+
+    options[6] = rcvh;
+
+    options[7] = rcv & 0xff; //packet_count
+    options[8] = (rcv>>8) & 0xff; //packet_count
+
+	getnstimeofday(&tv);
+	midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
+
+	options[9] = midtime & 0xff;
+	options[10] = (midtime>>8) & 0xff;
+	options[11] = (midtime>>16) & 0xff;
+	options[12] = (midtime>>24) & 0xff;
+
+
+    return 1;
+
+}
+
+int insert_mpip_options_hb(struct sk_buff *skb)
+{
+	struct iphdr *iph = NULL;
+	int res;
+//	struct ip_options *opt;
+
+	//todo: change the options
+	iph = ip_hdr(skb);
+
+	if (!get_mpip_options_hb(skb, iph->saddr, iph->daddr, options))
+		return 0;
+
+	if (!mp_opt)
+		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
+				   GFP_ATOMIC);
+
+	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
+
+	mpip_options_build(skb, true);
+
+	return 1;
+}
+
+
+int icmp_send_mpip_hb(struct sk_buff *skb)
+{
+	struct sk_buff *nskb = NULL;
+	struct iphdr *iph = NULL;
+	if(!skb)
+		return 0;
+
+	nskb = skb_copy(skb, GFP_ATOMIC);
+
+	if (nskb == NULL)
+		return 0;
+
+	iph = ip_hdr(nskb);
+	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);
+
+	printk("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 
 	return 1;
 }

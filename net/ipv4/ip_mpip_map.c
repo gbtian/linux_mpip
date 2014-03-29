@@ -5,6 +5,7 @@
 
 static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
+static unsigned long earliest_fbjiffies = 0;
 
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
@@ -213,7 +214,7 @@ struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
-unsigned char add_rcv_for_path(__be32 saddr, __be32 daddr, u16 pkt_len)
+unsigned char add_rcv_for_path(struct sk_buff *skb, __be32 saddr, __be32 daddr, u16 pkt_len)
 {
 	struct path_stat_table *path_stat = find_path_stat_by_addr(saddr, daddr);
 	if (path_stat)
@@ -226,6 +227,12 @@ unsigned char add_rcv_for_path(__be32 saddr, __be32 daddr, u16 pkt_len)
 			path_stat->rcvh += (path_stat->rcv / 60000);
 			path_stat->rcv = (path_stat->rcv % 60000);
 		}
+
+		if ((jiffies - earliest_fbjiffies) / HZ >= sysctl_mpip_hb)
+		{
+			icmp_send_mpip_hb(skb);
+		}
+
 	}
 
 	return 1;
@@ -306,12 +313,12 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 int update_path_info()
 {
 	struct path_info_table *path_info;
-	struct path_info_table *tmp_info = NULL;
+//	struct path_info_table *tmp_info = NULL;
 	__u64 rcv = 0;
 	__u64 sent = 0;
 	int rcvrate = 0;
 	int mindelay = 99999;
-	__u32 bw = 0;
+//	__u32 bw = 0;
 
 
 	list_for_each_entry(path_info, &pi_head, list)
@@ -595,6 +602,21 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
+unsigned char find_path_id(__be32 saddr, __be32 daddr)
+{
+	struct path_info_table *path_info;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if ((path_info->saddr == saddr) &&
+			(path_info->daddr == daddr))
+		{
+			return path_info->path_id;
+		}
+	}
+	return 0;
+}
+
 bool is_dest_added(unsigned char *node_id, __be32 addr)
 {
 	struct path_info_table *path_info;
@@ -618,8 +640,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 {
 	struct local_addr_table *local_addr;
 	struct path_info_table *item = NULL;
-	__be32 waddr = convert_addr(192, 168, 2, 20);
-	__be32 eaddr = convert_addr(192, 168, 2, 21);
+//	__be32 waddr = convert_addr(192, 168, 2, 20);
+//	__be32 eaddr = convert_addr(192, 168, 2, 21);
 
 	if (!node_id)
 		return 0;
@@ -789,8 +811,8 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 	struct path_stat_table *e_path_stat;
 	unsigned char e_path_stat_id = 0;
 	unsigned long e_fbtime = jiffies;
-	int totalrcv = 0;
-	int max_rcvc = 0;
+//	int totalrcv = 0;
+//	int max_rcvc = 0;
 
 	if (!dest_node_id)
 		return 0;
@@ -814,6 +836,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 	if (e_path_stat_id > 0)
 	{
 		e_path_stat->fbjiffies = jiffies;
+		earliest_fbjiffies = jiffies;
 
 		*rcvh = e_path_stat->rcvh;
 		*rcv = e_path_stat->rcv;
