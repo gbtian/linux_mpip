@@ -492,7 +492,10 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	struct sock *sk;
 
 	if (!rt)
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
+	}
 	net = dev_net(rt->dst.dev);
 
 	/*
@@ -505,27 +508,35 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	if ((u8 *)iph < skb_in->head ||
 	    (skb_network_header(skb_in) + sizeof(*iph)) >
 	    skb_tail_pointer(skb_in))
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
-
+	}
 	/*
 	 *	No replies to physical multicast/broadcast
 	 */
 	if (skb_in->pkt_type != PACKET_HOST)
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
-
+	}
 	/*
 	 *	Now check at the protocol level
 	 */
 	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST))
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
-
+	}
 	/*
 	 *	Only reply to fragment 0. We byte re-order the constant
 	 *	mask for efficiency.
 	 */
 	if (iph->frag_off & htons(IP_OFFSET))
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
-
+	}
 	/*
 	 *	If we send an ICMP error to an ICMP error a mess would result..
 	 */
@@ -546,26 +557,36 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 						 sizeof(_inner_type),
 						 &_inner_type);
 			if (itp == NULL)
+			{
+				printk("%s, %d\n", __FILE__,  __LINE__);
 				goto out;
-
+			}
 			/*
 			 *	Assume any unknown ICMP type is an error. This
 			 *	isn't specified by the RFC, but think about it..
 			 */
 			if (*itp > NR_ICMP_TYPES ||
 			    icmp_pointers[*itp].error)
+			{
+				printk("%s, %d\n", __FILE__,  __LINE__);
 				goto out;
+			}
 		}
 	}
 
 	icmp_param = kmalloc(sizeof(*icmp_param), GFP_ATOMIC);
 	if (!icmp_param)
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		return;
+	}
 
 	sk = icmp_xmit_lock(net);
 	if (sk == NULL)
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out_free;
-
+	}
 	/*
 	 *	Construct source address and options.
 	 */
@@ -591,8 +612,10 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 					  iph->tos;
 
 	if (ip_options_echo(&icmp_param->replyopts.opt.opt, skb_in))
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out_unlock;
-
+	}
 
 	/*
 	 *	Prepare data for ICMP header.
@@ -612,11 +635,15 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	rt = icmp_route_lookup(net, &fl4, skb_in, iph, saddr, tos,
 			       type, code, icmp_param);
 	if (IS_ERR(rt))
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out_unlock;
-
+	}
 	if (!icmpv4_xrlim_allow(net, rt, &fl4, type, code))
+	{
+		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto ende;
-
+	}
 	/* RFC says return as much as we can without exceeding 576 bytes. */
 
 	room = dst_mtu(&rt->dst);
@@ -632,12 +659,17 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 
 	icmp_push_reply(icmp_param, &fl4, &ipc, &rt);
 ende:
+	printk("%s, %d\n", __FILE__,  __LINE__);
 	ip_rt_put(rt);
 out_unlock:
+	printk("%s, %d\n", __FILE__,  __LINE__);
 	icmp_xmit_unlock(sk);
 out_free:
+	printk("%s, %d\n", __FILE__,  __LINE__);
 	kfree(icmp_param);
-out:;
+out:
+printk("%s, %d\n", __FILE__,  __LINE__);
+;
 }
 EXPORT_SYMBOL(icmp_send);
 
