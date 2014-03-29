@@ -384,6 +384,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
 
+	if (sysctl_mpip_enabled)
+	{
+		add_rcv_for_path(skb, iph->saddr, iph->daddr, skb->len);
+	}
 	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 	return dst_input(skb);
 
@@ -454,7 +458,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	if (sysctl_mpip_enabled)
 	{
-		add_rcv_for_path(skb, iph->saddr, iph->daddr, skb->len);
 		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
 		skb->transport_header = skb->network_header + iph->ihl*4;
 		process_mpip_options(skb);
