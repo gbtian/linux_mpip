@@ -888,6 +888,7 @@ static void icmp_discard(struct sk_buff *skb)
 int icmp_rcv(struct sk_buff *skb)
 {
 	struct icmphdr *icmph;
+	printk("%s, %d\n", __FILE__,  __LINE__);
 	struct rtable *rt = skb_rtable(skb);
 	printk("%s, %d\n", __FILE__,  __LINE__);
 	struct net *net = dev_net(rt->dst.dev);
