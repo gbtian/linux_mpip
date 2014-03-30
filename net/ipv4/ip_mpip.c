@@ -543,6 +543,8 @@ int process_mpip_options(struct sk_buff *skb)
 	update_path_delay(iph->saddr, iph->daddr, opt->nexthop);
 
 //	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
+	add_rcv_for_path(skb, iph->saddr, iph->daddr, skb->len);
+
 	update_path_info();
 
 	session_id = add_receiver_session(static_node_id, opt->node_id, iph->daddr, dport,
@@ -616,10 +618,6 @@ int process_mpip_options(struct sk_buff *skb)
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
 
 			ip_send_check(iph);
-	}
-	else if(iph->protocol==IPPROTO_ICMP)
-	{
-		printk("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 	}
 
 	return 1;

@@ -660,17 +660,12 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 
 	icmp_push_reply(icmp_param, &fl4, &ipc, &rt);
 ende:
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	ip_rt_put(rt);
 out_unlock:
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	icmp_xmit_unlock(sk);
 out_free:
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	kfree(icmp_param);
-out:
-printk("%s, %d\n", __FILE__,  __LINE__);
-;
+out:;
 }
 EXPORT_SYMBOL(icmp_send);
 

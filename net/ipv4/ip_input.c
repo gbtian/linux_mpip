@@ -384,10 +384,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
 
-	if (sysctl_mpip_enabled)
-	{
-		add_rcv_for_path(skb, iph->saddr, iph->daddr, skb->len);
-	}
+
 	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 	return dst_input(skb);
 
