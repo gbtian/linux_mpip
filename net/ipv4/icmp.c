@@ -934,13 +934,13 @@ int icmp_rcv(struct sk_buff *skb)
 	if (!pskb_pull(skb, sizeof(*icmph)))
 		goto error;
 
-	if (sysctl_mpip_enabled)
-		goto drop;
-
 	icmph = icmp_hdr(skb);
 	printk("%s, %d\n", __FILE__,  __LINE__);
 	ICMPMSGIN_INC_STATS_BH(net, icmph->type);
-	printk("%s, %d\n", __FILE__,  __LINE__);
+	printk("%d, %s, %d\n", icmph->type, __FILE__,  __LINE__);
+
+	if (sysctl_mpip_enabled)
+		goto drop;
 	/*
 	 *	18 is the highest 'known' ICMP type. Anything else is a mystery
 	 *
