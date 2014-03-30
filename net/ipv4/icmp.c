@@ -913,6 +913,10 @@ int icmp_rcv(struct sk_buff *skb)
 
 		skb_set_network_header(skb, nh);
 	}
+
+	if (sysctl_mpip_enabled)
+		goto drop;
+
 	printk("%s, %d\n", __FILE__,  __LINE__);
 	ICMP_INC_STATS_BH(net, ICMP_MIB_INMSGS);
 	printk("%s, %d\n", __FILE__,  __LINE__);
