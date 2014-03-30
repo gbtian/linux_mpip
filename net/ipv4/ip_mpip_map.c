@@ -344,7 +344,7 @@ int update_path_info()
 
 		if (rcv > sent)
 		{
-			//printk("rcv > sent: %llu > %llu, %s, %d\n", rcv, sent, __FILE__, __LINE__);
+			printk("rcv > sent: %llu > %llu, %s, %d\n", rcv, sent, __FILE__, __LINE__);
 		}
 	}
 

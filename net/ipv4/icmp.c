@@ -889,26 +889,19 @@ static void icmp_discard(struct sk_buff *skb)
 int icmp_rcv(struct sk_buff *skb)
 {
 	struct icmphdr *icmph;
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	struct rtable *rt = skb_rtable(skb);
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	struct net *net = dev_net(rt->dst.dev);
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
-		printk("%s, %d\n", __FILE__,  __LINE__);
 		struct sec_path *sp = skb_sec_path(skb);
 		int nh;
-		printk("%s, %d\n", __FILE__,  __LINE__);
 		if (!(sp && sp->xvec[sp->len - 1]->props.flags &
 				 XFRM_STATE_ICMP))
 			goto drop;
 
 		if (!pskb_may_pull(skb, sizeof(*icmph) + sizeof(struct iphdr)))
 			goto drop;
-		printk("%s, %d\n", __FILE__,  __LINE__);
 		nh = skb_network_offset(skb);
 		skb_set_network_header(skb, sizeof(*icmph));
-		printk("%s, %d\n", __FILE__,  __LINE__);
 		if (!xfrm4_policy_check_reverse(NULL, XFRM_POLICY_IN, skb))
 			goto drop;
 
@@ -917,9 +910,7 @@ int icmp_rcv(struct sk_buff *skb)
 
 
 
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	ICMP_INC_STATS_BH(net, ICMP_MIB_INMSGS);
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	switch (skb->ip_summed) {
 	case CHECKSUM_COMPLETE:
 		if (!csum_fold(skb->csum))
@@ -935,12 +926,9 @@ int icmp_rcv(struct sk_buff *skb)
 		goto error;
 
 	icmph = icmp_hdr(skb);
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	ICMPMSGIN_INC_STATS_BH(net, icmph->type);
-	printk("%d, %s, %d\n", icmph->type, __FILE__,  __LINE__);
 
-	if (sysctl_mpip_enabled)
-		goto drop;
+
 	/*
 	 *	18 is the highest 'known' ICMP type. Anything else is a mystery
 	 *
@@ -950,11 +938,9 @@ int icmp_rcv(struct sk_buff *skb)
 	if (icmph->type > NR_ICMP_TYPES)
 		goto error;
 
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	/*
 	 *	Parse the ICMP message
 	 */
-
 	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST)) {
 		/*
 		 *	RFC 1122: 3.2.2.6 An ICMP_ECHO to broadcast MAY be
@@ -974,7 +960,6 @@ int icmp_rcv(struct sk_buff *skb)
 			goto error;
 		}
 	}
-	printk("%s, %d\n", __FILE__,  __LINE__);
 	icmp_pointers[icmph->type].handler(skb);
 
 drop:
@@ -1082,6 +1067,9 @@ static const struct icmp_control icmp_pointers[NR_ICMP_TYPES + 1] = {
 	},
 	[ICMP_ADDRESSREPLY] = {
 		.handler = icmp_discard,
+	},
+	[ICMP_MPIP_HEARTBEAT] = {
+			.handler = icmp_discard,
 	},
 };
 

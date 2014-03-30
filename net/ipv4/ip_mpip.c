@@ -552,7 +552,6 @@ int process_mpip_options(struct sk_buff *skb)
 							  &saddr, &sport, &daddr, &dport);
 
 
-
 	mpip_log("r: iph->id=%d\n", iph->id);
 	mpip_log("r: iph->saddr=");
 	print_addr(__FUNCTION__, iph->saddr);
@@ -581,7 +580,7 @@ int process_mpip_options(struct sk_buff *skb)
 	print_mpip_options(__FUNCTION__, opt);
 
 
-	if (res)
+	if (res && iph->protocol != IPPROTO_ICMP)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		mpip_log("r: modifying header\n");
@@ -605,6 +604,8 @@ int process_mpip_options(struct sk_buff *skb)
 											skb->len, iph->protocol,
 											csum_partial((char *)tcph, skb->len, 0));
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+			ip_send_check(iph);
 	}
 	else if(iph->protocol==IPPROTO_UDP)
 	{
@@ -613,8 +614,13 @@ int process_mpip_options(struct sk_buff *skb)
 										   skb->len, iph->protocol,
 										   csum_partial((char *)udph, skb->len, 0));
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+			ip_send_check(iph);
 	}
-	ip_send_check(iph);
+	else if(iph->protocol==IPPROTO_ICMP)
+	{
+		printk("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+	}
 
 	return 1;
 }
@@ -892,7 +898,8 @@ int insert_mpip_options_hb(struct sk_buff *skb)
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 
-	mpip_options_build(skb, true);
+	iph->ihl += (mp_opt->opt.optlen)>>2;
+	mpip_options_build(skb, false);
 
 	return 1;
 }

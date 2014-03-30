@@ -110,8 +110,8 @@ int __ip_local_out(struct sk_buff *skb)
 	if (sysctl_mpip_enabled && (iph->protocol==IPPROTO_ICMP))
 	{
 		printk("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
-		//insert_mpip_options_hb(skb);
-		//iph = ip_hdr(skb);
+		insert_mpip_options_hb(skb);
+		iph = ip_hdr(skb);
 	}
 
 //	mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
