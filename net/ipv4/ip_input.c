@@ -321,11 +321,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-//	if (iph->ihl > 5 && sysctl_mpip_enabled)
-//	{
-//		process_mpip_options(skb);
-//	}
-
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
 		int protocol = iph->protocol;
@@ -384,8 +379,15 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
 
-
 	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
+
+//	if (sysctl_mpip_enabled && iph->protocol == IPPROTO_TCP)
+//	{
+//		unsigned char session_id = get_session(skb);
+//		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
+//			return NET_RX_SUCCESS;
+//	}
+
 	return dst_input(skb);
 
 drop:

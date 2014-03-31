@@ -1,5 +1,6 @@
 #include <linux/netdevice.h>
 #include <linux/inetdevice.h>
+#include <net/tcp.h>
 #include <linux/ip_mpip.h>
 
 
@@ -106,6 +107,17 @@ char *in_ntoa(unsigned long in)
 	return(buff);
 }
 
+int list_count(struct list_head head)
+{
+	struct tcp_skb_buf *tmp = NULL;
+	int count = 0;
+	list_for_each_entry(tmp, &head, list)
+	{
+		++count;
+	}
+
+	return count;
+}
 
 int add_working_ip(unsigned char *node_id, __be32 addr)
 {
@@ -272,10 +284,9 @@ int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
 	{
 		if (path_info->path_id == path_id)
 		{
-			mpip_log("%d, %d, %d, %d, %s, %d\n", path_info->rcvh, path_info->rcv, rcvh, rcv, __FILE__, __LINE__);
 			path_info->rcvh += (rcvh + (path_info->rcv + rcv) / 60000);
 			path_info->rcv = (path_info->rcv + rcv) % 60000;
-			mpip_log("%d, %d, %d, %d, %s, %d\n", path_info->rcvh, path_info->rcv, rcvh, rcv, __FILE__, __LINE__);
+			path_info->fbjiffies = jiffies;
 
 			break;
 		}
@@ -467,6 +478,7 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 
 	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
 	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
+	INIT_LIST_HEAD(&(item->tcp_buf));
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -505,7 +517,7 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 	return 0;
 }
 
-unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,
+unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id)
@@ -537,6 +549,7 @@ unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *ds
 
 	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
 	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
+	INIT_LIST_HEAD(&(item->tcp_buf));
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -555,7 +568,7 @@ unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *ds
 	return item->session_id;
 }
 
-int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
+int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport)
 {
@@ -586,6 +599,69 @@ int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
 	return 0;
 }
 
+int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
+{
+	struct tcphdr *tcph = NULL;
+	struct socket_session_table *socket_session;
+	struct tcp_skb_buf *item = NULL;
+	struct tcp_skb_buf *tcp_buf = NULL;
+	struct tcp_skb_buf *tmp_buf = NULL;
+	list_for_each_entry(socket_session, &ss_head, list)
+	{
+		if (socket_session->session_id == session_id)
+		{
+			tcph = tcp_hdr(skb);
+			if (!tcph)
+			{
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
+				return 0;
+			}
+
+			item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+			item->skb = skb;
+			item->fbjiffies = jiffies;
+			INIT_LIST_HEAD(&(item->list));
+			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+			{
+				if (tcp_hdr(tcp_buf->skb)->seq > tcph->seq)
+				{
+					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+					break;
+				}
+				else if (list_is_last(&(tcp_buf->list), &(socket_session->tcp_buf)))
+				{
+					list_add(&(item->list), &(socket_session->tcp_buf));
+					break;
+				}
+			}
+
+			if (list_count(socket_session->tcp_buf) >= sysctl_mpip_tcp_buf_count)
+			{
+				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+				{
+					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+					dst_input(tcp_buf->skb);
+					list_del(&(tcp_buf->list));
+					kfree(tcp_buf);
+				}
+			}
+
+			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+			{
+				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
+				{
+					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+					dst_input(tcp_buf->skb);
+					list_del(&(tcp_buf->list));
+					kfree(tcp_buf);
+				}
+			}
+
+			return 1;
+		}
+	}
+	return 0;
+}
 
 struct path_info_table *find_path_info(__be32 saddr, __be32 daddr)
 {
@@ -661,6 +737,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
 		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+		item->fbjiffies = jiffies;
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
 		item->delay = 0;
@@ -708,10 +785,8 @@ unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len)
 
 		if (f_path->sent >= 60000)
 		{
-			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 			f_path->senth += (f_path->sent / 60000);
 			f_path->sent = (f_path->sent % 60000);
-			mpip_log("%d, %d, %s, %d\n", f_path->senth, f_path->sent, __FILE__, __LINE__);
 		}
 	}
 
@@ -745,6 +820,10 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	{
 		if (!is_equal_node_id(path->node_id, node_id))
 			continue;
+
+// for depreciated path
+//		if ((jiffies - path->fbjiffies) / HZ >= sysctl_mpip_hb * 5)
+//			continue;
 
 		totalbw += path->bw;
 

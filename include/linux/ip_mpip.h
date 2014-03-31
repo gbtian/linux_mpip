@@ -42,6 +42,8 @@ extern int sysctl_mpip_bw_2;
 extern int sysctl_mpip_bw_3;
 extern int sysctl_mpip_bw_4;
 extern int sysctl_mpip_hb;
+extern int sysctl_mpip_tcp_buf_count;
+
 extern int max_pkt_len;
 extern int global_stat_1;
 extern int global_stat_2;
@@ -57,8 +59,6 @@ extern int global_stat_3;
 int mpip_init(void);
 
 void mpip_log(const char *fmt, ...);
-
-void mpip_tcp_v4_send_check(struct sk_buff *skb, __be32 saddr, __be32 daddr);
 
 void print_node_id(const char *prefix, unsigned char *node_id);
 
@@ -79,31 +79,20 @@ struct net_device *find_dev_by_addr(__be32 addr);
 int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
-//int get_mpip_options_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-//			__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
-
 bool check_bad_addr(__be32 saddr, __be32 daddr);
 
 void print_mpip_options(const char *prefix, struct ip_options *opt);
 
-int insert_mpip_options(struct sk_buff *skb, struct flowi *fl, bool pushed);
-
 int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr);
-//int mpip_compose_opt_1(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-//						__be32 *new_saddr, __be32 *new_daddr);
 
 void mpip_options_build(struct sk_buff *skb, bool pushed);
 
 int process_mpip_options(struct sk_buff *skb);
 
-int get_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
-
-int insert_mpip_options_udp(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
+int insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
 
 int icmp_send_mpip_hb(struct sk_buff *skb);
-
-int insert_mpip_options_hb(struct sk_buff *skb);
 
 
 struct working_ip_table {
@@ -119,6 +108,7 @@ struct path_info_table {
 	/*update sent*/
 	unsigned char node_id[MPIP_OPT_NODE_ID_LEN]; /*destination node id*/
 	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
+	unsigned long fbjiffies; /* last feedback time of this path */
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
 	unsigned char rcvrate; /* rcv rate */
@@ -147,10 +137,18 @@ struct path_info_table {
 //};
 //static LIST_HEAD(ss_head);
 
+struct tcp_skb_buf{
+	struct sk_buff *skb;
+	unsigned long fbjiffies;
+	struct list_head list;
+};
+
 struct socket_session_table {
 	unsigned char	src_node_id[MPIP_OPT_NODE_ID_LEN]; /* local node id*/
 	unsigned char	dst_node_id[MPIP_OPT_NODE_ID_LEN]; /* remote node id*/
 	unsigned char   session_id; /* sender's session id*/
+
+	struct list_head tcp_buf;
 
 	/* socket information seen at the receiver side*/
 	__be32	saddr; /* source ip address*/
@@ -210,12 +208,12 @@ unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 											 __be32 saddr, __be16 sport,
 											 __be32 daddr, __be16 dport);
 
-unsigned char add_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,
+unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id);
 
-int get_receiver_session(unsigned char *node_id,	unsigned char session_id,
+int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport);
 
@@ -249,5 +247,9 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 __be32 find_local_addr(__be32 addr);
 
 void get_available_local_addr(void);
+
+int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id);
+
+unsigned char get_session(struct sk_buff *skb);
 
 #endif	/* _IP_MPIP_H */

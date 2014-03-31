@@ -103,19 +103,19 @@ int __ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && (iph->ihl == 5) && (iph->protocol==IPPROTO_UDP))
 	{
-		insert_mpip_options_udp(skb, &new_saddr, &new_daddr);
+		insert_mpip_options(skb, &new_saddr, &new_daddr);
 		iph = ip_hdr(skb);
 	}
 
-	if (sysctl_mpip_enabled && (iph->protocol==IPPROTO_ICMP))
+	if (sysctl_mpip_enabled  && (iph->ihl == 5) && (iph->protocol==IPPROTO_ICMP))
 	{
-		printk("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
-		insert_mpip_options_hb(skb);
+		mpip_log("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+		insert_mpip_options(skb, &new_saddr, &new_daddr);
 		iph = ip_hdr(skb);
 	}
 
 //	mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
-	if (sysctl_mpip_enabled && (iph->protocol == IPPROTO_UDP))
+	if (sysctl_mpip_enabled && (iph->protocol == IPPROTO_UDP || iph->protocol==IPPROTO_ICMP))
 	{
 		if (new_saddr != 0)
 		{
@@ -147,22 +147,22 @@ int __ip_local_out(struct sk_buff *skb)
 //			}
 //		}
 //	}
-
-	mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
+//
+//	mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb_dst(skb)->dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 
-	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
-	{
-		mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-		print_addr(__FUNCTION__, iph->saddr);
-		print_addr(__FUNCTION__, iph->daddr);
-
-		if ((iph->ihl == 5) && sysctl_mpip_log)
-			dump_stack();
-	}
-
+//	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
+//	{
+//		mpip_log("Sent: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//		print_addr(__FUNCTION__, iph->saddr);
+//		print_addr(__FUNCTION__, iph->daddr);
+//
+//		if ((iph->ihl == 5) && sysctl_mpip_log)
+//			dump_stack();
+//	}
+//
 
 	if (sysctl_mpip_enabled)
 	{
@@ -215,9 +215,9 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	inet = inet_sk(sk);
 
 
-	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, saddr);
-	print_addr(__FUNCTION__, daddr);
+//	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(__FUNCTION__, saddr);
+//	print_addr(__FUNCTION__, daddr);
 
 	if (sysctl_mpip_enabled && (!(opt && opt->opt.optlen)))
 	{
@@ -225,17 +225,17 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 		mpip_opt_added = true;
 	}
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, new_saddr);
-	print_addr(__FUNCTION__, new_daddr);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(__FUNCTION__, new_saddr);
+//	print_addr(__FUNCTION__, new_daddr);
 
 	rt = skb_rtable(skb);
 
-	mpip_log("old_dst_dev_1: \n");
-	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
-	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
+//	mpip_log("old_dst_dev_1: \n");
+//	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
+//	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
 
 
 	if (sysctl_mpip_enabled && mpip_opt_added)
@@ -245,7 +245,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 			new_dst_dev = find_dev_by_addr(new_saddr);
 			if (new_dst_dev)
 			{
-				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+//				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
 				rt->dst.dev = new_dst_dev;
 				skb_dst(skb)->dev = new_dst_dev;
 			}
@@ -255,7 +255,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 			new_dst_dev = find_dev_by_addr(saddr);
 			if (new_dst_dev)
 			{
-				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+//				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
 				rt->dst.dev = new_dst_dev;
 				skb_dst(skb)->dev = new_dst_dev;
 			}
@@ -274,11 +274,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 //		}
 //	}
 
-	mpip_log("new_dst_dev_1: \n");
-	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
-	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
+//	mpip_log("new_dst_dev_1: \n");
+//	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
+//	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
 
 	/* Build the IP header. */
 	if (opt && opt->opt.optlen)
