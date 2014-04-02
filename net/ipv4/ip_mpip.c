@@ -29,7 +29,7 @@ static struct ip_options_rcu *mp_opt = NULL;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 1;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -515,7 +515,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	mpip_log("Receive: %d, %s, %d\n", iph->protocol, __FILE__, __LINE__);
+	//mpip_log("Receive: %d, %s, %d\n", iph->protocol, __FILE__, __LINE__);
 
 	//if TCP PACKET
 	if(iph->protocol == IPPROTO_TCP)

@@ -248,11 +248,13 @@ void send_mpip_hb(struct sk_buff *skb)
 {
 	if (!skb)
 		return;
-
+	
 	if ((jiffies - earliest_fbjiffies) / HZ >= sysctl_mpip_hb)
 	{
 		icmp_send_mpip_hb(skb);
 	}
+	
+	earliest_fbjiffies = jiffies;
 }
 
 int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len)
@@ -630,6 +632,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				if (tcp_hdr(tcp_buf->skb)->seq > tcph->seq)
 				{
+					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
 					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
 					break;
 				}
@@ -644,7 +647,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 				{
-//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
 					dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);
@@ -655,7 +658,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
-//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
 					dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);
