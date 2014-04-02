@@ -239,15 +239,20 @@ unsigned char add_rcv_for_path(struct sk_buff *skb, __be32 saddr, __be32 daddr, 
 			path_stat->rcvh += (path_stat->rcv / 60000);
 			path_stat->rcv = (path_stat->rcv % 60000);
 		}
-
-		if ((jiffies - earliest_fbjiffies) / HZ >= sysctl_mpip_hb)
-		{
-			icmp_send_mpip_hb(skb);
-		}
-
 	}
 
 	return 1;
+}
+
+void send_mpip_hb(struct sk_buff *skb)
+{
+	if (!skb)
+		return;
+
+	if ((jiffies - earliest_fbjiffies) / HZ >= sysctl_mpip_hb)
+	{
+		icmp_send_mpip_hb(skb);
+	}
 }
 
 int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len)

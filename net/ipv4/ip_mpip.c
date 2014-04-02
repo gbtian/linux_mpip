@@ -250,8 +250,8 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 	if (session_id == 0)
 	{
 		//printk("%s, %d\n", __FILE__, __LINE__);
-		print_addr(__FUNCTION__, saddr);
-		print_addr(__FUNCTION__, daddr);
+//		print_addr(__FUNCTION__, saddr);
+//		print_addr(__FUNCTION__, daddr);
 		//printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
@@ -515,7 +515,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	mpip_log("Receive: %s, %d\n", __FILE__, __LINE__);
+	mpip_log("Receive: %d, %s, %d\n", iph->protocol, __FILE__, __LINE__);
 
 	//if TCP PACKET
 	if(iph->protocol == IPPROTO_TCP)
@@ -525,7 +525,7 @@ int process_mpip_options(struct sk_buff *skb)
 		tcph= tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
 		{
-//			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			return 0;
 		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
@@ -538,7 +538,7 @@ int process_mpip_options(struct sk_buff *skb)
 		udph= udp_hdr(skb); //this fixed the problem
 		if (!udph)
 		{
-//			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			return 0;
 		}
 		osport = htons((unsigned short int) udph->source); //sport now has the source port
@@ -558,7 +558,6 @@ int process_mpip_options(struct sk_buff *skb)
 	update_path_delay(iph->saddr, iph->daddr, opt->nexthop);
 
 //	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
-	add_rcv_for_path(skb, iph->saddr, iph->daddr, skb->len);
 
 	update_path_info();
 

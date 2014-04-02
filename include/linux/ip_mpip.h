@@ -227,6 +227,8 @@ int add_path_info(unsigned char *node_id, __be32 addr);
 
 unsigned char add_rcv_for_path(struct sk_buff *skb, __be32 saddr, __be32 daddr, u16 pkt_len);
 
+void send_mpip_hb(struct sk_buff *skb);
+
 unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
