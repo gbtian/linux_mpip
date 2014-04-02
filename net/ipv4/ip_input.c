@@ -333,16 +333,16 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		}
 	}
 
-	mpip_log("After modification: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, iph->saddr);
-	print_addr(__FUNCTION__, iph->daddr);
+//	mpip_log("After modification: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(__FUNCTION__, iph->saddr);
+//	print_addr(__FUNCTION__, iph->daddr);
 
 	/*
 	 *	Initialise the virtual path cache for the packet. It describes
 	 *	how the packet travels inside Linux networking.
 	 */
 	if (!skb_dst(skb)) {
-		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		//dump_stack();
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
@@ -351,7 +351,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 				NET_INC_STATS_BH(dev_net(skb->dev),
 						 LINUX_MIB_IPRPFILTER);
 
-			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+//			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 			goto drop;
 		}
 	}
@@ -379,7 +379,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
 
-	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 //	if (sysctl_mpip_enabled && iph->protocol == IPPROTO_TCP)
 //	{
@@ -391,7 +391,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	return dst_input(skb);
 
 drop:
-	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
@@ -424,10 +424,10 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
-	{
-		mpip_log("\nReceived: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	}
+//	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
+//	{
+//		mpip_log("\nReceived: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//	}
 	/*
 	 *	RFC1122: 3.2.1.2 MUST silently discard any IP frame that fails the checksum.
 	 *
@@ -457,7 +457,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	if (sysctl_mpip_enabled)
 	{
-		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
 		skb->transport_header = skb->network_header + iph->ihl*4;
 		process_mpip_options(skb);
 		iph = ip_hdr(skb);

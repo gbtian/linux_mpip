@@ -109,7 +109,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled  && (iph->ihl == 5) && (iph->protocol==IPPROTO_ICMP))
 	{
-		mpip_log("iph->ihl: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+		mpip_log("Add ICMP options: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 		insert_mpip_options(skb, &new_saddr, &new_daddr);
 		iph = ip_hdr(skb);
 	}
@@ -517,8 +517,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	rcu_read_lock();
 	inet_opt = rcu_dereference(inet->inet_opt);
 
-	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	mpip_log("before:\n");
+//	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("before:\n");
 	print_addr(NULL, fl->u.ip4.saddr);
 	print_addr(NULL, fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled && !(inet_opt && inet_opt->opt.optlen))
@@ -529,8 +529,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	fl4 = &fl->u.ip4;
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	mpip_log("after:\n");
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("after:\n");
 	print_addr(__FUNCTION__, fl4->saddr);
 	print_addr(__FUNCTION__, fl4->daddr);
 
@@ -544,14 +544,14 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	rt = (struct rtable *)__sk_dst_check(sk, 0);
 	if (rt == NULL)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		__be32 daddr;
 
 		/* Use correct destination address if we have options. */
 		daddr = inet->inet_daddr;
 		if (inet_opt && inet_opt->opt.srr)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			daddr = inet_opt->opt.faddr;
 		}
 		/* If this fails, retransmit mechanism of transport layer will
@@ -567,7 +567,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 					   sk->sk_bound_dev_if);
 		if (IS_ERR(rt))
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			goto no_route;
 		}
 		sk_setup_caps(sk, &rt->dst);
@@ -575,11 +575,11 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	skb_dst_set_noref(skb, &rt->dst);
 
-	mpip_log("old_dst_dev: \n");
-	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
-	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
+//	mpip_log("old_dst_dev: \n");
+//	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
+//	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
 
 	if (sysctl_mpip_enabled && mpip_opt_added)
 	{
@@ -588,7 +588,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 			new_dst_dev = find_dev_by_addr(new_saddr);
 			if (new_dst_dev)
 			{
-				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+//				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
 				rt->dst.dev = new_dst_dev;
 				skb_dst(skb)->dev = new_dst_dev;
 			}
@@ -598,23 +598,23 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 			new_dst_dev = find_dev_by_addr(fl4->saddr);
 			if (new_dst_dev)
 			{
-				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
+//				mpip_log("new_dst_dev: %s, %s, %s, %d\n", new_dst_dev->name, __FILE__, __FUNCTION__, __LINE__);
 				rt->dst.dev = new_dst_dev;
 				skb_dst(skb)->dev = new_dst_dev;
 			}
 		}
 	}
 
-	mpip_log("new_dst_dev: \n");
-	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
-	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
-	print_addr(__FUNCTION__, gwaddr);
+//	mpip_log("new_dst_dev: \n");
+//	gwaddr = rt->dst.dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
+//	gwaddr = skb_dst(skb)->dev->ip_ptr->ifa_list->ifa_address;
+//	print_addr(__FUNCTION__, gwaddr);
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		goto no_route;
 	}
 
@@ -648,10 +648,10 @@ packet_routed:
 		ip_copy_addrs(iph, fl4);
 	}
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	mpip_log("Here:\n");
-	print_addr(__FUNCTION__, iph->saddr);
-	print_addr(__FUNCTION__, iph->daddr);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("Here:\n");
+//	print_addr(__FUNCTION__, iph->saddr);
+//	print_addr(__FUNCTION__, iph->daddr);
 
 	/* Transport layer set skb->h.foo itself. */
 
