@@ -107,11 +107,11 @@ char *in_ntoa(unsigned long in)
 	return(buff);
 }
 
-int list_count(struct list_head head)
+int list_count(struct list_head *head)
 {
 	struct tcp_skb_buf *tmp = NULL;
 	int count = 0;
-	list_for_each_entry(tmp, &head, list)
+	list_for_each_entry(tmp, head, list)
 	{
 		++count;
 	}
@@ -624,51 +624,53 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				return 0;
 			}
 
-//			item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
-//			item->skb = skb;
-//			item->fbjiffies = jiffies;
-//			INIT_LIST_HEAD(&(item->list));
+			printk("tcp->seq: %u, %s, %d\n", ntohl(tcph->seq), __FILE__, __LINE__);
 
-			printk("tcp->seq: %u, %s, %d\n", tcph->seq, __FILE__, __LINE__);
-			printk("ntohl: %u, %s, %d\n", ntohl(tcph->seq), __FILE__, __LINE__);
-			printk("htons: %u, %s, %d\n", htons(tcph->seq), __FILE__, __LINE__);
+			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+			{
+				if (ntohl(tcp_hdr(tcp_buf->skb)->seq) > ntohl(tcph->seq))
+				{
+					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+					item->skb = skb;
+					item->fbjiffies = jiffies;
+					INIT_LIST_HEAD(&(item->list));
 
-//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-//			{
-//				if (tcp_hdr(tcp_buf->skb)->seq > tcph->seq)
-//				{
-//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-//					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
-//					break;
-//				}
-//				else if (list_is_last(&(tcp_buf->list), &(socket_session->tcp_buf)))
-//				{
-//					list_add(&(item->list), &(socket_session->tcp_buf));
-//					break;
-//				}
-//			}
-//
-//			if (list_count(socket_session->tcp_buf) >= sysctl_mpip_tcp_buf_count)
-//			{
-//				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-//				{
-//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-//					//dst_input(tcp_buf->skb);
-//					list_del(&(tcp_buf->list));
-//					kfree(tcp_buf);
-//				}
-//			}
-//
-//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-//			{
-//				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
-//				{
-//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-//					//dst_input(tcp_buf->skb);
-//					list_del(&(tcp_buf->list));
-//					kfree(tcp_buf);
-//				}
-//			}
+					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+					break;
+				}
+				else if (list_is_last(&(tcp_buf->list), &(socket_session->tcp_buf)))
+				{
+					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+					item->skb = skb;
+					item->fbjiffies = jiffies;
+					INIT_LIST_HEAD(&(item->list));
+
+					list_add(&(item->list), &(socket_session->tcp_buf));
+					break;
+				}
+			}
+
+			if (list_count(&(socket_session->tcp_buf)) >= sysctl_mpip_tcp_buf_count)
+			{
+				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+				{
+					printk("send 1: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
+					//dst_input(tcp_buf->skb);
+					list_del(&(tcp_buf->list));
+					kfree(tcp_buf);
+				}
+			}
+
+			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+			{
+				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
+				{
+					printk("send 2: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
+					//dst_input(tcp_buf->skb);
+					list_del(&(tcp_buf->list));
+					kfree(tcp_buf);
+				}
+			}
 
 			return 1;
 		}
