@@ -630,6 +630,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 //			INIT_LIST_HEAD(&(item->list));
 
 			printk("tcp->seq: %d, %s, %d\n", tcph->seq, __FILE__, __LINE__);
+			printk("ntohl: %d, %s, %d\n", ntohl(tcph->seq), __FILE__, __LINE__);
+			printk("htons: %d, %s, %d\n", htons(tcph->seq), __FILE__, __LINE__);
 
 //			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 //			{

@@ -519,8 +519,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 //	mpip_log("\n%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 //	mpip_log("before:\n");
-	print_addr(NULL, fl->u.ip4.saddr);
-	print_addr(NULL, fl->u.ip4.daddr);
+//	print_addr(NULL, fl->u.ip4.saddr);
+//	print_addr(NULL, fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled && !(inet_opt && inet_opt->opt.optlen))
 	{
 		mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr);
@@ -531,8 +531,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 //	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 //	mpip_log("after:\n");
-	print_addr(__FUNCTION__, fl4->saddr);
-	print_addr(__FUNCTION__, fl4->daddr);
+//	print_addr(__FUNCTION__, fl4->saddr);
+//	print_addr(__FUNCTION__, fl4->daddr);
 
 	rt = skb_rtable(skb);
 	if (rt != NULL)
