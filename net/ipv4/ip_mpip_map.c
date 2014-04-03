@@ -624,46 +624,49 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				return 0;
 			}
 
-			item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
-			item->skb = skb;
-			item->fbjiffies = jiffies;
-			INIT_LIST_HEAD(&(item->list));
-			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-			{
-				if (tcp_hdr(tcp_buf->skb)->seq > tcph->seq)
-				{
-					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
-					break;
-				}
-				else if (list_is_last(&(tcp_buf->list), &(socket_session->tcp_buf)))
-				{
-					list_add(&(item->list), &(socket_session->tcp_buf));
-					break;
-				}
-			}
+//			item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+//			item->skb = skb;
+//			item->fbjiffies = jiffies;
+//			INIT_LIST_HEAD(&(item->list));
 
-			if (list_count(socket_session->tcp_buf) >= sysctl_mpip_tcp_buf_count)
-			{
-				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-				{
-					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-					//dst_input(tcp_buf->skb);
-					list_del(&(tcp_buf->list));
-					kfree(tcp_buf);
-				}
-			}
+			printk("tcp->seq: %d, %s, %d\n", tcph->seq, __FILE__, __LINE__);
 
-			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-			{
-				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
-				{
-					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-					//dst_input(tcp_buf->skb);
-					list_del(&(tcp_buf->list));
-					kfree(tcp_buf);
-				}
-			}
+//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+//			{
+//				if (tcp_hdr(tcp_buf->skb)->seq > tcph->seq)
+//				{
+//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+//					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+//					break;
+//				}
+//				else if (list_is_last(&(tcp_buf->list), &(socket_session->tcp_buf)))
+//				{
+//					list_add(&(item->list), &(socket_session->tcp_buf));
+//					break;
+//				}
+//			}
+//
+//			if (list_count(socket_session->tcp_buf) >= sysctl_mpip_tcp_buf_count)
+//			{
+//				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+//				{
+//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+//					//dst_input(tcp_buf->skb);
+//					list_del(&(tcp_buf->list));
+//					kfree(tcp_buf);
+//				}
+//			}
+//
+//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+//			{
+//				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
+//				{
+//					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
+//					//dst_input(tcp_buf->skb);
+//					list_del(&(tcp_buf->list));
+//					kfree(tcp_buf);
+//				}
+//			}
 
 			return 1;
 		}
