@@ -648,7 +648,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 				{
 					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-					dst_input(tcp_buf->skb);
+					//dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);
 				}
@@ -659,7 +659,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
 					printk("tcp->seq: %d, %s, %d\n", tcp_hdr(tcp_buf->skb)->seq, __FILE__, __LINE__);
-					dst_input(tcp_buf->skb);
+					//dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);
 				}
