@@ -626,9 +626,6 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				return 0;
 			}
 
-			printk("tcp->seq: %u, tcp->ack_seq: %u, skb->len: %u %s, %d\n",
-					ntohl(tcph->seq), ntohl(tcph->ack_seq), skb->len, __FILE__, __LINE__);
-
 			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 			{
 				if (ntohl(tcp_hdr(tcp_buf->skb)->seq) > ntohl(tcph->seq))
@@ -653,17 +650,19 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				INIT_LIST_HEAD(&(item->list));
 
 				list_add(&(item->list), &(socket_session->tcp_buf));
+
+				added = true;
 				break;
 			}
 
 
 			count = list_count(&(socket_session->tcp_buf));
-			printk("count: %d, %s, %d\n", count, __FILE__, __LINE__);
+			mpip_log("count: %d, %s, %d\n", count, __FILE__, __LINE__);
 			if (count >= sysctl_mpip_tcp_buf_count)
 			{
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 				{
-					printk("send 1: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
+					mpip_log("send 1: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);
@@ -674,7 +673,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
-					printk("send 2: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
+					mpip_log("send 2: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);

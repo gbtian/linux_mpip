@@ -391,6 +391,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		unsigned char session_id = get_session(skb);
 		//if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
 		//	return NET_RX_SUCCESS;
+
+		printk("tcp->seq: %u, tcp->ack_seq: %u, skb->len: %u %s, %d\n",
+				ntohl(tcp_hdr(skb)->seq), ntohl(tcp_hdr(skb)->ack_seq), skb->len, __FILE__, __LINE__);
+
 		if (session_id > 0)
 			add_to_tcp_skb_buf(skb, session_id);
 	}
