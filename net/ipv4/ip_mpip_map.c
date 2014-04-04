@@ -652,7 +652,6 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				list_add(&(item->list), &(socket_session->tcp_buf));
 
 				added = true;
-				break;
 			}
 
 
