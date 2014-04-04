@@ -625,7 +625,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				return 0;
 			}
 
-			printk("tcp->seq: %u, skb->len: %u %s, %d\n", ntohl(tcph->seq), skb->len, __FILE__, __LINE__);
+			printk("tcp->seq: %u, tcp->ack_seq: %u, skb->len: %u %s, %d\n",
+					ntohl(tcph->seq), ntohl(tcph->ack_seq), skb->len, __FILE__, __LINE__);
 
 			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 			{
