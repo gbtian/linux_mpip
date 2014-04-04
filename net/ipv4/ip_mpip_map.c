@@ -608,6 +608,7 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 
 int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 {
+	int count = 0;
 	struct tcphdr *tcph = NULL;
 	struct socket_session_table *socket_session;
 	struct tcp_skb_buf *item = NULL;
@@ -624,7 +625,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				return 0;
 			}
 
-			printk("tcp->seq: %u, %s, %d\n", ntohl(tcph->seq), __FILE__, __LINE__);
+			printk("tcp->seq: %u, skb->len: %u %s, %d\n", ntohl(tcph->seq), skb->len, __FILE__, __LINE__);
 
 			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 			{
@@ -636,6 +637,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 					INIT_LIST_HEAD(&(item->list));
 
 					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+
+					printk("insert: %s, %d\n", __FILE__, __LINE__);
 					break;
 				}
 				else if (list_is_last(&(tcp_buf->list), &(socket_session->tcp_buf)))
@@ -646,11 +649,15 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 					INIT_LIST_HEAD(&(item->list));
 
 					list_add(&(item->list), &(socket_session->tcp_buf));
+
+					printk("add: %s, %d\n", __FILE__, __LINE__);
 					break;
 				}
 			}
 
-			if (list_count(&(socket_session->tcp_buf)) >= sysctl_mpip_tcp_buf_count)
+			count = list_count(&(socket_session->tcp_buf));
+			printk("count: %d, %s, %d\n", count, __FILE__, __LINE__);
+			if (count >= sysctl_mpip_tcp_buf_count)
 			{
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 				{
