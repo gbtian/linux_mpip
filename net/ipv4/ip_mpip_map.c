@@ -623,7 +623,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			if (!tcph)
 			{
 				mpip_log("%s, %d\n", __FILE__, __LINE__);
-				return 0;
+				goto fail;
 			}
 
 			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
@@ -631,6 +631,10 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				if (ntohl(tcp_hdr(tcp_buf->skb)->seq) > ntohl(tcph->seq))
 				{
 					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+
+					if (!item)
+						goto fail;
+
 					item->skb = skb;
 					item->fbjiffies = jiffies;
 					INIT_LIST_HEAD(&(item->list));
@@ -645,6 +649,9 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			if (!added)
 			{
 				item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+				if (!item)
+					goto fail;
+
 				item->skb = skb;
 				item->fbjiffies = jiffies;
 				INIT_LIST_HEAD(&(item->list));
@@ -682,6 +689,9 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			return 1;
 		}
 	}
+
+fail:
+	mpip_log("Fail: %s, %d\n", __FILE__, __LINE__);
 	return 0;
 }
 
