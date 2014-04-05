@@ -635,7 +635,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 					if (!item)
 						goto fail;
 
-					item->seq = ntohl(tcph->seq);
+					//item->seq = ntohl(tcph->seq);
+					item->seq = 1;
 					//item->skb = skb;
 					item->fbjiffies = jiffies;
 					INIT_LIST_HEAD(&(item->list));
@@ -653,7 +654,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				if (!item)
 					goto fail;
 
-				item->seq = ntohl(tcph->seq);
+				//item->seq = ntohl(tcph->seq);
+				item->seq = 1;
 				//item->skb = skb;
 				item->fbjiffies = jiffies;
 				INIT_LIST_HEAD(&(item->list));
