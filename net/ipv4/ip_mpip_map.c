@@ -626,33 +626,35 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				goto fail;
 			}
 
-//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-//			{
-//				if (ntohl(tcp_hdr(tcp_buf->skb)->seq) > ntohl(tcph->seq))
-//				{
-//					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
-//
-//					if (!item)
-//						goto fail;
-//
-//					item->skb = skb;
-//					item->fbjiffies = jiffies;
-//					INIT_LIST_HEAD(&(item->list));
-//
-//					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
-//
-//					added = true;
-//
-//					break;
-//				}
-//			}
-//			if (!added)
+			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+			{
+				if (tcp_buf->seq > ntohl(tcph->seq))
+				{
+					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+
+					if (!item)
+						goto fail;
+
+					item->seq = ntohl(tcph->seq);
+					//item->skb = skb;
+					item->fbjiffies = jiffies;
+					INIT_LIST_HEAD(&(item->list));
+
+					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+
+					added = true;
+
+					break;
+				}
+			}
+			if (!added)
 			{
 				item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
 				if (!item)
 					goto fail;
 
-				item->skb = skb;
+				item->seq = ntohl(tcph->seq);
+				//item->skb = skb;
 				item->fbjiffies = jiffies;
 				INIT_LIST_HEAD(&(item->list));
 
@@ -668,8 +670,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 				{
-					//mpip_log("send 1: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
-					mpip_log("send 1: %s, %d\n", __FILE__, __LINE__);
+					mpip_log("send 1: %u, %s, %d\n", tcp_buf->seq, __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);
@@ -680,8 +681,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
-					//mpip_log("send 2: %u, %s, %d\n", ntohl(tcp_hdr(tcp_buf->skb)->seq), __FILE__, __LINE__);
-					mpip_log("send 2: %s, %d\n", __FILE__, __LINE__);
+					mpip_log("send 2: %u, %s, %d\n", tcp_buf->seq, __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
 					list_del(&(tcp_buf->list));
 					kfree(tcp_buf);

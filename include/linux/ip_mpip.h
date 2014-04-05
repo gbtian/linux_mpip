@@ -138,7 +138,8 @@ struct path_info_table {
 //static LIST_HEAD(ss_head);
 
 struct tcp_skb_buf{
-	struct sk_buff *skb;
+	__u32	seq;
+	//struct sk_buff *skb;
 	unsigned long fbjiffies;
 	struct list_head list;
 };
