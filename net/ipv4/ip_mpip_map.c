@@ -619,12 +619,12 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 	{
 		if (socket_session->session_id == session_id)
 		{
-			tcph = tcp_hdr(skb);
-			if (!tcph)
-			{
-				mpip_log("%s, %d\n", __FILE__, __LINE__);
-				goto fail;
-			}
+//			tcph = tcp_hdr(skb);
+//			if (!tcph)
+//			{
+//				mpip_log("%s, %d\n", __FILE__, __LINE__);
+//				goto fail;
+//			}
 
 //			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 //			{
