@@ -666,6 +666,10 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 
 			count = list_count(&(socket_session->tcp_buf));
 			mpip_log("count: %d, %s, %d\n", count, __FILE__, __LINE__);
+
+			if (sysctl_mpip_send)
+				return 1;
+
 			if (count >= sysctl_mpip_tcp_buf_count)
 			{
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
@@ -676,6 +680,9 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 					kfree(tcp_buf);
 				}
 			}
+
+			if (sysctl_mpip_rcv)
+				return 1;
 
 			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 			{
