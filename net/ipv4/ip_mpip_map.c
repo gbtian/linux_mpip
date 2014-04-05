@@ -626,28 +626,29 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				goto fail;
 			}
 
-			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-			{
-				if (tcp_buf->seq > ntohl(tcph->seq))
-				{
-					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
-
-					if (!item)
-						goto fail;
-
+//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+//			{
+//				if (tcp_buf->seq > ntohl(tcph->seq))
+//				{
+//					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
+//
+//					if (!item)
+//						goto fail;
+//
 					//item->seq = ntohl(tcph->seq);
-					item->seq = 1;
+//					item->seq = 1;
 					//item->skb = skb;
-					item->fbjiffies = jiffies;
-					INIT_LIST_HEAD(&(item->list));
+//					item->fbjiffies = jiffies;
+//					INIT_LIST_HEAD(&(item->list));
 
-					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+//					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
+//
+//					added = true;
 
-					added = true;
+//					break;
+//				}
+//			}
 
-					break;
-				}
-			}
 			if (!added)
 			{
 				item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
