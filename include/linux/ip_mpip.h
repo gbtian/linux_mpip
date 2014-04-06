@@ -140,7 +140,7 @@ struct path_info_table {
 
 struct tcp_skb_buf{
 	__u32	seq;
-	//struct sk_buff *skb;
+	struct sk_buff *skb;
 	unsigned long fbjiffies;
 	//struct list_head list;
 };

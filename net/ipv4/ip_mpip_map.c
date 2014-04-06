@@ -631,6 +631,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				if (socket_session->tcp_buf[i].seq == 0)
 				{
 					socket_session->tcp_buf[i].seq = ntohl(tcph->seq);
+					socket_session->tcp_buf[i].skb = skb;
 					socket_session->tcp_buf[i].fbjiffies = jiffies;
 					socket_session->buf_count += 1;
 
@@ -638,14 +639,18 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				}
 				else if (socket_session->tcp_buf[i].seq > ntohl(tcph->seq))
 				{
+					mpip_log("out of order: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
 					for (j = MPIP_TCP_BUF_LEN - 1; j > i; --j)
 					{
 						socket_session->tcp_buf[j].seq =
 								socket_session->tcp_buf[j - 1].seq;
+						socket_session->tcp_buf[j].skb =
+								socket_session->tcp_buf[j - 1].skb;
 						socket_session->tcp_buf[j].fbjiffies =
 								socket_session->tcp_buf[j - 1].fbjiffies;
 					}
 					socket_session->tcp_buf[i].seq = ntohl(tcph->seq);
+					socket_session->tcp_buf[i].skb = skb;
 					socket_session->tcp_buf[i].fbjiffies = jiffies;
 					socket_session->buf_count += 1;
 
@@ -657,8 +662,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			{
 				for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
 				{
-					mpip_log("send 1: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
-					//dst_input(tcp_buf->skb);
+					//mpip_log("send 1: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
+					dst_input(socket_session->tcp_buf[i].skb);
 					socket_session->tcp_buf[i].seq = 0;
 					socket_session->buf_count -= 1;
 				}
@@ -670,7 +675,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				    (jiffies - socket_session->tcp_buf[i].fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
 					mpip_log("send 2: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
-					//dst_input(tcp_buf->skb);
+					dst_input(socket_session->tcp_buf[i].skb);
 					socket_session->tcp_buf[i].seq = 0;
 					socket_session->buf_count -= 1;
 
@@ -678,6 +683,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 					{
 						socket_session->tcp_buf[j].seq =
 								socket_session->tcp_buf[j + 1].seq;
+						socket_session->tcp_buf[j].skb =
+								socket_session->tcp_buf[j + 1].skb;
 						socket_session->tcp_buf[j].fbjiffies =
 								socket_session->tcp_buf[j + 1].fbjiffies;
 					}
@@ -685,10 +692,10 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			}
 
 			mpip_log("%u, %u, %u, %u, %u\n", socket_session->tcp_buf[0].seq,
-											socket_session->tcp_buf[1].seq,
-											socket_session->tcp_buf[2].seq,
-											socket_session->tcp_buf[3].seq,
-											socket_session->tcp_buf[4].seq);
+											 socket_session->tcp_buf[1].seq,
+											 socket_session->tcp_buf[2].seq,
+											 socket_session->tcp_buf[3].seq,
+											 socket_session->tcp_buf[4].seq);
 
 			return 1;
 		}
