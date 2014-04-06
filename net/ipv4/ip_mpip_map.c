@@ -13,6 +13,7 @@ static LIST_HEAD(pi_head);
 static LIST_HEAD(ss_head);
 static LIST_HEAD(la_head);
 static LIST_HEAD(ps_head);
+static LIST_HEAD(tb_head);
 
 int global_stat_1 = 0;
 int global_stat_2 = 0;
@@ -661,13 +662,15 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				item->fbjiffies = jiffies;
 				INIT_LIST_HEAD(&(item->list));
 
-				list_add(&(item->list), &(socket_session->tcp_buf));
+				//list_add(&(item->list), &(socket_session->tcp_buf));
+				list_add(&(item->list), &tb_head);
 
 				added = true;
 			}
 
 
-			count = list_count(&(socket_session->tcp_buf));
+			//count = list_count(&(socket_session->tcp_buf));
+			count = list_count(&tb_head);
 			mpip_log("count: %d, %s, %d\n", count, __FILE__, __LINE__);
 
 			if (sysctl_mpip_send)
@@ -675,7 +678,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 
 			if (count >= sysctl_mpip_tcp_buf_count)
 			{
-				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+				//list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+				list_for_each_entry_safe(tcp_buf, tmp_buf, &tb_head, list)
 				{
 					mpip_log("send 1: %u, %s, %d\n", tcp_buf->seq, __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
@@ -687,7 +691,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			if (sysctl_mpip_rcv)
 				return 1;
 
-			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+			list_for_each_entry_safe(tcp_buf, tmp_buf, &tb_head, list)
 			{
 				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
