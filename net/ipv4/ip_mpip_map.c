@@ -666,7 +666,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 
 			for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
 			{
-				if ((jiffies - socket_session->tcp_buf[i].fbjiffies) / HZ >= sysctl_mpip_hb)
+				if (socket_session->tcp_buf[i].seq > 0 && 
+				    (jiffies - socket_session->tcp_buf[i].fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
 					mpip_log("send 2: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
