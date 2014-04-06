@@ -663,7 +663,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
 				{
 					//mpip_log("send 1: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
-					dst_input(socket_session->tcp_buf[i].skb);
+					//dst_input(socket_session->tcp_buf[i].skb);
 					socket_session->tcp_buf[i].seq = 0;
 					socket_session->buf_count -= 1;
 				}
@@ -675,7 +675,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				    (jiffies - socket_session->tcp_buf[i].fbjiffies) / HZ >= sysctl_mpip_hb)
 				{
 					mpip_log("send 2: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
-					dst_input(socket_session->tcp_buf[i].skb);
+					//dst_input(socket_session->tcp_buf[i].skb);
 					socket_session->tcp_buf[i].seq = 0;
 					socket_session->buf_count -= 1;
 
