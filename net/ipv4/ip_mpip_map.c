@@ -13,7 +13,6 @@ static LIST_HEAD(pi_head);
 static LIST_HEAD(ss_head);
 static LIST_HEAD(la_head);
 static LIST_HEAD(ps_head);
-static LIST_HEAD(tb_head);
 
 int global_stat_1 = 0;
 int global_stat_2 = 0;
