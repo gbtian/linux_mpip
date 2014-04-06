@@ -108,18 +108,6 @@ char *in_ntoa(unsigned long in)
 	return(buff);
 }
 
-int list_count(struct list_head *head)
-{
-	struct tcp_skb_buf *tmp = NULL;
-	int count = 0;
-	list_for_each_entry(tmp, head, list)
-	{
-		++count;
-	}
-
-	return count;
-}
-
 int add_working_ip(unsigned char *node_id, __be32 addr)
 {
 	/* todo: need sanity checks, leave it for now */
@@ -464,6 +452,7 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 					   __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
+	int i;
 
 	if (!is_lan_addr(saddr) || !is_lan_addr(daddr))
 	{
@@ -486,7 +475,13 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 
 	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
 	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
-	INIT_LIST_HEAD(&(item->tcp_buf));
+
+	for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
+	{
+		item->tcp_buf[i].seq = 0;
+	}
+	item->buf_count = 0;
+
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -531,7 +526,7 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 		 	 	 	 	unsigned char session_id)
 {
 	struct socket_session_table *item = NULL;
-	int sid;
+	int sid, i;
 
 
 	if (!src_node_id || !dst_node_id || !session_id)
@@ -557,7 +552,13 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 
 	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
 	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
-	INIT_LIST_HEAD(&(item->tcp_buf));
+
+	for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
+	{
+		item->tcp_buf[i].seq = 0;
+	}
+	item->buf_count = 0;
+
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -609,98 +610,85 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 
 int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 {
-	int count = 0;
+	int count = 0, i, j;
 	bool added = false;
 	struct tcphdr *tcph = NULL;
 	struct socket_session_table *socket_session;
-	struct tcp_skb_buf *item = NULL;
 	struct tcp_skb_buf *tcp_buf = NULL;
-	struct tcp_skb_buf *tmp_buf = NULL;
+
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
 		if (socket_session->session_id == session_id)
 		{
-//			tcph = tcp_hdr(skb);
-//			if (!tcph)
-//			{
-//				mpip_log("%s, %d\n", __FILE__, __LINE__);
-//				goto fail;
-//			}
-
-//			list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-//			{
-//				if (tcp_buf->seq > ntohl(tcph->seq))
-//				{
-//					item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
-//
-//					if (!item)
-//						goto fail;
-//
-					//item->seq = ntohl(tcph->seq);
-//					item->seq = 1;
-					//item->skb = skb;
-//					item->fbjiffies = jiffies;
-//					INIT_LIST_HEAD(&(item->list));
-
-//					__list_add(&(item->list), tcp_buf->list.prev, &(tcp_buf->list));
-//
-//					added = true;
-
-//					break;
-//				}
-//			}
-
-			if (!added)
+			tcph = tcp_hdr(skb);
+			if (!tcph)
 			{
-				item = kzalloc(sizeof(struct tcp_skb_buf),	GFP_ATOMIC);
-				if (!item)
-					goto fail;
-
-				//item->seq = ntohl(tcph->seq);
-				item->seq = 1;
-				//item->skb = skb;
-				item->fbjiffies = jiffies;
-				INIT_LIST_HEAD(&(item->list));
-
-				//list_add(&(item->list), &(socket_session->tcp_buf));
-				list_add(&(item->list), &tb_head);
-
-				added = true;
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
+				goto fail;
 			}
 
-
-			//count = list_count(&(socket_session->tcp_buf));
-			count = list_count(&tb_head);
-			mpip_log("count: %d, %s, %d\n", count, __FILE__, __LINE__);
-
-			if (sysctl_mpip_send)
-				return 1;
-
-			if (count >= sysctl_mpip_tcp_buf_count)
+			for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
 			{
-				//list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
-				list_for_each_entry_safe(tcp_buf, tmp_buf, &tb_head, list)
+				if (socket_session->tcp_buf[i].seq == 0)
 				{
-					mpip_log("send 1: %u, %s, %d\n", tcp_buf->seq, __FILE__, __LINE__);
-					//dst_input(tcp_buf->skb);
-					list_del(&(tcp_buf->list));
-					kfree(tcp_buf);
+					socket_session->tcp_buf[i].seq = ntohl(tcph->seq);
+					socket_session->tcp_buf[i].fbjiffies = jiffies;
+					socket_session->buf_count += 1;
+
+					break;
+				}
+				else if (socket_session->tcp_buf[i].seq > ntohl(tcph->seq))
+				{
+					for (j = MPIP_TCP_BUF_LEN - 1; j > i; --j)
+					{
+						socket_session->tcp_buf[j].seq =
+								socket_session->tcp_buf[j - 1].seq;
+						socket_session->tcp_buf[j].fbjiffies =
+								socket_session->tcp_buf[j - 1].fbjiffies;
+					}
+					socket_session->tcp_buf[i].seq = ntohl(tcph->seq);
+					socket_session->tcp_buf[i].fbjiffies = jiffies;
+					socket_session->buf_count += 1;
+
+					break;
 				}
 			}
 
-			if (sysctl_mpip_rcv)
-				return 1;
-
-			list_for_each_entry_safe(tcp_buf, tmp_buf, &tb_head, list)
+			if (socket_session->buf_count == MPIP_TCP_BUF_LEN)
 			{
-				if ((jiffies - tcp_buf->fbjiffies) / HZ >= sysctl_mpip_hb)
+				for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
 				{
-					mpip_log("send 2: %u, %s, %d\n", tcp_buf->seq, __FILE__, __LINE__);
+					mpip_log("send 1: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
 					//dst_input(tcp_buf->skb);
-					list_del(&(tcp_buf->list));
-					kfree(tcp_buf);
+					socket_session->tcp_buf[i].seq = 0;
+					socket_session->buf_count -= 1;
 				}
 			}
+
+			for (i = 0; i < MPIP_TCP_BUF_LEN; ++i)
+			{
+				if ((jiffies - socket_session->tcp_buf[i].fbjiffies) / HZ >= sysctl_mpip_hb)
+				{
+					mpip_log("send 2: %u, %s, %d\n", socket_session->tcp_buf[i].seq, __FILE__, __LINE__);
+					//dst_input(tcp_buf->skb);
+					socket_session->tcp_buf[i].seq = 0;
+					socket_session->buf_count -= 1;
+
+					for (j = i; j < MPIP_TCP_BUF_LEN - 1; ++j)
+					{
+						socket_session->tcp_buf[j].seq =
+								socket_session->tcp_buf[j + 1].seq;
+						socket_session->tcp_buf[j].fbjiffies =
+								socket_session->tcp_buf[j + 1].fbjiffies;
+					}
+				}
+			}
+
+			mpip_log("%u, %u, %u, %u, %u\n", socket_session->tcp_buf[0].seq,
+											socket_session->tcp_buf[1].seq,
+											socket_session->tcp_buf[2].seq,
+											socket_session->tcp_buf[3].seq,
+											socket_session->tcp_buf[4].seq);
 
 			return 1;
 		}
