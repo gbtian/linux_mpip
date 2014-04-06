@@ -691,11 +691,11 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				}
 			}
 
-			mpip_log("%u, %u, %u, %u, %u\n", socket_session->tcp_buf[0].seq,
-											 socket_session->tcp_buf[1].seq,
-											 socket_session->tcp_buf[2].seq,
-											 socket_session->tcp_buf[3].seq,
-											 socket_session->tcp_buf[4].seq);
+//			mpip_log("%u, %u, %u, %u, %u\n", socket_session->tcp_buf[0].seq,
+//											 socket_session->tcp_buf[1].seq,
+//											 socket_session->tcp_buf[2].seq,
+//											 socket_session->tcp_buf[3].seq,
+//											 socket_session->tcp_buf[4].seq);
 
 			return 1;
 		}
