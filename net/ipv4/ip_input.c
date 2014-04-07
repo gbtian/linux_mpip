@@ -398,10 +398,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		printk("seq: %u, next 1: %u, next 2: %u, tcp_header_len: %d, "
 				"doff: %d, ihl: %d, skb->len: %u\n",
 				ntohl(tcp_hdr(skb)->seq),
+				skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff * 4 + ntohl(tcp_hdr(skb)->seq),
 				skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
-				skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff + ntohl(tcp_hdr(skb)->seq),
+				tcp_hdr(skb)->doff * 4,
 				tcp_header_len,
-				tcp_hdr(skb)->doff,
 				iph->ihl * 4,
 				skb->len);
 
