@@ -395,10 +395,15 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		u16 tcp_header_len = sizeof(struct tcphdr) +
 				(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
 
-		printk("tcp->seq: %u, next seq: %u, skb->len: %u %s, %d\n",
+		printk("seq: %u, next 1: %u, next 2: %u, tcp_header_len: %d, "
+				"doff: %d, ihl: %d, skb->len: %u\n",
 				ntohl(tcp_hdr(skb)->seq),
+				skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
 				skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff + ntohl(tcp_hdr(skb)->seq),
-				skb->len, __FILE__, __LINE__);
+				tcp_header_len,
+				tcp_hdr(skb)->doff,
+				iph->ihl * 4,
+				skb->len);
 
 		if (session_id > 0)
 			add_to_tcp_skb_buf(skb, session_id);
