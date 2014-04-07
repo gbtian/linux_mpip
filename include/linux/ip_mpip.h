@@ -142,7 +142,7 @@ struct tcp_skb_buf{
 	__u32	seq;
 	struct sk_buff *skb;
 	unsigned long fbjiffies;
-	//struct list_head list;
+	struct list_head list;
 };
 
 struct socket_session_table {
@@ -150,7 +150,9 @@ struct socket_session_table {
 	unsigned char	dst_node_id[MPIP_OPT_NODE_ID_LEN]; /* remote node id*/
 	unsigned char   session_id; /* sender's session id*/
 
-	struct tcp_skb_buf tcp_buf[MPIP_TCP_BUF_LEN];
+	struct list_head tcp_buf;
+	__u32	next_seq;
+	//struct tcp_skb_buf tcp_buf[MPIP_TCP_BUF_LEN];
 	int buf_count;
 
 	/* socket information seen at the receiver side*/
