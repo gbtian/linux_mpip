@@ -397,7 +397,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 		printk("tcp->seq: %u, next seq: %u, skb->len: %u %s, %d\n",
 				ntohl(tcp_hdr(skb)->seq),
-				skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
+				skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff + ntohl(tcp_hdr(skb)->seq),
 				skb->len, __FILE__, __LINE__);
 
 		if (session_id > 0)
