@@ -626,7 +626,9 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 
 			if ((socket_session->next_seq == 0) || (ntohl(tcph->seq) == socket_session->next_seq))
 			{
+				printk("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				socket_session->next_seq = skb->len - ip_hdr(skb)->ihl * 4 - tcph->doff * 4 + ntohl(tcph->seq);
+				printk("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 				goto success;
 			}

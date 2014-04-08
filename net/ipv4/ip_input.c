@@ -387,26 +387,24 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 //	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
+	u16 tcp_header_len = sizeof(struct tcphdr) +
+			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
+
+	mpip_log("seq: %u, next 1: %u, next 2: %u, tcp_header_len: %d, "
+			"doff: %d, ihl: %d, skb->len: %u\n",
+			ntohl(tcp_hdr(skb)->seq),
+			skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff * 4 + ntohl(tcp_hdr(skb)->seq),
+			skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
+			tcp_hdr(skb)->doff * 4,
+			tcp_header_len,
+			iph->ihl * 4,
+			skb->len);
+
 	if (sysctl_mpip_enabled && iph->protocol == IPPROTO_TCP)
 	{
-	
-		u16 tcp_header_len = sizeof(struct tcphdr) +
-				(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
-
-		mpip_log("seq: %u, next 1: %u, next 2: %u, tcp_header_len: %d, "
-				"doff: %d, ihl: %d, skb->len: %u\n",
-				ntohl(tcp_hdr(skb)->seq),
-				skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff * 4 + ntohl(tcp_hdr(skb)->seq),
-				skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
-				tcp_hdr(skb)->doff * 4,
-				tcp_header_len,
-				iph->ihl * 4,
-				skb->len);
-
 		unsigned char session_id = get_session(skb);
 		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
 			return NET_RX_SUCCESS;
-
 
 //		if (session_id > 0)
 //			add_to_tcp_skb_buf(skb, session_id);
