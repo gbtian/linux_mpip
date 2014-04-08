@@ -624,10 +624,11 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				goto fail;
 			}
 
-			if (ntohl(tcph->seq) < socket_session->next_seq)
+			if ((ntohl(tcph->seq) < socket_session->next_seq) &&
+				(socket_session->next_seq) - ntohl(tcph->seq) < 0xFFFF)
 			{
 				printk("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
-                                dst_input(skb);
+				dst_input(skb);
 				goto success;
 			}
 			if ((socket_session->next_seq == 0) ||
