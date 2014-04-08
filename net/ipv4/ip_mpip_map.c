@@ -361,10 +361,17 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (path_info->posdelay + sysctl_mpip_bw_factor == 1)
-			continue;
+		if (sysctl_mpip_rcv)
+		{
+			if (path_info->posdelay + sysctl_mpip_bw_factor == 1)
+				continue;
 
-		path_info->bw = 1000 - (1000 * (path_info->posdelay - 1)) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
+			path_info->bw = 1000 - (1000 * (path_info->posdelay - 1)) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
+		}
+		else
+		{
+			path_info->bw = 1000;
+		}
 	}
 
 	return 1;
@@ -945,7 +952,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 		*rcvh = e_path_stat->rcvh;
 		*rcv = e_path_stat->rcv;
 
-		e_path_stat->rcvc = 0;
+		//e_path_stat->rcvc = 0;
 		e_path_stat->rcvh = 0;
 		e_path_stat->rcv = 0;
 
@@ -1135,6 +1142,7 @@ asmlinkage long sys_mpip(void)
 				path_stat->node_id[0], path_stat->node_id[1]);
 
 		printk("%d  ", path_stat->path_id);
+		printk("%u  ", path_stat->rcvc);
 		printk("%d  ", path_stat->rcvh);
 //		printk("%d  ", atomic_read(&(path_stat->rcv)));
 		printk("%d  ", path_stat->rcv);

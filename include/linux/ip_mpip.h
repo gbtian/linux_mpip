@@ -171,7 +171,7 @@ struct path_stat_table {
 	__be32	saddr; /* source ip address*/
 	__be32	daddr; /* destination ip address*/
 //	atomic_t  rcv;  /* number of pkt received on this path */
-	__u16  rcvc;    /* number of pkt received on this path */
+	__u32  rcvc;    /* number of pkt received on this path */
 	unsigned char	rcvh;  /* number of mega received on this path */
 	__u16  rcv;
 	unsigned long fbjiffies; /* last feedback time of this path's stat */
