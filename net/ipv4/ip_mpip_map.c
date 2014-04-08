@@ -632,6 +632,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				printk("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 
+recursive:
 				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 				{
 					if (tcp_buf->seq == socket_session->next_seq)
@@ -646,6 +647,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 						kfree(tcp_buf);
 
 						socket_session->buf_count -= 1;
+
+						goto recursive;
 					}
 				}
 				goto success;
