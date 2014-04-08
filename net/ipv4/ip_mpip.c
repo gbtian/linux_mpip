@@ -154,7 +154,7 @@ void mpip_log(const char *fmt, ...)
 //	mm_segment_t fs;
 //	loff_t pos;
 
-	if (!sysctl_mpip_enabled || !sysctl_mpip_log)
+	if (!sysctl_mpip_log)
 		return;
 
 	memset(log_buf, 0, 256);

@@ -390,8 +390,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
 
-	printk("seq: %u, next 1: %u, next 2: %u, tcp_header_len: %d, "
-			"doff: %d, ihl: %d, skb->len: %u\n",
+	mpip_log("seq: %u, next 1: %u, next 2: %u, doff: %d, "
+			"tcp_header_len: %d, ihl: %d, skb->len: %u\n",
 			ntohl(tcp_hdr(skb)->seq),
 			skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff * 4 + ntohl(tcp_hdr(skb)->seq),
 			skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
