@@ -114,6 +114,8 @@ struct path_info_table {
 	__be32	daddr; /* destination ip address*/
 	unsigned char rcvrate; /* rcv rate */
 	__u32 losspkt; /*the amount of data that are lost*/
+	int 	delaycount; /*how many delays have been calculated. Just use the first 10,
+	 	 	 	 	 	  dont wait until congestion happens*/
 	int     delay;
 	int 	posdelay;
 	__u32	bw;  /* bandwidth */

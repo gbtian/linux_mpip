@@ -303,10 +303,12 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 			if (path_info->delay == 0)
 			{
 				path_info->delay = midtime - delay;
+				path_info->delaycount += 1;
 			}
-			else
+			else if (path_info->delaycount < 10)
 			{
 				path_info->delay = ((int)(path_info->delay * 9 + midtime - delay)) / 10;
+				path_info->delaycount += 1;
 			}
 
 			break;
@@ -772,6 +774,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->fbjiffies = jiffies;
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
+		item->delaycount = 0;
 		item->delay = 0;
 		item->sentc = 0;
 		item->senth = 0;
@@ -1181,6 +1184,7 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
+		printk("%d  ", path_info->delaycount);
 
 		printk("%d  ", path_info->delay);
 
