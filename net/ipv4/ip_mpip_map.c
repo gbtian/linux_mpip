@@ -659,7 +659,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			list_add(&(item->list), &(socket_session->tcp_buf));
 			socket_session->buf_count += 1;
 
-			printk("out of order: %u, %s, %d\n", ntohl(tcph->seq), __FILE__, __LINE__);
+			printk("out of order: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 
 			goto success;
 		}

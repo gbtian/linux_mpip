@@ -2310,7 +2310,7 @@ int __tcp_retransmit_skb(struct sock *sk, struct sk_buff *skb)
 	struct inet_connection_sock *icsk = inet_csk(sk);
 	unsigned int cur_mss;
 
-	printk("retrans: %s, %d\n", __FILE__, __LINE__);
+//	printk("retrans: %s, %d\n", __FILE__, __LINE__);
 
 	/* Inconslusive MTU probe */
 	if (icsk->icsk_mtup.probe_size) {

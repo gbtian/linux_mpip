@@ -1670,10 +1670,10 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 		inet_csk(newsk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
 	newinet->inet_id = newtp->write_seq ^ jiffies;
 
-	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, newinet->inet_saddr);
-	print_addr(__FUNCTION__, newinet->inet_rcv_saddr);
-	print_addr(__FUNCTION__, newinet->inet_daddr);
+//	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(__FUNCTION__, newinet->inet_saddr);
+//	print_addr(__FUNCTION__, newinet->inet_rcv_saddr);
+//	print_addr(__FUNCTION__, newinet->inet_daddr);
 
 
 	if (!dst) {
