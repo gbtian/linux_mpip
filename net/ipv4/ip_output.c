@@ -216,8 +216,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled && (!(opt && opt->opt.optlen)))
 	{
-		mpip_compose_opt(skb, saddr, daddr, &new_saddr, &new_daddr);
-		mpip_opt_added = true;
+		if (mpip_compose_opt(skb, saddr, daddr, &new_saddr, &new_daddr))
+		{
+                        mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
+			mpip_opt_added = true;
+		}
 	}
 
 //	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -518,8 +521,11 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 //	print_addr(NULL, fl->u.ip4.daddr);
 	if (sysctl_mpip_enabled && !(inet_opt && inet_opt->opt.optlen))
 	{
-		mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr);
-		mpip_opt_added = true;
+		if (mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr))
+		{	
+			mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
+			mpip_opt_added = true;
+		}
 	}
 
 	fl4 = &fl->u.ip4;
