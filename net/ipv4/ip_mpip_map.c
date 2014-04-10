@@ -256,6 +256,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	{
 		if (path_info->path_id == path_id)
 		{
+			path_info->delay = delay;
 			if (path_info->min_delay < delay || path_info->min_delay == 0)
 			{
 				path_info->min_delay = delay;
@@ -538,7 +539,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			if ((ntohl(tcph->seq) < socket_session->next_seq) &&
 				(socket_session->next_seq) - ntohl(tcph->seq) < 0xFFFFFFF)
 			{
-				printk("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+				mpip_log("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 				goto success;
 			}
@@ -548,7 +549,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				(ntohl(tcph->seq) == socket_session->next_seq + 1)) //for three-way handshake
 			{
 				socket_session->next_seq = skb->len - ip_hdr(skb)->ihl * 4 - tcph->doff * 4 + ntohl(tcph->seq);
-				printk("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+				mpip_log("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 
 recursive:
@@ -558,7 +559,7 @@ recursive:
 					{
 						socket_session->next_seq = tcp_buf->skb->len - ip_hdr(tcp_buf->skb)->ihl * 4 -
 																	   tcp_hdr(tcp_buf->skb)->doff * 4 + tcp_buf->seq;
-						printk("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
+						mpip_log("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
 
 						dst_input(tcp_buf->skb);
 

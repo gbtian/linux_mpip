@@ -218,8 +218,11 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	{
 		if (mpip_compose_opt(skb, saddr, daddr, &new_saddr, &new_daddr))
 		{
-                        mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
 			mpip_opt_added = true;
+		}
+		else
+		{
+			mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
 		}
 	}
 
@@ -522,9 +525,12 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	if (sysctl_mpip_enabled && !(inet_opt && inet_opt->opt.optlen))
 	{
 		if (mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr, &new_saddr, &new_daddr))
-		{	
-			mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
+		{
 			mpip_opt_added = true;
+		}
+		else
+		{
+			mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
 		}
 	}
 
