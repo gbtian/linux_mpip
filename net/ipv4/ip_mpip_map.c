@@ -214,24 +214,6 @@ struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
-unsigned char add_rcv_for_path(struct sk_buff *skb, __be32 saddr, __be32 daddr, u16 pkt_len)
-{
-	struct path_stat_table *path_stat = find_path_stat_by_addr(saddr, daddr);
-	if (path_stat)
-	{
-		path_stat->rcvc += 1;
-		path_stat->rcv += pkt_len>>3;
-
-		if (path_stat->rcv >= 60000)
-		{
-			path_stat->rcvh += (path_stat->rcv / 60000);
-			path_stat->rcv = (path_stat->rcv % 60000);
-		}
-	}
-
-	return 1;
-}
-
 void send_mpip_hb(struct sk_buff *skb)
 {
 	if (!skb)
@@ -245,71 +227,41 @@ void send_mpip_hb(struct sk_buff *skb)
 	earliest_fbjiffies = jiffies;
 }
 
-int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len)
+int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay)
 {
-	/* todo: need sanity checks, leave it for now */
+/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
 	struct path_stat_table *path_stat;
+    struct timespec tv;
+	u32  midtime;
 
-	if (!node_id || (path_id == 0))
-		return 0;
-
-	path_stat = find_path_stat(node_id, path_id);
+	path_stat = find_path_stat_by_addr(saddr, daddr);
 	if (path_stat)
 	{
-		path_stat->rcvc += 1;
-		path_stat->rcv += pkt_len>>3;
+		getnstimeofday(&tv);
+		midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
 
-		if (path_stat->rcv >= 60000)
-		{
-			path_stat->rcvh += (path_stat->rcv / 60000);
-			path_stat->rcv = (path_stat->rcv % 60000);
-		}
+		path_stat->delay = midtime - delay;
 	}
 
 
 	return 1;
 }
 
-int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv)
-{
-	struct path_info_table *path_info = NULL;
 
+int update_path_delay(unsigned char path_id, __s32 delay)
+{
+    struct path_info_table *path_info;
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->rcvh += (rcvh + (path_info->rcv + rcv) / 60000);
-			path_info->rcv = (path_info->rcv + rcv) % 60000;
-			path_info->fbjiffies = jiffies;
-
-			break;
-		}
-	}
-	return 1;
-}
-
-int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
-{
-    struct timespec tv;
-	u32  midtime;
-	struct path_info_table *path_info;
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		if ((path_info->saddr == daddr) && (path_info->daddr == saddr))
-		{
-			getnstimeofday(&tv);
-			midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
-			if (path_info->delay == 0)
+			if (path_info->min_delay < delay || path_info->min_delay == 0)
 			{
-				path_info->delay = midtime - delay;
-				path_info->delaycount += 1;
+				path_info->min_delay = delay;
 			}
-			else if (path_info->delaycount < 10)
-			{
-				path_info->delay = ((int)(path_info->delay * 9 + midtime - delay)) / 10;
-				path_info->delaycount += 1;
-			}
+
+			path_info->delay_diff = delay - path_info->min_delay;
 
 			break;
 		}
@@ -317,63 +269,15 @@ int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay)
 
 	return 1;
 }
+
 
 int update_path_info()
 {
 	struct path_info_table *path_info;
-//	struct path_info_table *tmp_info = NULL;
-	__u64 rcv = 0;
-	__u64 sent = 0;
-	int rcvrate = 0;
-	int mindelay = 99999;
-//	__u32 bw = 0;
-
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (mindelay == 99999)
-		{
-			mindelay = path_info->delay;
-		}
-		else if (path_info->delay < mindelay)
-		{
-			mindelay = path_info->delay;
-		}
-
-		rcv = path_info->rcvh * 60000 + path_info->rcv;
-		sent = path_info->senth * 60000 + path_info->sent;
-
-		if (sent <= 0)
-			continue;
-		rcvrate = (unsigned char)(rcv * 100 / sent);
-
-		path_info->rcvrate = rcvrate;
-		path_info->losspkt = sent - rcv;
-
-		if (rcv > sent)
-		{
-			printk("rcv > sent: %llu > %llu, %s, %d\n", rcv, sent, __FILE__, __LINE__);
-		}
-	}
-
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		path_info->posdelay = path_info->delay - mindelay + 1;
-	}
-
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		if (sysctl_mpip_rcv)
-		{
-			if (path_info->posdelay + sysctl_mpip_bw_factor == 1)
-				continue;
-
-			path_info->bw = 1000 - (1000 * (path_info->posdelay - 1)) / (path_info->posdelay + sysctl_mpip_bw_factor - 1);
-		}
-		else
-		{
-			path_info->bw = 1000;
-		}
+		path_info->bw = 1000;
 	}
 
 	return 1;
@@ -422,9 +326,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, _
 	item->path_id = path_id;
 	item->saddr = saddr;
 	item->daddr = daddr;
-	item->rcvc = 0;
-	item->rcvh = 0;
-	item->rcv = 0;
+	item->delay = 0;
 	item->fbjiffies = jiffies;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
@@ -774,27 +676,9 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->fbjiffies = jiffies;
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
-		item->delaycount = 0;
+		item->min_delay = 0;
 		item->delay = 0;
-		item->sentc = 0;
-		item->senth = 0;
-		item->sent = 0;
-		item->rcvh = 0;
-		item->rcv = 0;
-		item->rcvrate = 0;
-		item->losspkt = 0;
-//		if (item->saddr == waddr)
-//		{
-//			item->bw = sysctl_mpip_bw_1;
-//		}
-//		else if (item->saddr == eaddr)
-//		{
-//			item->bw = sysctl_mpip_bw_2;
-//		}
-//		else
-//		{
-//			item->bw = 30;
-//		}
+		item->delay_diff = 0;
 		item->bw = 1000;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
@@ -810,29 +694,9 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 }
 
 
-unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len)
-{
-	struct path_info_table *f_path = find_path_info(saddr, daddr);
-	if (f_path)
-	{
-		f_path->sentc += 1;
-		f_path->sent += pkt_len>>3;
-
-		if (f_path->sent >= 60000)
-		{
-			f_path->senth += (f_path->sent / 60000);
-			f_path->sent = (f_path->sent % 60000);
-		}
-	}
-
-	return 1;
-}
-
-
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
-								   __be32 origin_saddr, __be32 origin_daddr,
-								   u16 pkt_len)
+								   __be32 origin_saddr, __be32 origin_daddr)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -873,7 +737,6 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			path_done = false;
 	}
 
-//	if (((totalbw > 0) && (pkt_len > 120)) || !path_done)
 	if ((totalbw > 0) || !path_done)
 	{
 		random = get_random_int() % totalbw;
@@ -919,7 +782,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 }
 
 
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned char *rcvh, u16 *rcv)
+unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, __s32 *delay)
 {
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;
@@ -952,12 +815,9 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned c
 		e_path_stat->fbjiffies = jiffies;
 		earliest_fbjiffies = jiffies;
 
-		*rcvh = e_path_stat->rcvh;
-		*rcv = e_path_stat->rcv;
+		*delay = e_path_stat->delay;
 
-		//e_path_stat->rcvc = 0;
-		e_path_stat->rcvh = 0;
-		e_path_stat->rcv = 0;
+		e_path_stat->delay = 0;
 
 	}
 
@@ -1145,10 +1005,7 @@ asmlinkage long sys_mpip(void)
 				path_stat->node_id[0], path_stat->node_id[1]);
 
 		printk("%d  ", path_stat->path_id);
-		printk("%u  ", path_stat->rcvc);
-		printk("%d  ", path_stat->rcvh);
-//		printk("%d  ", atomic_read(&(path_stat->rcv)));
-		printk("%d  ", path_stat->rcv);
+		printk("%d  ", path_stat->delay);
 		printk("%lu\n", path_stat->fbjiffies);
 
 		printk("+++++++++\n");
@@ -1184,27 +1041,13 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-		printk("%d  ", path_info->delaycount);
+		printk("%d  ", path_info->min_delay);
 
 		printk("%d  ", path_info->delay);
 
-		printk("%d  ", path_info->posdelay);
-
-		printk("%d  ", path_info->losspkt);
-
-		printk("%d  ", path_info->rcvrate);
+		printk("%d  ", path_info->delay_diff);
 
 		printk("%d  ", path_info->bw);
-
-		printk("%d  ", path_info->sentc);
-
-		printk("%d  ", path_info->senth);
-
-		printk("%d  ", path_info->sent);
-
-		printk("%d  ", path_info->rcvh);
-
-		printk("%d\n", path_info->rcv);
 
 		printk("+++++++++\n");
 	}

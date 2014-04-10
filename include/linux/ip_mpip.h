@@ -29,7 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_OPT_LEN 13
+#define MPIP_OPT_LEN 14
 #define MPIP_OPT_NODE_ID_LEN 2
 #define MPIP_TCP_BUF_LEN 5
 
@@ -96,94 +96,76 @@ int insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dadd
 int icmp_send_mpip_hb(struct sk_buff *skb);
 
 
-struct working_ip_table {
-	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
+struct working_ip_table
+{
+	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
 									   /*the node id is defined as the MAC*/
-	__be32	addr; /* receiver' ip seen by sender */
-	struct list_head list;
+	__be32				addr; /* receiver' ip seen by sender */
+	struct list_head 	list;
 };
 
 
-struct path_info_table {
+struct path_info_table
+{
 	/*when sending pkts, check the bw to choose the fastest one*/
 	/*update sent*/
-	unsigned char node_id[MPIP_OPT_NODE_ID_LEN]; /*destination node id*/
-	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
-	unsigned long fbjiffies; /* last feedback time of this path */
-	__be32	saddr; /* source ip address*/
-	__be32	daddr; /* destination ip address*/
-	unsigned char rcvrate; /* rcv rate */
-	__u32 losspkt; /*the amount of data that are lost*/
-	int 	delaycount; /*how many delays have been calculated. Just use the first 10,
-	 	 	 	 	 	  dont wait until congestion happens*/
-	int     delay;
-	int 	posdelay;
-	__u32	bw;  /* bandwidth */
-	__u32   sentc;
-	__u16   sent;  /* number of pkt sent on this path */
-	__u16   rcv;  /* number of pkt received on this path */
-	__u32   senth;
-	__u32	rcvh;  /* number of mega received on this path */
-	struct list_head list;
+	unsigned char 		node_id[MPIP_OPT_NODE_ID_LEN]; /*destination node id*/
+	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
+	unsigned long 		fbjiffies; /* last feedback time of this path */
+	__be32				saddr; /* source ip address*/
+	__be32				daddr; /* destination ip address*/
+	__s32 				min_delay;
+	__s32     			delay;
+	__s32     			delay_diff;
+	__u32				bw;  /* bandwidth */
+	struct list_head 	list;
 };
 
 
-//
-//struct sender_socket_table {
-//	unsigned char	session_id; /* session id*/
-//	/* socket information seen at the sender side*/
-//	__be32	saddr; /* source ip address*/
-//	__be32	daddr; /* destination ip address*/
-//	__be16	sport; /* source port*/
-//	__be16	dport; /* destination port*/
-//	struct list_head list;
-//};
-//static LIST_HEAD(ss_head);
-
-struct tcp_skb_buf{
-	__u32	seq;
-	struct sk_buff *skb;
-	unsigned long fbjiffies;
-	struct list_head list;
+struct tcp_skb_buf
+{
+	__u32				seq;
+	struct sk_buff *	skb;
+	unsigned long 		fbjiffies;
+	struct list_head 	list;
 };
 
-struct socket_session_table {
-	unsigned char	src_node_id[MPIP_OPT_NODE_ID_LEN]; /* local node id*/
-	unsigned char	dst_node_id[MPIP_OPT_NODE_ID_LEN]; /* remote node id*/
-	unsigned char   session_id; /* sender's session id*/
+struct socket_session_table
+{
+	unsigned char		src_node_id[MPIP_OPT_NODE_ID_LEN]; /* local node id*/
+	unsigned char		dst_node_id[MPIP_OPT_NODE_ID_LEN]; /* remote node id*/
+	unsigned char   	session_id; /* sender's session id*/
 
-	struct list_head tcp_buf;
-	__u32	next_seq;
-	//struct tcp_skb_buf tcp_buf[MPIP_TCP_BUF_LEN];
-	int buf_count;
+	struct list_head 	tcp_buf;
+	__u32				next_seq;
+	int 				buf_count;
 
 	/* socket information seen at the receiver side*/
-	__be32	saddr; /* source ip address*/
-	__be32	daddr; /* destination ip address*/
-	__be16	sport; /* source port*/
-	__be16	dport; /* destination port*/
-	struct list_head list;
+	__be32				saddr; /* source ip address*/
+	__be32				daddr; /* destination ip address*/
+	__be16				sport; /* source port*/
+	__be16				dport; /* destination port*/
+	struct list_head 	list;
 };
 
 
 
-struct path_stat_table {
-	unsigned char	node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
-	unsigned char	path_id; /* path id: 0,1,2,3,4....*/
-	__be32	saddr; /* source ip address*/
-	__be32	daddr; /* destination ip address*/
-//	atomic_t  rcv;  /* number of pkt received on this path */
-	__u32  rcvc;    /* number of pkt received on this path */
-	unsigned char	rcvh;  /* number of mega received on this path */
-	__u16  rcv;
-	unsigned long fbjiffies; /* last feedback time of this path's stat */
-	struct list_head list;
+struct path_stat_table
+{
+	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
+	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
+	__be32				saddr; /* source ip address*/
+	__be32				daddr; /* destination ip address*/
+	__s32     			delay;
+	unsigned long 		fbjiffies; /* last feedback time of this path's stat */
+	struct list_head 	list;
 };
 
 
-struct local_addr_table {
-	__be32	addr;
-	struct list_head list;
+struct local_addr_table
+{
+	__be32				addr;
+	struct list_head 	list;
 };
 
 int add_working_ip(unsigned char *node_id, __be32 addr);
@@ -194,17 +176,15 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr);
 
 unsigned char * find_node_id_in_working_ip(__be32 addr);
 
-int update_packet_rcv(unsigned char path_id, unsigned char rcvh, u16 rcv);
-
 struct path_stat_table *find_path_stat(unsigned char *node_id, unsigned char path_id);
 
 struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr);
 
 int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, __be32 daddr);
 
-int update_sender_packet_rcv(unsigned char *node_id, unsigned char path_id, u16 pkt_len);
+int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay);
 
-int update_path_delay(__be32 saddr, __be32 daddr, __u32 delay);
+int update_path_delay(unsigned char path_id, __s32 delay);
 
 int update_path_info(void);
 
@@ -232,19 +212,13 @@ bool is_dest_added(unsigned char *node_id, __be32 add);
 
 int add_path_info(unsigned char *node_id, __be32 addr);
 
-unsigned char add_rcv_for_path(struct sk_buff *skb, __be32 saddr, __be32 daddr, u16 pkt_len);
-
 void send_mpip_hb(struct sk_buff *skb);
-
-unsigned char add_sent_for_path(__be32 saddr, __be32 daddr, u16 pkt_len);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
-								   __be32 origin_saddr, __be32 origin_daddr,
-								   u16 pkt_len);
+								   __be32 origin_saddr, __be32 origin_daddr);
 
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, unsigned char *rcvh,
-										 u16 *rcv);
+unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, __s32 *delay);
 
 unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);

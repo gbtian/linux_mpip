@@ -481,7 +481,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	if (sysctl_mpip_enabled)
 	{
 //		mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
-		add_rcv_for_path(skb, iph->saddr, iph->daddr, skb->len);
 		skb->transport_header = skb->network_header + iph->ihl*4;
 		process_mpip_options(skb);
 		iph = ip_hdr(skb);

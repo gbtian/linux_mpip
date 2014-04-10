@@ -164,11 +164,6 @@ int __ip_local_out(struct sk_buff *skb)
 //	}
 //
 
-	if (sysctl_mpip_enabled)
-	{
-		add_sent_for_path(iph->saddr, iph->daddr, skb->len + 20);
-	}
-
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
 }

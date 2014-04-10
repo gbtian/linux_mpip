@@ -197,8 +197,8 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 		mpip_log("%s: session_id = %d\n", prefix, opt->session_id);
 		mpip_log("%s: path_id = %d\n",  prefix, opt->path_id);
 		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
-		mpip_log("%s: rcvh = %d\n",  prefix, opt->rcvh);
-		mpip_log("%s: rcv = %d\n",  prefix, opt->rcv);
+		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
+		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
 	}
 	else
 	{
@@ -208,8 +208,8 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 		mpip_log("session_id = %d\n", opt->session_id);
 		mpip_log("path_id = %d\n", opt->path_id);
 		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
-		mpip_log("rcvh = %d\n", opt->rcvh);
-		mpip_log("rcv = %d\n", opt->rcv);
+		mpip_log("delay = %d\n", opt->delay);
+		mpip_log("nexthop = %d\n", opt->nexthop);
 	}
 }
 EXPORT_SYMBOL(print_mpip_options);
@@ -271,7 +271,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 }
 
 unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
-						  __be32 origin_saddr, __be32 origin_daddr, int pkt_len)
+						  __be32 origin_saddr, __be32 origin_daddr)
 {
 	if (node_id == NULL)
 		return 0;
@@ -282,11 +282,11 @@ unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
 	}
 
 	return find_fastest_path_id(node_id, saddr, daddr,
-								origin_saddr, origin_daddr, pkt_len);
+								origin_saddr, origin_daddr);
 }
 
 
-unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh, u16 *rcv)
+unsigned char get_path_stat_id(unsigned char *dest_node_id,  long *delay)
 {
 	if (!dest_node_id)
 		return 0;
@@ -296,7 +296,7 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id, unsigned char *rcvh,
 		return 0;
 	}
 
-	return find_earliest_stat_path_id(dest_node_id, rcvh, rcv);
+	return find_earliest_stat_path_id(dest_node_id,  delay);
 }
 
 bool check_bad_addr(__be32 saddr, __be32 daddr)
@@ -340,9 +340,8 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	__be16 osport = 0, odport = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
-	int pkt_len = skb->len + ((MPIP_OPT_LEN + 3) & ~3) + 20;
-	unsigned char rcvh = 0;
-	u16 rcv = 0;
+
+	long delay = 0;
 	bool is_new = true;
 
 	if (!skb)
@@ -425,25 +424,25 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     {
 //    	mpip_log("%s, %d\n", __FILE__, __LINE__);
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr,
-    							old_saddr, old_daddr, pkt_len);
+    							old_saddr, old_daddr);
     }
 
-    path_stat_id = get_path_stat_id(dst_node_id, &rcvh, &rcv);
+    path_stat_id = get_path_stat_id(dst_node_id, &delay);
 
     options[5] = (((path_id << 4) & 0xf0) | (path_stat_id & 0x0f));
 
-    options[6] = rcvh;
-
-    options[7] = rcv & 0xff; //packet_count
-    options[8] = (rcv>>8) & 0xff; //packet_count
-
-	getnstimeofday(&tv);
+    getnstimeofday(&tv);
 	midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
 
-	options[9] = midtime & 0xff;
-	options[10] = (midtime>>8) & 0xff;
-	options[11] = (midtime>>16) & 0xff;
-	options[12] = (midtime>>24) & 0xff;
+	options[6] = midtime & 0xff;
+	options[7] = (midtime>>8) & 0xff;
+	options[8] = (midtime>>16) & 0xff;
+	options[9] = (midtime>>24) & 0xff;
+
+	options[10] = delay & 0xff;
+	options[11] = (delay>>8) & 0xff;
+	options[12] = (delay>>16) & 0xff;
+	options[13] = (delay>>24) & 0xff;
 
 
 //mpip_log("\ns: iph->id=%d\n", iph->id);
@@ -549,15 +548,12 @@ int process_mpip_options(struct sk_buff *skb)
 
 	get_available_local_addr();
 
-
 	add_working_ip(opt->node_id, iph->saddr);
 	add_path_info(opt->node_id, iph->saddr);
 	add_path_stat(opt->node_id, opt->path_id, iph->saddr, iph->daddr);
 
-	update_packet_rcv(opt->stat_path_id, opt->rcvh, opt->rcv);
-	update_path_delay(iph->saddr, iph->daddr, opt->nexthop);
-
-//	update_sender_packet_rcv(opt->node_id, opt->path_id, skb->len);
+	update_path_stat_delay(iph->saddr, iph->daddr, opt->nexthop);
+	update_path_delay(opt->stat_path_id, opt->delay);
 
 	update_path_info();
 
