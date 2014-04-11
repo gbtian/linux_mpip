@@ -257,7 +257,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 		if (path_info->path_id == path_id)
 		{
 			path_info->delay = delay;
-			if (path_info->min_delay < delay || path_info->min_delay == 0)
+			if (path_info->min_delay > delay || path_info->min_delay == 0)
 			{
 				path_info->min_delay = delay;
 			}
@@ -969,8 +969,6 @@ asmlinkage long sys_mpip(void)
 		p = (char *) &(working_ip->addr);
 		printk( "%d.%d.%d.%d\n",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-
-		printk("+++++++++\n");
 	}
 
 	printk("******************ss*************\n");
@@ -995,8 +993,6 @@ asmlinkage long sys_mpip(void)
 		printk("%d\t", socket_session->sport);
 
 		printk("%d\n", socket_session->dport);
-
-		printk("+++++++++\n");
 	}
 
 	printk("******************ps*************\n");
@@ -1008,8 +1004,6 @@ asmlinkage long sys_mpip(void)
 		printk("%d  ", path_stat->path_id);
 		printk("%d  ", path_stat->delay);
 		printk("%lu\n", path_stat->fbjiffies);
-
-		printk("+++++++++\n");
 	}
 
 
@@ -1021,7 +1015,6 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d\n",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-		printk("+++++++++\n");
 	}
 
 
@@ -1048,9 +1041,8 @@ asmlinkage long sys_mpip(void)
 
 		printk("%d  ", path_info->delay_diff);
 
-		printk("%d  ", path_info->bw);
+		printk("%d  \n", path_info->bw);
 
-		printk("+++++++++\n");
 	}
 
 
