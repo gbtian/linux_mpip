@@ -256,7 +256,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->delay = delay;
+			path_info->delay = (9 * path_info->delay + delay) / 10;
 			if (path_info->min_delay > delay || path_info->min_delay == 0)
 			{
 				path_info->min_delay = delay;
@@ -296,6 +296,8 @@ int update_path_info()
 		list_for_each_entry(path_info, &pi_head, list)
 		{
 			path_info->bw /= 5;
+			if (path_info->bw == 0)
+				path_info->bw = 10;
 		}
 	}
 
