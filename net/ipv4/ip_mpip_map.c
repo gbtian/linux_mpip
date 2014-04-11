@@ -274,11 +274,29 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 
 int update_path_info()
 {
-	struct path_info_table *path_info;
+	struct path_info_table *path_info, *min_path = NULL;
+	__s32 min_delay_diff = -1;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		path_info->bw = 1000;
+		if (path_info->delay_diff < min_delay_diff || min_delay_diff == -1)
+		{
+			min_delay_diff = path_info->delay_diff;
+			min_path = path_info;
+		}
+	}
+
+	if (!min_path)
+		return 0;
+
+	min_path->bw += sysctl_mpip_bw_factor;
+
+	if (min_path->bw > 5000)
+	{
+		list_for_each_entry(path_info, &pi_head, list)
+		{
+			path_info->bw /= 5;
+		}
 	}
 
 	return 1;
@@ -363,7 +381,6 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 					   __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *item = NULL;
-	int i;
 
 	if (!is_lan_addr(saddr) || !is_lan_addr(daddr))
 	{
@@ -435,7 +452,7 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 		 	 	 	 	unsigned char session_id)
 {
 	struct socket_session_table *item = NULL;
-	int sid, i;
+	int sid;
 
 
 	if (!src_node_id || !dst_node_id || !session_id)
@@ -517,8 +534,6 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 
 int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 {
-	int count = 0, i, j;
-	bool added = false;
 	struct tcphdr *tcph = NULL;
 	struct socket_session_table *socket_session;
 	struct tcp_skb_buf *item = NULL;
@@ -586,7 +601,7 @@ recursive:
 			list_add(&(item->list), &(socket_session->tcp_buf));
 			socket_session->buf_count += 1;
 
-			printk("out of order: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+			mpip_log("out of order: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 
 			goto success;
 		}
