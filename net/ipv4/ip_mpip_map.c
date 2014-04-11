@@ -256,7 +256,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->delay = (9 * path_info->delay + delay) / 10;
+			path_info->delay = (3 * path_info->delay + delay) / 4;
 			if (path_info->min_delay > delay || path_info->min_delay == 0)
 			{
 				path_info->min_delay = delay;
