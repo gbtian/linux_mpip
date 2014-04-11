@@ -818,7 +818,7 @@ unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, __s32 *del
 
 		*delay = e_path_stat->delay;
 
-		e_path_stat->delay = 0;
+		//e_path_stat->delay = 0;
 
 	}
 
