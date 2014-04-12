@@ -277,6 +277,7 @@ int update_path_info()
 	struct path_info_table *path_info, *min_path = NULL, *max_path = NULL;
 	__s32 min_delay_diff = -1;
 	__s32 max_delay_diff = 0;
+	__u32 diff = 0;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
@@ -293,17 +294,16 @@ int update_path_info()
 		}
 	}
 
-	if (!min_path)
+	if (!min_path || !max_path)
 		return 0;
 
-	min_path->bw += sysctl_mpip_bw_factor;
+	diff = max_delay_diff - min_delay_diff;
+	if (diff == 0)
+		return 0;
 
-	if (max_path)
+	list_for_each_entry(path_info, &pi_head, list)
 	{
-		max_path->bw -= sysctl_mpip_bw_factor;
-
-		if (max_path->bw <= 0)
-			max_path->bw = 10;
+		min_path->bw += (min_path->bw * 4 + sysctl_mpip_bw_factor * (max_delay_diff - path_info->delay_diff) / diff) / 5;
 	}
 
 	if (min_path->bw > 5000)
