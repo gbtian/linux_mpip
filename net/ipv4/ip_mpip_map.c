@@ -303,7 +303,7 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		min_path->bw += (min_path->bw * 4 + sysctl_mpip_bw_factor * (max_delay_diff - path_info->delay_diff) / diff) / 5;
+		path_info->bw += (path_info->bw * 4 + sysctl_mpip_bw_factor * (max_delay_diff - path_info->delay_diff) / diff) / 5;
 	}
 
 	if (min_path->bw > 5000)
