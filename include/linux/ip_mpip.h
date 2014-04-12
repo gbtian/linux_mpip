@@ -117,7 +117,7 @@ struct path_info_table
 	__s32 				min_delay;
 	__s32     			delay;
 	__s32     			delay_diff;
-	__u32				bw;  /* bandwidth */
+	__s32				bw;  /* bandwidth */
 	struct list_head 	list;
 };
 
