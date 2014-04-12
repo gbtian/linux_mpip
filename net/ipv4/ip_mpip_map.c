@@ -262,7 +262,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 				path_info->min_delay = delay;
 			}
 
-			path_info->delay_diff = delay - path_info->min_delay;
+			path_info->delay_diff = path_info->delay - path_info->min_delay;
 
 			break;
 		}
