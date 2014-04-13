@@ -324,7 +324,7 @@ int update_path_info()
 			continue;
 
 		path_info->bw +=
-				sysctl_mpip_bw_factor * (max_max_delay_diff * max_delay_diff) / (path_info->max_delay_diff * path_info->delay_diff);
+				sysctl_mpip_bw_factor * (max_max_delay_diff * max_delay_diff - path_info->max_delay_diff * path_info->delay_diff);
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
