@@ -331,11 +331,14 @@ int update_path_info()
 
 	}
 
+	printk("max_bw=%u/n", max_bw);
 
 	if (max_bw > 5000)
 	{
 		list_for_each_entry(path_info, &pi_head, list)
 		{
+			printk("path_info->bw=%u/n", path_info->bw);
+
 			path_info->bw /= 5;
 			if (path_info->bw <= 0)
 				path_info->bw = 10;
