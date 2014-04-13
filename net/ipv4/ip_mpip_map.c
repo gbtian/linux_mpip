@@ -1100,6 +1100,8 @@ asmlinkage long sys_mpip(void)
 
 		printk("%d  ", path_info->delay);
 
+		printk("%d  ", path_info->max_delay_diff);
+
 		printk("%d  ", path_info->delay_diff);
 
 		printk("%d  \n", path_info->bw);
