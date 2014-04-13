@@ -312,8 +312,8 @@ int update_path_info()
 		list_for_each_entry(path_info, &pi_head, list)
 		{
 			path_info->bw /= 5;
-//			if (path_info->bw == 0)
-//				path_info->bw = 10;
+			if (path_info->bw <= 0)
+				path_info->bw = 10;
 		}
 	}
 
