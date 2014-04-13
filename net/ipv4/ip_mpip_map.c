@@ -297,14 +297,12 @@ int update_path_info()
 	if (!min_path || !max_path)
 		return 0;
 
-	diff = max_delay_diff - min_delay_diff;
-	if (diff == 0)
-		return 0;
+	min_path->bw += sysctl_mpip_bw_factor;
+	max_path->bw -= sysctl_mpip_bw_factor;
 
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		path_info->bw += (path_info->bw * 4 + sysctl_mpip_bw_factor * (max_delay_diff - path_info->delay_diff) / diff) / 5;
-	}
+	sysctl_mpip_bw_factor /= 2;
+	if (sysctl_mpip_bw_factor == 0)
+		sysctl_mpip_bw_factor = 1;
 
 	if (min_path->bw > 5000)
 	{
