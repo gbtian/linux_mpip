@@ -324,22 +324,20 @@ int update_path_info()
 			continue;
 
 		path_info->bw +=
-				sysctl_mpip_bw_factor * (max_max_delay_diff + max_delay_diff - path_info->max_delay_diff - path_info->delay_diff);
+				sysctl_mpip_bw_factor * (max_max_delay_diff * max_delay_diff) / (path_info->max_delay_diff * path_info->delay_diff);
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
 
 	}
 
-	printk("max_bw=%u/n", max_bw);
 
 	if (max_bw > 5000)
 	{
+		__u64 times = max_bw / 5000;
 		list_for_each_entry(path_info, &pi_head, list)
 		{
-			printk("path_info->bw=%u/n", path_info->bw);
-
-			path_info->bw /= 5;
+			path_info->bw /= times;
 			if (path_info->bw <= 0)
 				path_info->bw = 10;
 		}
