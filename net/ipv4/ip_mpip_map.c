@@ -263,6 +263,10 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 			}
 
 			path_info->delay_diff = path_info->delay - path_info->min_delay;
+			if (path_info->delay_diff > path_info->max_delay_diff)
+			{
+				path_info->max_delay_diff = path_info->delay_diff;
+			}
 
 			break;
 		}
@@ -277,37 +281,21 @@ int update_path_info()
 	struct path_info_table *path_info, *min_path = NULL, *max_path = NULL;
 	__s32 min_delay_diff = -1;
 	__s32 max_delay_diff = 0;
+	__s32 max_bw = 0;
 	__u32 diff = 0;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (path_info->bw < 0)
-			continue;
+		path_info->bw += path_info->max_delay_diff / path_info->delay_diff * sysctl_mpip_bw_factor;
 
-		if (path_info->delay_diff < min_delay_diff || min_delay_diff == -1)
+		if (path_info->bw > max_bw)
 		{
-			min_delay_diff = path_info->delay_diff;
-			min_path = path_info;
-		}
-
-		if (path_info->delay_diff > max_delay_diff)
-		{
-			max_delay_diff = path_info->delay_diff;
+			max_bw = path_info->bw;
 			max_path = path_info;
 		}
 	}
 
-	if (!min_path || !max_path)
-		return 0;
-
-	min_path->bw += sysctl_mpip_bw_factor;
-	max_path->bw -= sysctl_mpip_bw_factor;
-
-	sysctl_mpip_bw_factor /= 2;
-	if (sysctl_mpip_bw_factor == 0)
-		sysctl_mpip_bw_factor = 1;
-
-	if (min_path->bw > 5000)
+	if (max_bw > 5000)
 	{
 		list_for_each_entry(path_info, &pi_head, list)
 		{
@@ -316,6 +304,43 @@ int update_path_info()
 				path_info->bw = 10;
 		}
 	}
+
+
+//	list_for_each_entry(path_info, &pi_head, list)
+//	{
+//
+//		if (path_info->delay_diff < min_delay_diff || min_delay_diff == -1)
+//		{
+//			min_delay_diff = path_info->delay_diff;
+//			min_path = path_info;
+//		}
+//
+//		if (path_info->delay_diff > max_delay_diff)
+//		{
+//			max_delay_diff = path_info->delay_diff;
+//			max_path = path_info;
+//		}
+//	}
+//
+//	if (!min_path || !max_path)
+//		return 0;
+//
+//	min_path->bw += sysctl_mpip_bw_factor;
+//	max_path->bw -= sysctl_mpip_bw_factor;
+//
+//	sysctl_mpip_bw_factor -= 1;
+//	if (sysctl_mpip_bw_factor == 0)
+//		sysctl_mpip_bw_factor = 1;
+//
+//	if (min_path->bw > 5000)
+//	{
+//		list_for_each_entry(path_info, &pi_head, list)
+//		{
+//			path_info->bw /= 5;
+//			if (path_info->bw <= 0)
+//				path_info->bw = 10;
+//		}
+//	}
 
 	return 1;
 }
@@ -713,6 +738,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->min_delay = 0;
 		item->delay = 0;
 		item->delay_diff = 0;
+		item->max_delay_diff = 0;
 		item->bw = 1000;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
