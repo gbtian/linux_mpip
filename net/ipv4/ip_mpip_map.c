@@ -285,7 +285,7 @@ int update_path_info()
 	__s32 min_max_delay_diff = -1;
 	__s32 max_max_delay_diff = 0;
 
-	__s32 max_bw = 0;
+	__u64 max_bw = 0;
 
 
 
@@ -761,8 +761,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	struct path_info_table *path;
 	struct path_info_table *f_path;
 	unsigned char f_path_id = 0;
-	unsigned char f_bw = 0;
-	int totalbw = 0, tmptotal = 0;
+
+	__u64 totalbw = 0, tmptotal = 0, f_bw = 0;
 	int random = 0;
 	bool path_done = true;
 
