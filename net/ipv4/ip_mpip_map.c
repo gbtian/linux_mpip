@@ -287,49 +287,60 @@ int update_path_info()
 
 	__u64 max_bw = 0;
 
-
-
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-
-		if (path_info->delay_diff < min_delay_diff || min_delay_diff == -1)
-		{
-			min_delay_diff = path_info->delay_diff;
-			min_path = path_info;
-		}
-
-		if (path_info->delay_diff > max_delay_diff)
-		{
-			max_delay_diff = path_info->delay_diff;
-			max_path = path_info;
-		}
-
-		if (path_info->max_delay_diff < min_max_delay_diff || min_max_delay_diff == -1)
-		{
-			min_max_delay_diff = path_info->max_delay_diff;
-		}
-
-		if (path_info->max_delay_diff > max_max_delay_diff)
-		{
-			max_max_delay_diff = path_info->max_delay_diff;
-		}
-	}
-
-	if (!min_path || !max_path)
-		return 0;
-
-	list_for_each_entry(path_info, &pi_head, list)
-	{
-		if (path_info->max_delay_diff == 0 || path_info->delay_diff == 0)
+		if (path_info->delay_diff == 0)
 			continue;
 
 		path_info->bw +=
-				sysctl_mpip_bw_factor * (max_max_delay_diff * max_delay_diff - path_info->max_delay_diff * path_info->delay_diff);
+				path_info->max_delay_diff / path_info->delay_diff * sysctl_mpip_bw_factor;
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
 
 	}
+
+
+//	list_for_each_entry(path_info, &pi_head, list)
+//	{
+//		if (path_info->delay_diff < min_delay_diff || min_delay_diff == -1)
+//		{
+//			min_delay_diff = path_info->delay_diff;
+//			min_path = path_info;
+//		}
+//
+//		if (path_info->delay_diff > max_delay_diff)
+//		{
+//			max_delay_diff = path_info->delay_diff;
+//			max_path = path_info;
+//		}
+//
+//		if (path_info->max_delay_diff < min_max_delay_diff || min_max_delay_diff == -1)
+//		{
+//			min_max_delay_diff = path_info->max_delay_diff;
+//		}
+//
+//		if (path_info->max_delay_diff > max_max_delay_diff)
+//		{
+//			max_max_delay_diff = path_info->max_delay_diff;
+//		}
+//	}
+//
+//	if (!min_path || !max_path)
+//		return 0;
+//
+//	list_for_each_entry(path_info, &pi_head, list)
+//	{
+//		if (path_info->max_delay_diff == 0 || path_info->delay_diff == 0)
+//			continue;
+//
+//		path_info->bw +=
+//				sysctl_mpip_bw_factor * (max_max_delay_diff * max_delay_diff - path_info->max_delay_diff * path_info->delay_diff);
+//
+//		if (path_info->bw > max_bw)
+//			max_bw = path_info->bw;
+//
+//	}
 
 
 	if (max_bw > 5000)
