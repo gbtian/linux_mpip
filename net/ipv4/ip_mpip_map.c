@@ -289,9 +289,9 @@ int update_path_info()
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (path_info->delay_diff > max_delay_diff)
+		if (path_info->max_delay_diff > max_delay_diff)
 		{
-			max_delay_diff = path_info->delay_diff;
+			max_delay_diff = path_info->max_delay_diff;
 		}
 	}
 
@@ -304,7 +304,7 @@ int update_path_info()
 		else
 		{
 			path_info->bw +=
-				max_delay_diff / path_info->delay_diff * sysctl_mpip_bw_factor;
+				sysctl_mpip_bw_factor * max_delay_diff / path_info->delay_diff ;
 		}
 
 		if (path_info->bw > max_bw)
