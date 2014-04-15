@@ -227,9 +227,8 @@ void send_mpip_hb(struct sk_buff *skb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		icmp_send_mpip_hb(skb);
+		earliest_fbjiffies = jiffies;
 	}
-	
-	earliest_fbjiffies = jiffies;
 }
 
 int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay)

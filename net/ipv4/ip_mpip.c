@@ -286,7 +286,7 @@ unsigned char get_path_id(unsigned char *node_id, __be32 *saddr, __be32 *daddr,
 }
 
 
-unsigned char get_path_stat_id(unsigned char *dest_node_id,  long *delay)
+unsigned char get_path_stat_id(unsigned char *dest_node_id,  __s32 *delay)
 {
 	if (!dest_node_id)
 		return 0;
@@ -341,7 +341,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
 
-	long delay = 0;
+	__s32 delay = 0;
 	bool is_new = true;
 
 	if (!skb)
