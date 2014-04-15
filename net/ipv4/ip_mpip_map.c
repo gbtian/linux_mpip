@@ -278,7 +278,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 __s32 calc_diff(__s32 delay_diff, __s32 min_delay_diff)
 {
 	__s32 diff = delay_diff - min_delay_diff;
-	return diff / 50;
+	return diff / sysctl_mpip_bw_factor;
 }
 
 int update_path_info()
@@ -308,7 +308,7 @@ int update_path_info()
 	{
 		__s32 diff = calc_diff(path_info->delay_diff, min_delay_diff);
 
-		path_info->bw += min_delay_diff / (diff + 1) * sysctl_mpip_bw_factor;
+		path_info->bw += min_delay_diff / (diff + 1);
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
