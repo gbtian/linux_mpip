@@ -217,10 +217,15 @@ struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 void send_mpip_hb(struct sk_buff *skb)
 {
 	if (!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return;
-	
+	}
+
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	if ((jiffies - earliest_fbjiffies) / HZ >= sysctl_mpip_hb)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		icmp_send_mpip_hb(skb);
 	}
 	

@@ -382,6 +382,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		send_mpip_hb(skb);
 	}
 

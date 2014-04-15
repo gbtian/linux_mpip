@@ -727,12 +727,17 @@ int icmp_send_mpip_hb(struct sk_buff *skb)
 	struct sk_buff *nskb = NULL;
 	struct iphdr *iph = NULL;
 	if(!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return 0;
-
+	}
 	nskb = skb_copy(skb, GFP_ATOMIC);
 
 	if (nskb == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return 0;
+	}
 
 	iph = ip_hdr(nskb);
 	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);

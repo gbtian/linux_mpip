@@ -249,12 +249,6 @@ int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 
 	err = tcp_connect(sk);
 
-	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, inet->inet_saddr);
-	print_addr(__FUNCTION__, inet->inet_rcv_saddr);
-	print_addr(__FUNCTION__, inet->inet_daddr);
-	print_addr(__FUNCTION__, rt->dst.dev->ip_ptr->ifa_list->ifa_address);
-
 	rt = NULL;
 	if (err)
 		goto failure;
