@@ -116,8 +116,9 @@ struct path_info_table
 	__be32				daddr; /* destination ip address*/
 	__s32 				min_delay;
 	__s32     			delay;
-	__s32     			delay_diff;
-	__s32     			max_delay_diff;
+	__s32     			queuing_delay;
+	__s32     			max_queuing_delay;
+	unsigned char		count;
 	__u64				bw;  /* bandwidth */
 	struct list_head 	list;
 };

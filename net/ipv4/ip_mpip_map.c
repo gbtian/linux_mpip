@@ -260,16 +260,29 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	{
 		if (path_info->path_id == path_id)
 		{
-			path_info->delay = (99 * path_info->delay + delay) / 100;
-			if (path_info->min_delay > path_info->delay || path_info->min_delay == 0)
+			if (path_info->count == 0)
 			{
-				path_info->min_delay = path_info->delay;
+				path_info->delay = delay;
 			}
 
-			path_info->delay_diff = path_info->delay - path_info->min_delay;
-			if (path_info->delay_diff > path_info->max_delay_diff)
+			path_info->delay = (99 * path_info->delay + delay) / 100;
+			if (path_info->count < 10)
 			{
-				path_info->max_delay_diff = path_info->delay_diff;
+				path_info->min_delay = path_info->delay;
+				path_info->count += 1;
+			}
+			else
+			{
+				if (path_info->min_delay > path_info->delay)
+				{
+					path_info->min_delay = path_info->delay;
+				}
+			}
+
+			path_info->queuing_delay = path_info->delay - path_info->min_delay;
+			if (path_info->queuing_delay > path_info->max_queuing_delay)
+			{
+				path_info->max_queuing_delay = path_info->queuing_delay;
 			}
 
 			break;
@@ -279,40 +292,40 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	return 1;
 }
 
-__s32 calc_diff(__s32 delay_diff, __s32 min_delay_diff)
+__s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
 {
-	__s32 diff = delay_diff - min_delay_diff;
+	__s32 diff = queuing_delay - min_queuing_delay;
 	return diff / sysctl_mpip_bw_factor;
 }
 
 int update_path_info()
 {
 	struct path_info_table *path_info, *min_path = NULL, *max_path = NULL;
-	__s32 min_delay_diff = -1;
-	__s32 max_delay_diff = 0;
+	__s32 min_queuing_delay = -1;
+	__s32 max_queuing_delay = 0;
 
-	__s32 min_max_delay_diff = -1;
-	__s32 max_max_delay_diff = 0;
+	__s32 min_max_queuing_delay = -1;
+	__s32 max_max_queuing_delay = 0;
 
 	__u64 max_bw = 0;
 
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		if (path_info->delay_diff < min_delay_diff || min_delay_diff == -1)
+		if (path_info->queuing_delay < min_queuing_delay || min_queuing_delay == -1)
 		{
-			min_delay_diff = path_info->delay_diff;
+			min_queuing_delay = path_info->queuing_delay;
 		}
 	}
 
-	if (min_delay_diff == -1)
+	if (min_queuing_delay == -1)
 		return 0;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
-		__s32 diff = calc_diff(path_info->delay_diff, min_delay_diff);
+		__s32 diff = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
-		path_info->bw += min_delay_diff / (diff + 1);
+		path_info->bw += min_queuing_delay / (diff + 1);
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
@@ -726,8 +739,9 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->daddr = addr;
 		item->min_delay = 0;
 		item->delay = 0;
-		item->delay_diff = 0;
-		item->max_delay_diff = 0;
+		item->queuing_delay = 0;
+		item->max_queuing_delay = 0;
+		item->count = 0;
 		item->bw = 1000;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
@@ -1087,11 +1101,11 @@ asmlinkage long sys_mpip(void)
 
 		printk("%d  ", path_info->delay);
 
-		printk("%d  ", path_info->max_delay_diff);
+		printk("%d  ", path_info->max_queuing_delay);
 
-		printk("%d  ", path_info->delay_diff);
+		printk("%d  ", path_info->queuing_delay);
 
-		printk("%u  \n", path_info->bw);
+		printk("%lu  \n", path_info->bw);
 
 	}
 
