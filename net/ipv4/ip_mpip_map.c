@@ -316,6 +316,11 @@ int update_path_info()
 		{
 			min_queuing_delay = path_info->queuing_delay;
 		}
+
+		if (path_info->queuing_delay > max_queuing_delay)
+		{
+			max_queuing_delay = path_info->queuing_delay;
+		}
 	}
 
 	if (min_queuing_delay == -1)
@@ -325,7 +330,7 @@ int update_path_info()
 	{
 		__s32 diff = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
-		path_info->bw += min_queuing_delay / (diff + 1);
+		path_info->bw += max_queuing_delay / (diff + 1);
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
