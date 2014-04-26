@@ -292,10 +292,52 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	return 1;
 }
 
+
+
+__s32 calc_si_diff()
+{
+	__s32 si = 0;
+	__s32 K = 0;
+	__s32 sigma = 0;
+	__s32 diff = 0;
+	__s32 max = 0;
+	struct path_info_table *path_info, *prev_info;
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		prev_info = list_entry(path_info->list.prev, typeof(*path_info), list);
+		if (!prev_info)
+			continue;
+		
+		++K;
+
+		diff = (path_info->queuing_delay - prev_info->queuing_delay > 0) ? 
+		       (path_info->queuing_delay - prev_info->queuing_delay) :
+		       (prev_info->queuing_delay - path_info->queuing_delay);
+		
+		max = (path_info->queuing_delay > prev_info->queuing_delay) ? 
+		       path_info->queuing_delay : prev_info->queuing_delay;
+
+		if (max == 0)
+			sigma += diff * 100;
+		else
+			sigma += (100 * diff) / max;
+
+	}
+
+	if (K == 0)
+		si = 0;
+	else
+		si = sigma / K;
+	
+	return 100 - si;
+}
+
 __s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
 {
 	__s32 diff = queuing_delay - min_queuing_delay;
-	return diff / sysctl_mpip_bw_factor;
+	__s32 si = calc_si_diff();
+	printk("%d, %s, %d\n", si, __FILE__, __LINE__);
+	return diff / (sysctl_mpip_bw_factor * si);
 }
 
 int update_path_info()
