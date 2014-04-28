@@ -223,7 +223,7 @@ void send_mpip_hb(struct sk_buff *skb)
 	}
 
 	mpip_log("%s, %d\n", __FILE__, __LINE__);
-	if ((jiffies - earliest_fbjiffies) / HZ >= sysctl_mpip_hb)
+	if ((jiffies - earliest_fbjiffies) / (HZ / 100) >= sysctl_mpip_hb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		icmp_send_mpip_hb(skb);
