@@ -548,14 +548,17 @@ int process_mpip_options(struct sk_buff *skb)
 
 	get_available_local_addr();
 
-	add_working_ip(opt->node_id, iph->saddr);
-	add_path_info(opt->node_id, iph->saddr);
-	add_path_stat(opt->node_id, opt->path_id, iph->saddr, iph->daddr);
+	if (opt->session_id > 0)
+	{
+		add_working_ip(opt->node_id, iph->saddr);
+		add_path_info(opt->node_id, iph->saddr);
+		add_path_stat(opt->node_id, opt->path_id, iph->saddr, iph->daddr);
 
-	update_path_stat_delay(iph->saddr, iph->daddr, opt->nexthop);
-	update_path_delay(opt->stat_path_id, opt->delay);
+		update_path_stat_delay(iph->saddr, iph->daddr, opt->nexthop);
+		update_path_delay(opt->stat_path_id, opt->delay);
 
-	update_path_info();
+		update_path_info();
+	}
 
 	if (iph->protocol != IPPROTO_ICMP)
 	{
