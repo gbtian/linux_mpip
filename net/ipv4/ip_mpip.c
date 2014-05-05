@@ -14,6 +14,7 @@
 #include <net/tcp.h>
 #include <net/icmp.h>
 
+#include <linux/inetdevice.h>
 #include <linux/ip_mpip.h>
 #include <net/ip.h>
 
@@ -123,20 +124,198 @@ static struct ctl_table mpip_table[] =
 };
 
 
+/* React on IPv4-addr add/rem-events */
+static int mpip_inetaddr_event(struct notifier_block *this,
+				   unsigned long event, void *ptr)
+{
 
+	struct in_ifaddr *ifa = (struct in_ifaddr *)ptr;
+	struct net_device *dev = ifa->ifa_dev->dev;
+	struct net *net = dev_net(ifa->ifa_dev->dev);
+
+	if (dev && dev->ip_ptr && dev->ip_ptr->ifa_list)
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
+		print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
+	}
+
+//	addr4_event_handler(ifa, event, net);
+
+	return NOTIFY_DONE;
+}
+
+/* React on ifup/down-events */
+static int netdev_event(struct notifier_block *this, unsigned long event,
+			void *ptr)
+{
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+	struct in_device *in_dev;
+#if IS_ENABLED(CONFIG_IPV6)
+	struct inet6_dev *in6_dev;
+#endif
+
+	if (!(event == NETDEV_UP || event == NETDEV_DOWN ||
+	      event == NETDEV_CHANGE))
+		return NOTIFY_DONE;
+
+	rcu_read_lock();
+	in_dev = __in_dev_get_rtnl(dev);
+
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+
+	if (in_dev) {
+		for_ifa(in_dev) {
+			mpip_inetaddr_event(NULL, event, ifa);
+		} endfor_ifa(in_dev);
+	}
+
+	rcu_read_unlock();
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block mpip_netdev_notifier = {
+		.notifier_call = netdev_event,
+};
+
+
+static void addr4_event_handler(struct in_ifaddr *ifa, unsigned long event,
+				struct net *net)
+{
+//	struct mptcp_loc_addr *mptcp_local, *old;
+//	struct net_device *netdev = ifa->ifa_dev->dev;
+//	struct mptcp_fm_ns *fm_ns = fm_get_ns(net);
+//	int i;
+//
+//	if (ifa->ifa_scope > RT_SCOPE_LINK ||
+//	    ipv4_is_loopback(ifa->ifa_local))
+//		return;
+//
+//	rcu_read_lock_bh();
+//	spin_lock(&fm_ns->local_lock);
+//
+//	mptcp_local = rcu_dereference(fm_ns->local);
+//
+//	if (event == NETDEV_DOWN ||!netif_running(netdev) ||
+//	    (netdev->flags & IFF_NOMULTIPATH)) {
+//		/* It's an event that removes the address */
+//		struct mptcp_addr_event event;
+//		bool found = false;
+//
+//		/* Look for the address among the local addresses */
+//		mptcp_for_each_bit_set(mptcp_local->loc4_bits, i) {
+//			if (mptcp_local->locaddr4[i].addr.s_addr == ifa->ifa_local) {
+//				found = true;
+//				break;
+//			}
+//		}
+//
+//		/* Not in the list - so we don't care */
+//		if (!found)
+//			goto exit;
+//
+//		old = mptcp_local;
+//		mptcp_local = kmemdup(mptcp_local, sizeof(*mptcp_local),
+//				      GFP_ATOMIC);
+//		if (!mptcp_local)
+//			goto exit;
+//		kfree(old);
+//
+//		mptcp_local->loc4_bits &= ~(1 << i);
+//
+//		rcu_assign_pointer(fm_ns->local, mptcp_local);
+//
+//		/* Now, we have to create an event for the MPTCP-sockets */
+//		event.code = MPTCP_EVENT_DEL;
+//		event.family = AF_INET;
+//		event.id = i;
+//		event.u.addr4.s_addr = ifa->ifa_local;
+//		add_pm_event(net, &event);
+//
+//	} else {
+//		/* The event modifies / adds an address */
+//		bool found = false;
+//
+//		/* Look for the address among the local addresses */
+//		mptcp_for_each_bit_set(mptcp_local->loc4_bits, i) {
+//			if (mptcp_local->locaddr4[i].addr.s_addr == ifa->ifa_local) {
+//				found = true;
+//				break;
+//			}
+//		}
+//
+//		if (!found) {
+//			/* Not in the list, so we have to find an empty slot */
+//			i = __mptcp_find_free_index(mptcp_local->loc4_bits, 0,
+//						    mptcp_local->next_v4_index);
+//			if (i < 0)
+//				goto exit;
+//		} else {
+//			struct mptcp_addr_event event;
+//
+//			/* Let's check if anything changes */
+//			if ((netdev->flags & IFF_MPBACKUP) ? 1 : 0 == mptcp_local->locaddr4[i].low_prio)
+//				goto exit;
+//
+//
+//			/* Now, we have to create an event for the MPTCP-sockets */
+//			event.code = MPTCP_EVENT_MOD;
+//			event.family = AF_INET;
+//			event.id = i;
+//			event.low_prio = mptcp_local->locaddr4[i].low_prio;
+//			event.u.addr4.s_addr = ifa->ifa_local;
+//			add_pm_event(net, &event);
+//		}
+//
+//		old = mptcp_local;
+//		mptcp_local = kmemdup(mptcp_local, sizeof(*mptcp_local),
+//				      GFP_ATOMIC);
+//		if (!mptcp_local)
+//			goto exit;
+//		kfree(old);
+//
+//		mptcp_local->locaddr4[i].addr.s_addr = ifa->ifa_local;
+//		mptcp_local->locaddr4[i].id = i;
+//		mptcp_local->locaddr4[i].low_prio = (netdev->flags & IFF_MPBACKUP) ? 1 : 0;
+//
+//		if (!found) {
+//			mptcp_local->loc4_bits |= (1 << i);
+//			mptcp_local->next_v4_index = i + 1;
+//		}
+//
+//		rcu_assign_pointer(fm_ns->local, mptcp_local);
+//
+//		if (!found) {
+//			struct mptcp_addr_event event;
+//
+//			/* Now, we have to create an event for the MPTCP-sockets */
+//			event.code = MPTCP_EVENT_ADD;
+//			event.family = AF_INET;
+//			event.id = i;
+//			event.low_prio = mptcp_local->locaddr4[i].low_prio;
+//			event.u.addr4.s_addr = ifa->ifa_local;
+//			add_pm_event(net, &event);
+//		}
+//	}
+//
+//exit:
+//	spin_unlock(&fm_ns->local_lock);
+//	rcu_read_unlock_bh();
+//	return;
+}
+
+static struct notifier_block mpip_inetaddr_notifier = {
+		.notifier_call = mpip_inetaddr_event,
+};
 
 int mpip_init(void)
 {
 	struct ctl_table_header *mptcp_sysctl;
-
+	int ret;
     //In kernel, __MPIP__ will be checked to decide which functions to call.
 	mptcp_sysctl = register_net_sysctl(&init_net, "net/mpip", mpip_table);
-	//register_netdevice_notifier(&mpip_netdev_notifier);
-	//if (!mptcp_sysctl)
-	//	goto register_sysctl_failed;
-
-	//register_sysctl_failed:
-	//	mpip_undo();
+	ret = register_inetaddr_notifier(&mpip_inetaddr_notifier);
+	ret = register_netdevice_notifier(&mpip_netdev_notifier);
 
 	//get_available_local_addr();
 
