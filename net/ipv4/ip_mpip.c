@@ -314,8 +314,8 @@ int mpip_init(void)
 	int ret;
     //In kernel, __MPIP__ will be checked to decide which functions to call.
 	mptcp_sysctl = register_net_sysctl(&init_net, "net/mpip", mpip_table);
-	ret = register_inetaddr_notifier(&mpip_inetaddr_notifier);
-	ret = register_netdevice_notifier(&mpip_netdev_notifier);
+//	ret = register_inetaddr_notifier(&mpip_inetaddr_notifier);
+//	ret = register_netdevice_notifier(&mpip_netdev_notifier);
 
 	//get_available_local_addr();
 
