@@ -1,6 +1,7 @@
 #include <linux/netdevice.h>
 #include <linux/inetdevice.h>
 #include <net/tcp.h>
+#include <net/icmp.h>
 #include <linux/ip_mpip.h>
 
 
@@ -146,22 +147,20 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 	return 1;
 }
 
-bool is_mpip_enabled(struct sk_buff *skb, __be32 addr)
+bool is_mpip_enabled(__be32 addr)
 {
 	bool enabled = false;
-	if (sysctl_mpip_enabled)
+	struct mpip_enabled_table *item = NULL;
+
+	if (!sysctl_mpip_enabled)
 		enabled = false;
 
-	struct mpip_enabled_table *item = find_mpip_enabled(addr);
+	item = find_mpip_enabled(addr);
+
 	if (!item)
 		enabled = false;
-
-	enabled = item->mpip_enabled;
-
-	if (!enabled)
-	{
-		icmp_send_mpip_enabled(skb);
-	}
+	else
+		enabled = item->mpip_enabled;
 
 	return enabled;
 }
@@ -273,6 +272,32 @@ struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
+int icmp_send_mpip_hb(struct sk_buff *skb)
+{
+	struct sk_buff *nskb = NULL;
+	struct iphdr *iph = NULL;
+	if(!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+	nskb = skb_copy(skb, GFP_ATOMIC);
+
+	if (nskb == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+
+	iph = ip_hdr(nskb);
+	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);
+
+	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+
+	return 1;
+}
+
+
 void send_mpip_hb(struct sk_buff *skb)
 {
 	if (!skb)
@@ -289,6 +314,84 @@ void send_mpip_hb(struct sk_buff *skb)
 		earliest_fbjiffies = jiffies;
 	}
 }
+
+void send_mpip_enable(struct sk_buff *skb)
+{
+	if (!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return;
+	}
+
+	struct iphdr *iph = ip_hdr(skb);
+
+	if (!is_mpip_enabled(iph->saddr))
+	{
+		icmp_send_mpip_enable(skb);
+	}
+}
+
+int icmp_send_mpip_enable(struct sk_buff *skb)
+{
+	struct sk_buff *nskb = NULL;
+	struct iphdr *iph = NULL;
+	if(!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+	nskb = skb_copy(skb, GFP_ATOMIC);
+
+	if (nskb == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+
+	iph = ip_hdr(nskb);
+	icmp_send(nskb, ICMP_MPIP_ENABLE, 0, 0);
+
+	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+
+	return 1;
+}
+
+void send_mpip_enabled(struct sk_buff *skb)
+{
+	if (!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return;
+	}
+
+	icmp_send_mpip_enabled(skb);
+}
+
+int icmp_send_mpip_enabled(struct sk_buff *skb)
+{
+	struct sk_buff *nskb = NULL;
+	struct iphdr *iph = NULL;
+	if(!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+	nskb = skb_copy(skb, GFP_ATOMIC);
+
+	if (nskb == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+
+	iph = ip_hdr(nskb);
+	icmp_send(nskb, ICMP_MPIP_ENABLED, 0, 0);
+
+	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+
+	return 1;
+}
+
 
 int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay)
 {
@@ -1117,12 +1220,25 @@ static void reset_mpip(void)
 
 asmlinkage long sys_mpip(void)
 {
+	struct mpip_enabled_table *mpip_enbaled;
 	struct working_ip_table *working_ip;
 	struct path_info_table *path_info;
 	struct socket_session_table *socket_session;
 	struct path_stat_table *path_stat;
 	struct local_addr_table *local_addr;
 	char *p;
+
+	printk("******************me*************\n");
+	list_for_each_entry(mpip_enbaled, &me_head, list)
+	{
+		p = (char *) &(mpip_enbaled->addr);
+		printk( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		printk("%d\t", mpip_enbaled->mpip_enabled);
+	}
+
+
 
 	printk("******************wi*************\n");
 	list_for_each_entry(working_ip, &wi_head, list)

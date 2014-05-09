@@ -384,6 +384,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		send_mpip_hb(skb);
+		send_mpip_enable(skb);
 	}
 
 //	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);

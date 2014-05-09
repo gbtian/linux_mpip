@@ -12,7 +12,6 @@
 #include <linux/syscalls.h>
 #include <net/route.h>
 #include <net/tcp.h>
-#include <net/icmp.h>
 
 #include <linux/inetdevice.h>
 #include <linux/ip_mpip.h>
@@ -868,7 +867,7 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 {
 	int res;
 
-	if (is_mpip_enabled(skb, old_daddr))
+	if (is_mpip_enabled(old_daddr))
 		return false;
 
 	if (!get_mpip_options(skb, old_saddr, old_daddr, new_saddr, new_daddr, options))
@@ -891,7 +890,7 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 	struct iphdr *iph = ip_hdr(skb);
 	int res;
 
-	if (is_mpip_enabled(skb, iph->daddr))
+	if (is_mpip_enabled(iph->daddr))
 		return false;
 
 	if (!get_mpip_options(skb, iph->saddr, iph->daddr, new_saddr, new_daddr, options))
@@ -910,55 +909,6 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 	return true;
 }
 
-int icmp_send_mpip_hb(struct sk_buff *skb)
-{
-	struct sk_buff *nskb = NULL;
-	struct iphdr *iph = NULL;
-	if(!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-	nskb = skb_copy(skb, GFP_ATOMIC);
-
-	if (nskb == NULL)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-
-	iph = ip_hdr(nskb);
-	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);
-
-	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
-
-	return 1;
-}
-
-int icmp_send_mpip_enabled(struct sk_buff *skb)
-{
-	struct sk_buff *nskb = NULL;
-	struct iphdr *iph = NULL;
-	if(!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-	nskb = skb_copy(skb, GFP_ATOMIC);
-
-	if (nskb == NULL)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-
-	iph = ip_hdr(nskb);
-	icmp_send(nskb, ICMP_MPIP_ENABLED, 0, 0);
-
-	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
-
-	return 1;
-}
 
 unsigned char get_session(struct sk_buff *skb)
 {

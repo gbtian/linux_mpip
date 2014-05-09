@@ -834,10 +834,18 @@ static void icmp_echo(struct sk_buff *skb)
 }
 
 /*
+ *	Handle ICMP_MPIP_ENABLE requests.
+*/
+static void icmp_mpip_enable(struct sk_buff *skb)
+{
+	struct iphdr *iph = ip_hdr(skb);
+	add_mpip_enabled(iph->saddr, true);
+	send_mpip_enabled(skb);
+}
+
+/*
  *	Handle ICMP_MPIP_ENABLED requests.
 */
-
-
 static void icmp_mpip_enabled(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
@@ -1073,6 +1081,9 @@ static const struct icmp_control icmp_pointers[NR_ICMP_TYPES + 1] = {
 	},
 	[ICMP_ADDRESSREPLY] = {
 		.handler = icmp_discard,
+	},
+	[ICMP_MPIP_ENABLE] = {
+		.handler = icmp_mpip_enable,
 	},
 	[ICMP_MPIP_ENABLED] = {
 		.handler = icmp_mpip_enabled,

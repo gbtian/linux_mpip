@@ -57,47 +57,6 @@ extern int global_stat_3;
 //extern struct list_head la_head;
 //extern struct list_head ps_head;
 
-int mpip_init(void);
-
-void mpip_log(const char *fmt, ...);
-
-void print_node_id(const char *prefix, unsigned char *node_id);
-
-void print_addr(const char *prefix, __be32 addr);
-
-__be32 convert_addr(char a1, char a2, char a3, char a4);
-
-char *in_ntoa(unsigned long in);
-
-bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2);
-
-int		mpip_rcv(struct sk_buff *skb);
-
-int		mpip_xmit(struct sk_buff *skb);
-
-struct net_device *find_dev_by_addr(__be32 addr);
-
-int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
-
-bool check_bad_addr(__be32 saddr, __be32 daddr);
-
-void print_mpip_options(const char *prefix, struct ip_options *opt);
-
-bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-					__be32 *new_saddr, __be32 *new_daddr);
-
-void mpip_options_build(struct sk_buff *skb, bool pushed);
-
-int process_mpip_options(struct sk_buff *skb);
-
-bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
-
-int icmp_send_mpip_hb(struct sk_buff *skb);
-
-int icmp_send_mpip_enabled(struct sk_buff *skb);
-
-
 struct mpip_enabled_table
 {
 	__be32				addr; /* receiver' ip seen by sender */
@@ -179,11 +138,61 @@ struct local_addr_table
 	__be32				addr;
 	struct list_head 	list;
 };
+
+
+int mpip_init(void);
+
+void mpip_log(const char *fmt, ...);
+
+void print_node_id(const char *prefix, unsigned char *node_id);
+
+void print_addr(const char *prefix, __be32 addr);
+
+__be32 convert_addr(char a1, char a2, char a3, char a4);
+
+char *in_ntoa(unsigned long in);
+
+bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2);
+
+int		mpip_rcv(struct sk_buff *skb);
+
+int		mpip_xmit(struct sk_buff *skb);
+
+struct net_device *find_dev_by_addr(__be32 addr);
+
+int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
+
+bool check_bad_addr(__be32 saddr, __be32 daddr);
+
+void print_mpip_options(const char *prefix, struct ip_options *opt);
+
+bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+					__be32 *new_saddr, __be32 *new_daddr);
+
+void mpip_options_build(struct sk_buff *skb, bool pushed);
+
+int process_mpip_options(struct sk_buff *skb);
+
+bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
+
+void send_mpip_hb(struct sk_buff *skb);
+
+int icmp_send_mpip_hb(struct sk_buff *skb);
+
+void send_mpip_enable(struct sk_buff *skb);
+
+int icmp_send_mpip_enable(struct sk_buff *skb);
+
+void send_mpip_enabled(struct sk_buff *skb);
+
+int icmp_send_mpip_enabled(struct sk_buff *skb);
+
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
 
 int add_mpip_enabled(__be32 addr, bool enabled);
 
-bool is_mpip_enabled(struct sk_buff *skb, __be32 addr);
+bool is_mpip_enabled(__be32 addr);
 
 int add_working_ip(unsigned char *node_id, __be32 addr);
 
@@ -228,8 +237,6 @@ unsigned char find_path_id(__be32 saddr, __be32 daddr);
 bool is_dest_added(unsigned char *node_id, __be32 add);
 
 int add_path_info(unsigned char *node_id, __be32 addr);
-
-void send_mpip_hb(struct sk_buff *skb);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
