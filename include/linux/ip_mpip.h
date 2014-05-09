@@ -84,16 +84,26 @@ bool check_bad_addr(__be32 saddr, __be32 daddr);
 
 void print_mpip_options(const char *prefix, struct ip_options *opt);
 
-int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr);
 
 void mpip_options_build(struct sk_buff *skb, bool pushed);
 
 int process_mpip_options(struct sk_buff *skb);
 
-int insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
+bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
 
 int icmp_send_mpip_hb(struct sk_buff *skb);
+
+int icmp_send_mpip_enabled(struct sk_buff *skb);
+
+
+struct mpip_enabled_table
+{
+	__be32				addr; /* receiver' ip seen by sender */
+	bool				mpip_enabled;
+	struct list_head 	list;
+};
 
 
 struct working_ip_table
@@ -169,6 +179,11 @@ struct local_addr_table
 	__be32				addr;
 	struct list_head 	list;
 };
+struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
+
+int add_mpip_enabled(__be32 addr, bool enabled);
+
+bool is_mpip_enabled(struct sk_buff *skb, __be32 addr);
 
 int add_working_ip(unsigned char *node_id, __be32 addr);
 

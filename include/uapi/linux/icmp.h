@@ -32,8 +32,9 @@
 #define ICMP_INFO_REPLY		16	/* Information Reply		*/
 #define ICMP_ADDRESS		17	/* Address Mask Request		*/
 #define ICMP_ADDRESSREPLY	18	/* Address Mask Reply		*/
-#define ICMP_MPIP_HEARTBEAT	19	/* mpip heart beat		*/
-#define NR_ICMP_TYPES		19
+#define ICMP_MPIP_ENABLED   19	/* mpip enabled information		*/
+#define ICMP_MPIP_HEARTBEAT	20	/* mpip heart beat		*/
+#define NR_ICMP_TYPES		20
 
 
 /* Codes for UNREACH. */

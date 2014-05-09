@@ -834,6 +834,17 @@ static void icmp_echo(struct sk_buff *skb)
 }
 
 /*
+ *	Handle ICMP_MPIP_ENABLED requests.
+*/
+
+
+static void icmp_mpip_enabled(struct sk_buff *skb)
+{
+	struct iphdr *iph = ip_hdr(skb);
+	add_mpip_enabled(iph->saddr, true);
+}
+
+/*
  *	Handle ICMP Timestamp requests.
  *	RFC 1122: 3.2.2.8 MAY implement ICMP timestamp requests.
  *		  SHOULD be in the kernel for minimum random latency.
@@ -1063,8 +1074,11 @@ static const struct icmp_control icmp_pointers[NR_ICMP_TYPES + 1] = {
 	[ICMP_ADDRESSREPLY] = {
 		.handler = icmp_discard,
 	},
+	[ICMP_MPIP_ENABLED] = {
+		.handler = icmp_mpip_enabled,
+	},
 	[ICMP_MPIP_HEARTBEAT] = {
-			.handler = icmp_discard,
+		.handler = icmp_discard,
 	},
 };
 

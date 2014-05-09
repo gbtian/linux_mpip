@@ -8,6 +8,7 @@ static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
 static unsigned long earliest_fbjiffies = 0;
 
+static LIST_HEAD(me_head);
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
 static LIST_HEAD(ss_head);
@@ -105,6 +106,64 @@ char *in_ntoa(unsigned long in)
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 	return(buff);
+}
+
+struct mpip_enabled_table *find_mpip_enabled(__be32 addr)
+{
+	struct mpip_enabled_table *mpip_enabled;
+
+	list_for_each_entry(mpip_enabled, &me_head, list)
+	{
+		if (addr == mpip_enabled->addr)
+		{
+			return mpip_enabled;
+		}
+	}
+
+	return NULL;
+}
+
+
+int add_mpip_enabled(__be32 addr, bool enabled)
+{
+	/* todo: need sanity checks, leave it for now */
+	/* todo: need locks */
+	struct mpip_enabled_table *item = NULL;
+
+	if (find_mpip_enabled(addr))
+		return 0;
+
+	item = kzalloc(sizeof(struct mpip_enabled_table),	GFP_ATOMIC);
+	item->addr = addr;
+	item->mpip_enabled = enabled;
+	INIT_LIST_HEAD(&(item->list));
+	list_add(&(item->list), &me_head);
+
+	mpip_log( "me:");
+
+	print_addr(__FUNCTION__, addr);
+
+	return 1;
+}
+
+bool is_mpip_enabled(struct sk_buff *skb, __be32 addr)
+{
+	bool enabled = false;
+	if (sysctl_mpip_enabled)
+		enabled = false;
+
+	struct mpip_enabled_table *item = find_mpip_enabled(addr);
+	if (!item)
+		enabled = false;
+
+	enabled = item->mpip_enabled;
+
+	if (!enabled)
+	{
+		icmp_send_mpip_enabled(skb);
+	}
+
+	return enabled;
 }
 
 int add_working_ip(unsigned char *node_id, __be32 addr)

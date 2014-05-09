@@ -863,13 +863,16 @@ static int mpip_options_get(struct net *net, struct ip_options_rcu *opt,
 	return 0;
 }
 
-int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr)
 {
 	int res;
 
+	if (is_mpip_enabled(skb, old_daddr))
+		return false;
+
 	if (!get_mpip_options(skb, old_saddr, old_daddr, new_saddr, new_daddr, options))
-		return 0;
+		return false;
 
 	if (!mp_opt)
 	{
@@ -880,16 +883,19 @@ int mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 //	print_mpip_options(__FUNCTION__, &(mp_opt->opt));
 
-	return 1;
+	return true;
 }
 
-int insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr)
+bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr)
 {
 	struct iphdr *iph = ip_hdr(skb);
 	int res;
 
+	if (is_mpip_enabled(skb, iph->daddr))
+		return false;
+
 	if (!get_mpip_options(skb, iph->saddr, iph->daddr, new_saddr, new_daddr, options))
-		return 0;
+		return false;
 
 	if (!mp_opt)
 		mp_opt = kzalloc(sizeof(struct ip_options_rcu) + ((MPIP_OPT_LEN + 3) & ~3),
@@ -901,7 +907,7 @@ int insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dadd
 
 	mpip_options_build(skb, false);
 
-	return 1;
+	return true;
 }
 
 int icmp_send_mpip_hb(struct sk_buff *skb)
@@ -923,6 +929,31 @@ int icmp_send_mpip_hb(struct sk_buff *skb)
 
 	iph = ip_hdr(nskb);
 	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);
+
+	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+
+	return 1;
+}
+
+int icmp_send_mpip_enabled(struct sk_buff *skb)
+{
+	struct sk_buff *nskb = NULL;
+	struct iphdr *iph = NULL;
+	if(!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+	nskb = skb_copy(skb, GFP_ATOMIC);
+
+	if (nskb == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+
+	iph = ip_hdr(nskb);
+	icmp_send(nskb, ICMP_MPIP_ENABLED, 0, 0);
 
 	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 
