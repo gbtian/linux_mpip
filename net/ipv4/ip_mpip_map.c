@@ -131,18 +131,34 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 	/* todo: need locks */
 	struct mpip_enabled_table *item = NULL;
 
-	if (find_mpip_enabled(addr))
+	if (!find_mpip_enabled(addr))
 		return 0;
 
 	item = kzalloc(sizeof(struct mpip_enabled_table),	GFP_ATOMIC);
 	item->addr = addr;
 	item->mpip_enabled = enabled;
+	item->sent_count = 0;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &me_head);
 
 	mpip_log( "me:");
 
 	print_addr(__FUNCTION__, addr);
+
+	return 1;
+}
+
+
+int update_mpip_enabled(__be32 addr, bool enabled)
+{
+	/* todo: need sanity checks, leave it for now */
+	/* todo: need locks */
+	struct mpip_enabled_table *item = find_mpip_enabled(addr);
+
+	if (!item)
+		return 0;
+
+	item->mpip_enabled = enabled;
 
 	return 1;
 }
@@ -325,8 +341,19 @@ void send_mpip_enable(struct sk_buff *skb)
 
 	struct iphdr *iph = ip_hdr(skb);
 
-	if (!is_mpip_enabled(iph->saddr))
+	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr);
+	if (item && ((item->sent_count > 10) || (item->mpip_enabled)))
 	{
+		return;
+	}
+	else if (item)
+	{
+		item->sent_count += 1;
+		icmp_send_mpip_enable(skb);
+	}
+	else
+	{
+		add_mpip_enabled(iph->saddr, false);
 		icmp_send_mpip_enable(skb);
 	}
 }

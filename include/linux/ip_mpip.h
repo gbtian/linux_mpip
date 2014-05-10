@@ -61,6 +61,7 @@ struct mpip_enabled_table
 {
 	__be32				addr; /* receiver' ip seen by sender */
 	bool				mpip_enabled;
+	int 				sent_count;
 	struct list_head 	list;
 };
 
@@ -189,6 +190,8 @@ void send_mpip_enabled(struct sk_buff *skb);
 int icmp_send_mpip_enabled(struct sk_buff *skb);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
+
+int update_mpip_enabled(__be32 addr, bool enabled);
 
 int add_mpip_enabled(__be32 addr, bool enabled);
 
