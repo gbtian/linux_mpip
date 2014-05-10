@@ -1262,6 +1262,8 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
+		printk("%d  ", mpip_enbaled->sent_count);
+
 		printk("%d\n", mpip_enbaled->mpip_enabled);
 	}
 
