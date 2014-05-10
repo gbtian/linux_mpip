@@ -867,7 +867,7 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 {
 	int res;
 
-	if (is_mpip_enabled(old_daddr))
+	if (!is_mpip_enabled(old_daddr))
 		return false;
 
 	if (!get_mpip_options(skb, old_saddr, old_daddr, new_saddr, new_daddr, options))
@@ -890,7 +890,7 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 	struct iphdr *iph = ip_hdr(skb);
 	int res;
 
-	if (is_mpip_enabled(iph->daddr))
+	if (!is_mpip_enabled(iph->daddr))
 		return false;
 
 	if (!get_mpip_options(skb, iph->saddr, iph->daddr, new_saddr, new_daddr, options))
