@@ -395,22 +395,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && iph->protocol == IPPROTO_TCP)
 	{
-//		mpip_log("seq: %u, next 1: %u, next 2: %u, doff: %d, "
-//					"tcp_header_len: %d, ihl: %d, skb->len: %u\n",
-//					ntohl(tcp_hdr(skb)->seq),
-//					skb->len - iph->ihl * 4 - tcp_hdr(skb)->doff * 4 + ntohl(tcp_hdr(skb)->seq),
-//					skb->len - iph->ihl * 4 - tcp_header_len + ntohl(tcp_hdr(skb)->seq),
-//					tcp_hdr(skb)->doff * 4,
-//					tcp_header_len,
-//					iph->ihl * 4,
-//					skb->len);
+		unsigned char session_id = get_session(skb);
+		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
+			return NET_RX_SUCCESS;
 
-		if (sysctl_mpip_send)
-		{
-			unsigned char session_id = get_session(skb);
-			if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
-				return NET_RX_SUCCESS;
-		}
 	}
 
 	return dst_input(skb);
@@ -449,10 +437,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-//	if (sysctl_mpip_enabled && check_bad_addr(iph->saddr, iph->daddr))
-//	{
-//		mpip_log("\nReceived: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-//	}
 	/*
 	 *	RFC1122: 3.2.1.2 MUST silently discard any IP frame that fails the checksum.
 	 *
