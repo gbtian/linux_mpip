@@ -849,7 +849,7 @@ static void icmp_mpip_enable(struct sk_buff *skb)
 static void icmp_mpip_enabled(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
-	add_mpip_enabled(iph->saddr, true);
+	update_mpip_enabled(iph->saddr, true);
 }
 
 /*

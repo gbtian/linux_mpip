@@ -131,7 +131,7 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 	/* todo: need locks */
 	struct mpip_enabled_table *item = NULL;
 
-	if (!find_mpip_enabled(addr))
+	if (find_mpip_enabled(addr))
 		return 0;
 
 	item = kzalloc(sizeof(struct mpip_enabled_table),	GFP_ATOMIC);
