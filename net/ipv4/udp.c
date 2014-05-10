@@ -831,9 +831,10 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	struct flowi4 fl4_stack;
 	struct flowi4 *fl4;
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled &&
+		is_mpip_enabled(inet->inet_daddr))
 	{
-		//len -= ((MPIP_OPT_LEN + 3) & ~3);
+		len -= ((MPIP_OPT_LEN + 3) & ~3);
 	}
 
 	int ulen = len;
