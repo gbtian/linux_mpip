@@ -1360,10 +1360,7 @@ unsigned int tcp_current_mss(struct sock *sk)
 	if (sysctl_mpip_enabled &&
 		is_mpip_enabled(inet_sk(sk)->inet_daddr))
 	{
-		if (sysctl_mpip_send)
-		{
-			mss_now -= ((MPIP_OPT_LEN + 3) & ~3);
-		}
+		mss_now -= ((MPIP_OPT_LEN + 3) & ~3);
 	}
 
 	return mss_now;

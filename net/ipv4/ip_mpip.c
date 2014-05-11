@@ -726,7 +726,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	get_available_local_addr();
 
-	if (opt->session_id > 0)
+	//if (opt->session_id > 0)
 	{
 		add_working_ip(opt->node_id, iph->saddr);
 		add_path_info(opt->node_id, iph->saddr);
@@ -738,7 +738,7 @@ int process_mpip_options(struct sk_buff *skb)
 		update_path_info();
 	}
 
-	if (iph->protocol != IPPROTO_ICMP)
+	if ((iph->protocol != IPPROTO_ICMP) && (opt->session_id > 0))
 	{
 		session_id = get_receiver_session_id(static_node_id, opt->node_id, iph->daddr, dport,
 											iph->saddr, sport, opt->session_id);
