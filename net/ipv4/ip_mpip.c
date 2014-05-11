@@ -672,7 +672,7 @@ int process_mpip_options(struct sk_buff *skb)
 
 	if (!skb)
 	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
 	}
 
@@ -686,13 +686,13 @@ int process_mpip_options(struct sk_buff *skb)
 	opt->optlen = iph->ihl*4 - sizeof(struct iphdr);
 	if (ip_options_compile(dev_net(dev), opt, skb))
 	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 		return 0;
 	}
 
 
-	//mpip_log("Receive: %d, %s, %d\n", iph->protocol, __FILE__, __LINE__);
+	mpip_log("Receive: %d, %s, %d\n", iph->protocol, __FILE__, __LINE__);
 
 	//if TCP PACKET
 	if(iph->protocol == IPPROTO_TCP)
@@ -772,24 +772,24 @@ int process_mpip_options(struct sk_buff *skb)
 //		mpip_log("r: udph->dest= %d, odport=%d, sport=%d\n", udph->dest, odport, sport);
 //	}
 
-//	print_mpip_options(__FUNCTION__, opt);
+	print_mpip_options(__FUNCTION__, opt);
 
 
 	if (res && iph->protocol != IPPROTO_ICMP)
 	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//		mpip_log("r: modifying header\n");
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("r: modifying header\n");
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
-//		mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		new_dst_dev = find_dev_by_addr(iph->daddr);
 		if (new_dst_dev)
 		{
 			skb->dev = new_dst_dev;
 		}
 
-//		mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("new_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	if(iph->protocol==IPPROTO_TCP)
