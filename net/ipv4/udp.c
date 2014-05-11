@@ -830,10 +830,10 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	struct udp_sock *up = udp_sk(sk);
 	struct flowi4 fl4_stack;
 	struct flowi4 *fl4;
-	__be16 dport = htons((unsigned short int) inet->inet_dport);
+	__be16 dnsport = htons((unsigned short int) inet->inet_dport);
 
 
-	if (sysctl_mpip_enabled && (dport != 53) &&
+	if (sysctl_mpip_enabled && (dnsport != 53) &&
 		is_mpip_enabled(inet->inet_daddr))
 	{
 		len -= ((MPIP_OPT_LEN + 3) & ~3);
