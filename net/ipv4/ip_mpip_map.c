@@ -1189,6 +1189,9 @@ struct net_device *find_dev_by_addr(__be32 addr)
 
 static void reset_mpip(void)
 {
+	struct mpip_enabled_table *mpip_enabled;
+	struct mpip_enabled_table *tmp_enabled;
+
 	struct working_ip_table *working_ip;
 	struct working_ip_table *tmp_ip;
 
@@ -1204,6 +1207,12 @@ static void reset_mpip(void)
 
 	struct local_addr_table *local_addr;
 	struct local_addr_table *tmp_addr;
+
+	list_for_each_entry_safe(mpip_enabled, tmp_enabled, &me_head, list)
+	{
+			list_del(&(mpip_enabled->list));
+			kfree(mpip_enabled);
+	}
 
 	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
 	{
