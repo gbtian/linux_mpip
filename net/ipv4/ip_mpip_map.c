@@ -1166,10 +1166,6 @@ void get_available_local_addr(void)
 			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		}
 	}
-
-//	add_working_ip("1234", convert_addr(192,168,2,1));
-//	add_path_info("1234", convert_addr(192,168,2,1));
-//	add_path_stat("1234", 2);
 }
 
 
@@ -1332,7 +1328,6 @@ asmlinkage long sys_mpip(void)
 	printk("******************la*************\n");
 	list_for_each_entry(local_addr, &la_head, list)
 	{
-
 		p = (char *) &(local_addr->addr);
 		printk( "%d.%d.%d.%d\n",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
@@ -1369,10 +1364,8 @@ asmlinkage long sys_mpip(void)
 
 	}
 
-
 	printk("******************global stat*************\n");
 	printk("%d  %d  %d\n", global_stat_1, global_stat_2, global_stat_3);
-
 
 	return 0;
 
@@ -1383,5 +1376,4 @@ asmlinkage long sys_reset_mpip(void)
 	reset_mpip();
 	printk("reset ended\n");
 	return 0;
-
 }
