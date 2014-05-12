@@ -497,7 +497,6 @@ __s32 calc_si_diff()
 		if (!prev_info)
 			continue;
 		
-		++K;
 
 		diff = (path_info->queuing_delay - prev_info->queuing_delay > 0) ? 
 		       (path_info->queuing_delay - prev_info->queuing_delay) :
@@ -505,8 +504,12 @@ __s32 calc_si_diff()
 		
 		max = (path_info->queuing_delay > prev_info->queuing_delay) ? 
 		       path_info->queuing_delay : prev_info->queuing_delay;
-
-		sigma += (100 * diff) / (max + 500);
+		
+		if (max > diff)
+		{
+			sigma += (100 * diff) / (max + 500);
+			++k;
+		}
 
 		printk("%d, %d, %d, %d, %d\n", diff, max, (100 * diff) / (max + 500), sigma, __LINE__);
 	}
