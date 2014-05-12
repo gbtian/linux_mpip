@@ -508,7 +508,7 @@ __s32 calc_si_diff()
 		if (max > diff)
 		{
 			sigma += (100 * diff) / (max + 500);
-			++k;
+			++K;
 		}
 
 		printk("%d, %d, %d, %d, %d\n", diff, max, (100 * diff) / (max + 500), sigma, __LINE__);
