@@ -883,7 +883,9 @@ recursive:
 			list_add(&(item->list), &(socket_session->tcp_buf));
 			socket_session->buf_count += 1;
 
-			mpip_log("out of order: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+			mpip_log("out of order: %u, %u, %d, %s, %d\n", ntohl(tcph->seq),
+					socket_session->next_seq, socket_session->buf_count,
+					__FILE__, __LINE__);
 
 			goto success;
 		}
