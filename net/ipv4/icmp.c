@@ -494,7 +494,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 
 	if (!rt)
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
+		//printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
 	}
 	net = dev_net(rt->dst.dev);
@@ -510,7 +510,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	    (skb_network_header(skb_in) + sizeof(*iph)) >
 	    skb_tail_pointer(skb_in))
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
+		//printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
 	}
 	/*
@@ -518,7 +518,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	 */
 	if (skb_in->pkt_type != PACKET_HOST)
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
+		//printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
 	}
 	/*
@@ -526,7 +526,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	 */
 	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST))
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
+		//printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out;
 	}
 	/*
@@ -585,7 +585,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	sk = icmp_xmit_lock(net);
 	if (sk == NULL)
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
+//		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out_free;
 	}
 	/*
@@ -614,7 +614,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 
 	if (ip_options_echo(&icmp_param->replyopts.opt.opt, skb_in))
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
+//		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto out_unlock;
 	}
 
