@@ -822,6 +822,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 	struct tcp_skb_buf *tcp_buf = NULL;
 	struct tcp_skb_buf *tmp_buf = NULL;
 
+	rcu_read_lock();
+
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
 		if (socket_session->session_id == session_id)
@@ -893,8 +895,10 @@ recursive:
 
 
 success:
+	rcu_read_unlock();
 	return 1;
 fail:
+	rcu_read_unlock();
 	mpip_log("Fail: %s, %d\n", __FILE__, __LINE__);
 	return 0;
 }
