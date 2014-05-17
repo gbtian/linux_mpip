@@ -109,7 +109,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled  && (iph->ihl == 5) && (iph->protocol==IPPROTO_ICMP))
 	{
-		mpip_log("Add ICMP options: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+//		mpip_log("Add ICMP options: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 
 		if (icmp_hdr(skb)->type == ICMP_MPIP_HEARTBEAT)
 		{

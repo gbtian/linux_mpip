@@ -444,7 +444,7 @@ int icmp_send_mpip_enable(struct sk_buff *skb)
 	iph = ip_hdr(nskb);
 	icmp_send(nskb, ICMP_MPIP_ENABLE, 0, 0);
 
-	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+//	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 
 	return 1;
 }
@@ -1269,6 +1269,8 @@ void update_addr_change()
 	struct local_addr_table *local_addr;
 	struct local_addr_table *tmp_addr;
 	struct working_ip_table *working_ip;
+	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
 
 	struct addr_notified_table *addr_notified;
 	list_for_each_entry(addr_notified, &an_head, list)
@@ -1283,6 +1285,12 @@ void update_addr_change()
 	}
 
 	get_available_local_addr();
+
+	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+	{
+			list_del(&(path_info->list));
+			kfree(path_info);
+	}
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
