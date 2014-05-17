@@ -410,7 +410,7 @@ unsigned char *get_node_id(void)
 			continue;
 
 		static_node_id = kzalloc(MPIP_OPT_NODE_ID_LEN, GFP_ATOMIC);
-		memcpy(static_node_id, dev->perm_addr, MPIP_OPT_NODE_ID_LEN);
+		memcpy(static_node_id, dev->perm_addr + ETH_ALEN - MPIP_OPT_NODE_ID_LEN, MPIP_OPT_NODE_ID_LEN);
 		return static_node_id;
 	}
 
