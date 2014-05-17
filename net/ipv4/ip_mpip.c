@@ -127,15 +127,23 @@ static struct ctl_table mpip_table[] =
 static int mpip_inetaddr_event(struct notifier_block *this,
 				   unsigned long event, void *ptr)
 {
-
+	struct net_device *dev = NULL;
 	struct in_ifaddr *ifa = (struct in_ifaddr *)ptr;
-	struct net_device *dev = ifa->ifa_dev->dev;
-	struct net *net = dev_net(ifa->ifa_dev->dev);
+	if (ifa && ifa->ifa_dev)
+		dev = ifa->ifa_dev->dev;
+	else
+	{
+		dump_stack();
+		printk("%s, %d\n", __FILE__, __LINE__);
+	}
+	//struct net *net = dev_net(ifa->ifa_dev->dev);
 
 	if (dev && dev->ip_ptr && dev->ip_ptr->ifa_list)
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
 		print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
+		if (sysctl_mpip_enabled)
+			update_addr_change();
 	}
 
 //	addr4_event_handler(ifa, event, net);
@@ -149,9 +157,6 @@ static int netdev_event(struct notifier_block *this, unsigned long event,
 {
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct in_device *in_dev;
-#if IS_ENABLED(CONFIG_IPV6)
-	struct inet6_dev *in6_dev;
-#endif
 
 	if (!(event == NETDEV_UP || event == NETDEV_DOWN ||
 	      event == NETDEV_CHANGE))
@@ -159,7 +164,6 @@ static int netdev_event(struct notifier_block *this, unsigned long event,
 
 	rcu_read_lock();
 	in_dev = __in_dev_get_rtnl(dev);
-
 
 	printk("%s, %d\n", __FILE__, __LINE__);
 
@@ -313,8 +317,8 @@ int mpip_init(void)
 	int ret;
     //In kernel, __MPIP__ will be checked to decide which functions to call.
 	mptcp_sysctl = register_net_sysctl(&init_net, "net/mpip", mpip_table);
-//	ret = register_inetaddr_notifier(&mpip_inetaddr_notifier);
-//	ret = register_netdevice_notifier(&mpip_netdev_notifier);
+	ret = register_inetaddr_notifier(&mpip_inetaddr_notifier);
+	ret = register_netdevice_notifier(&mpip_netdev_notifier);
 
 	//get_available_local_addr();
 
@@ -622,6 +626,11 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	options[12] = (delay>>16) & 0xff;
 	options[13] = (delay>>24) & 0xff;
 
+	if (get_addr_notified(dst_node_id))
+		options[14] = 0;
+	else
+		options[14] = 1;
+
 
 //mpip_log("\ns: iph->id=%d\n", iph->id);
 //    mpip_log("s: old_saddr=");
@@ -728,13 +737,17 @@ int process_mpip_options(struct sk_buff *skb)
 
 	//if (opt->session_id > 0)
 	{
+		add_addr_notified(opt->node_id);
+		process_addr_notified_event(opt->node_id, opt->is_changed);
+
 		add_working_ip(opt->node_id, iph->saddr);
 		add_path_info(opt->node_id, iph->saddr);
 		add_path_stat(opt->node_id, opt->path_id, iph->saddr, iph->daddr);
 
+
+
 		update_path_stat_delay(iph->saddr, iph->daddr, opt->nexthop);
 		update_path_delay(opt->stat_path_id, opt->delay);
-
 		update_path_info();
 	}
 

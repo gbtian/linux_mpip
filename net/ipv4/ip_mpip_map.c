@@ -10,6 +10,7 @@ static unsigned char static_path_id = 1;
 static unsigned long earliest_fbjiffies = 0;
 
 static LIST_HEAD(me_head);
+static LIST_HEAD(an_head);
 static LIST_HEAD(wi_head);
 static LIST_HEAD(pi_head);
 static LIST_HEAD(ss_head);
@@ -273,6 +274,71 @@ unsigned char * find_node_id_in_working_ip(__be32 addr)
 	return NULL;
 }
 
+struct addr_notified_table *find_addr_notified(unsigned char *node_id)
+{
+	struct addr_notified_table *addr_notified;
+
+	if (!node_id)
+		return NULL;
+
+	list_for_each_entry(addr_notified, &an_head, list)
+	{
+		if (is_equal_node_id(node_id, addr_notified->node_id))
+		{
+			return addr_notified;
+		}
+	}
+
+	return NULL;
+}
+
+bool get_addr_notified(unsigned char *node_id)
+{
+	bool notified = true;
+	struct addr_notified_table *addr_notified = find_addr_notified(node_id);
+	if (addr_notified)
+	{
+		notified = addr_notified->notified;
+		addr_notified->notified = true;
+		return notified;
+	}
+
+	return true;
+}
+
+int add_addr_notified(unsigned char *node_id)
+{
+	struct addr_notified_table *item = NULL;
+
+
+	if (!node_id)
+		return 0;
+
+	if (node_id[0] == node_id[1])
+	{
+		return 0;
+	}
+
+	if (find_addr_notified(node_id))
+		return 0;
+
+
+	item = kzalloc(sizeof(struct addr_notified_table),	GFP_ATOMIC);
+
+	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	item->notified = true;
+	INIT_LIST_HEAD(&(item->list));
+	list_add(&(item->list), &an_head);
+
+	mpip_log( "an:");
+
+	print_node_id(__FUNCTION__, node_id);
+
+	return 1;
+}
+
+
+
 struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 {
 	struct path_stat_table *path_stat;
@@ -419,6 +485,30 @@ int icmp_send_mpip_enabled(struct sk_buff *skb)
 	return 1;
 }
 
+
+void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
+{
+	struct path_info_table *path_info;
+	struct path_info_table *tmp_info;
+
+
+	if (!node_id || changed == 0)
+		return;
+
+	if (node_id[0] == node_id[1])
+	{
+		return;
+	}
+
+	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
+	{
+		if (is_equal_node_id(node_id, path_info->node_id))
+		{
+			list_del(&(path_info->list));
+			kfree(path_info);
+		}
+	}
+}
 
 int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay)
 {
@@ -1174,6 +1264,31 @@ void get_available_local_addr(void)
 	}
 }
 
+void update_addr_change()
+{
+	struct local_addr_table *local_addr;
+	struct local_addr_table *tmp_addr;
+	struct working_ip_table *working_ip;
+
+	struct addr_notified_table *addr_notified;
+	list_for_each_entry(addr_notified, &an_head, list)
+	{
+		addr_notified->notified = false;
+	}
+
+	list_for_each_entry_safe(local_addr, tmp_addr, &la_head, list)
+	{
+		list_del(&(local_addr->list));
+		kfree(local_addr);
+	}
+
+	get_available_local_addr();
+
+	list_for_each_entry(working_ip, &wi_head, list)
+	{
+		add_path_info(working_ip->node_id, working_ip->addr);
+	}
+}
 
 struct net_device *find_dev_by_addr(__be32 addr)
 {
@@ -1199,6 +1314,9 @@ static void reset_mpip(void)
 	struct mpip_enabled_table *mpip_enabled;
 	struct mpip_enabled_table *tmp_enabled;
 
+	struct addr_notified_table *addr_notified;
+	struct addr_notified_table *tmp_notified;
+
 	struct working_ip_table *working_ip;
 	struct working_ip_table *tmp_ip;
 
@@ -1219,6 +1337,12 @@ static void reset_mpip(void)
 	{
 			list_del(&(mpip_enabled->list));
 			kfree(mpip_enabled);
+	}
+
+	list_for_each_entry_safe(addr_notified, tmp_notified, &an_head, list)
+	{
+			list_del(&(addr_notified->list));
+			kfree(addr_notified);
 	}
 
 	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
@@ -1264,6 +1388,7 @@ static void reset_mpip(void)
 asmlinkage long sys_mpip(void)
 {
 	struct mpip_enabled_table *mpip_enbaled;
+	struct addr_notified_table *addr_notified;
 	struct working_ip_table *working_ip;
 	struct path_info_table *path_info;
 	struct socket_session_table *socket_session;
@@ -1283,6 +1408,14 @@ asmlinkage long sys_mpip(void)
 		printk("%d\n", mpip_enbaled->mpip_enabled);
 	}
 
+	printk("******************an*************\n");
+	list_for_each_entry(addr_notified, &an_head, list)
+	{
+		printk( "%02x-%02x  ",
+				addr_notified->node_id[0], addr_notified->node_id[1]);
+
+		printk("%d\n", addr_notified->notified);
+	}
 
 	printk("******************wi*************\n");
 	list_for_each_entry(working_ip, &wi_head, list)

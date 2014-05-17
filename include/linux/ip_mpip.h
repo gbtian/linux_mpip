@@ -65,6 +65,13 @@ struct mpip_enabled_table
 	struct list_head 	list;
 };
 
+struct addr_notified_table
+{
+	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
+	bool				notified;
+	struct list_head 	list;
+};
+
 
 struct working_ip_table
 {
@@ -197,6 +204,14 @@ int add_mpip_enabled(__be32 addr, bool enabled);
 
 bool is_mpip_enabled(__be32 addr);
 
+bool get_addr_notified(unsigned char *node_id);
+
+struct addr_notified_table *find_addr_notified(unsigned char *node_id);
+
+int add_addr_notified(unsigned char *node_id);
+
+void process_addr_notified_event(unsigned char *node_id, unsigned char changed);
+
 int add_working_ip(unsigned char *node_id, __be32 addr);
 
 int del_working_ip(unsigned char *node_id, __be32 addr);
@@ -257,6 +272,8 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 __be32 find_local_addr(__be32 addr);
 
 void get_available_local_addr(void);
+
+void update_addr_change();
 
 int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id);
 
