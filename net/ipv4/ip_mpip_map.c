@@ -298,9 +298,9 @@ bool get_addr_notified(unsigned char *node_id)
 	struct addr_notified_table *addr_notified = find_addr_notified(node_id);
 	if (addr_notified)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		notified = addr_notified->notified;
 		addr_notified->notified = true;
+		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
 		return notified;
 	}
 
