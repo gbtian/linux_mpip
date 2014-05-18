@@ -381,7 +381,7 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
 		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
 		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
-		mpip_log("%s: changed = %d\n",  prefix, opt->is_changed);
+		mpip_log("%s: changed = %d\n",  prefix, opt->ts);
 	}
 	else
 	{
@@ -393,7 +393,7 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
 		mpip_log("delay = %d\n", opt->delay);
 		mpip_log("nexthop = %d\n", opt->nexthop);
-		mpip_log("changed = %d\n",  opt->is_changed);
+		mpip_log("changed = %d\n",  opt->ts);
 	}
 }
 EXPORT_SYMBOL(print_mpip_options);
@@ -740,7 +740,7 @@ int process_mpip_options(struct sk_buff *skb)
 	//if (opt->session_id > 0)
 	{
 		add_addr_notified(opt->node_id);
-		//process_addr_notified_event(opt->node_id, opt->is_changed);
+		process_addr_notified_event(opt->node_id, opt->ts);
 
 		add_working_ip(opt->node_id, iph->saddr);
 		add_path_info(opt->node_id, iph->saddr);

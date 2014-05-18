@@ -390,7 +390,7 @@ int ip_options_compile(struct net *net,
 		    				   (optptr[7]<<8) | optptr[6];
 		    	opt->delay = (optptr[13]<<24) | (optptr[12]<<16) |
 							   (optptr[11]<<8) | optptr[10];
-		    	opt->is_changed = optptr[14];
+		    	opt->ts = optptr[14];
 		    	break;
 		    case IPOPT_TIMESTAMP:
 		    	if (opt->ts)
