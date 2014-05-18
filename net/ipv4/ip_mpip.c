@@ -370,7 +370,7 @@ EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(const char *prefix, struct ip_options *opt)
 {
-	prefix = NULL;
+	//prefix = NULL;
 	if (prefix)
 	{
 		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
@@ -381,6 +381,7 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
 		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
 		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
+		mpip_log("%s: changed = %d\n",  prefix, opt->is_changed);
 	}
 	else
 	{
@@ -392,6 +393,7 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
 		mpip_log("delay = %d\n", opt->delay);
 		mpip_log("nexthop = %d\n", opt->nexthop);
+		mpip_log("changed = %d\n",  opt->is_changed);
 	}
 }
 EXPORT_SYMBOL(print_mpip_options);
@@ -785,7 +787,7 @@ int process_mpip_options(struct sk_buff *skb)
 //		mpip_log("r: udph->dest= %d, odport=%d, sport=%d\n", udph->dest, odport, sport);
 //	}
 
-	//print_mpip_options(__FUNCTION__, opt);
+	print_mpip_options(__FUNCTION__, opt);
 
 
 	if (res && iph->protocol != IPPROTO_ICMP)
@@ -827,7 +829,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 	else if (iph->protocol == IPPROTO_ICMP)
 	{
-		mpip_log("Receive ICMP options: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+//		mpip_log("Receive ICMP options: %d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 		//print_mpip_options(__FUNCTION__, opt);
 	}
 	return 1;
@@ -893,7 +895,8 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	}
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
-//	print_mpip_options(__FUNCTION__, &(mp_opt->opt));
+
+	print_mpip_options(__FUNCTION__, &(mp_opt->opt));
 
 	return true;
 }
