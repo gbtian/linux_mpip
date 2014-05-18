@@ -629,7 +629,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	options[13] = (delay>>24) & 0xff;
 
 	if (get_addr_notified(dst_node_id))
-		options[14] = 0;
+		options[14] = 1;
 	else
 		options[14] = 1;
 
@@ -740,7 +740,7 @@ int process_mpip_options(struct sk_buff *skb)
 	//if (opt->session_id > 0)
 	{
 		add_addr_notified(opt->node_id);
-		process_addr_notified_event(opt->node_id, opt->is_changed);
+		//process_addr_notified_event(opt->node_id, opt->is_changed);
 
 		add_working_ip(opt->node_id, iph->saddr);
 		add_path_info(opt->node_id, iph->saddr);
