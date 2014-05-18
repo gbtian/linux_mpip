@@ -374,7 +374,7 @@ int icmp_send_mpip_hb(struct sk_buff *skb)
 	iph = ip_hdr(nskb);
 	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);
 
-	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+//	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 
 	return 1;
 }
@@ -391,7 +391,7 @@ void send_mpip_hb(struct sk_buff *skb)
 	//mpip_log("%s, %d\n", __FILE__, __LINE__);
 	if ((jiffies - earliest_fbjiffies) / (HZ / 100) >= sysctl_mpip_hb)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
+//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		icmp_send_mpip_hb(skb);
 		earliest_fbjiffies = jiffies;
 	}
@@ -480,7 +480,7 @@ int icmp_send_mpip_enabled(struct sk_buff *skb)
 	iph = ip_hdr(nskb);
 	icmp_send(nskb, ICMP_MPIP_ENABLED, 0, 0);
 
-	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+//	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
 
 	return 1;
 }
@@ -500,10 +500,12 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 		return;
 	}
 
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
 		if (is_equal_node_id(node_id, path_info->node_id))
 		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			list_del(&(path_info->list));
 			kfree(path_info);
 		}
@@ -1272,28 +1274,34 @@ void update_addr_change()
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info;
 
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
+
 	struct addr_notified_table *addr_notified;
 	list_for_each_entry(addr_notified, &an_head, list)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		addr_notified->notified = false;
 	}
-
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	list_for_each_entry_safe(local_addr, tmp_addr, &la_head, list)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		list_del(&(local_addr->list));
 		kfree(local_addr);
 	}
-
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	get_available_local_addr();
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-			list_del(&(path_info->list));
-			kfree(path_info);
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		list_del(&(path_info->list));
+		kfree(path_info);
 	}
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		add_path_info(working_ip->node_id, working_ip->addr);
 	}
 }
