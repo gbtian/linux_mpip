@@ -1260,7 +1260,7 @@ void get_available_local_addr(void)
 			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &la_head);
 
-			mpip_log( "local addr:");
+			mpip_log( "local addr: %lu  ", dev->state);
 			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		}
 	}
