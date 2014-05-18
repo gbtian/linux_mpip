@@ -1250,6 +1250,16 @@ void get_available_local_addr(void)
 		if (strstr(dev->name, "lo"))
 			continue;
 
+		if (!netif_running(dev))
+		{
+			if (dev->ip_ptr && dev->ip_ptr->ifa_list)
+			{
+				mpip_log( "un-active: %lu  ", dev->state);
+				print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
+			}
+
+			continue;
+		}
 		if (dev->ip_ptr && dev->ip_ptr->ifa_list)
 		{
 			if (find_local_addr(dev->ip_ptr->ifa_list->ifa_address))
@@ -1259,7 +1269,6 @@ void get_available_local_addr(void)
 			item->addr = dev->ip_ptr->ifa_list->ifa_address;
 			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &la_head);
-
 			mpip_log( "local addr: %lu  ", dev->state);
 			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		}
