@@ -464,6 +464,11 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
+	mpip_log("Original receive addr:\n");
+	print_addr(__FUNCTION__, iph->saddr);
+	print_addr(__FUNCTION__, iph->daddr);
+
+
 	if (sysctl_mpip_enabled)
 	{
 		//mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
