@@ -370,6 +370,9 @@ EXPORT_SYMBOL(mpip_log);
 
 void print_mpip_options(const char *prefix, struct ip_options *opt)
 {
+	if (opt->ts < 1)
+		return;
+
 	prefix = NULL;
 	if (prefix)
 	{
@@ -796,13 +799,21 @@ int process_mpip_options(struct sk_buff *skb)
 	{
 		//mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		//mpip_log("r: modifying header\n");
-		iph->saddr = daddr;
-		iph->daddr = saddr;
 
 		//mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
-		new_dst_dev = find_dev_by_addr(iph->daddr);
+		new_dst_dev = find_dev_by_addr(saddr);
 		if (new_dst_dev)
 		{
+			mpip_log("receive addr:");
+			print_addr(__FUNCTION__, iph->saddr);
+			print_addr(__FUNCTION__, daddr);
+			print_addr(__FUNCTION__, iph->daddr);
+			print_addr(__FUNCTION__, saddr);
+
+
+			iph->saddr = daddr;
+			iph->daddr = saddr;
+
 			skb->dev = new_dst_dev;
 		}
 

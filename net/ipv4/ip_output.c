@@ -129,6 +129,14 @@ int __ip_local_out(struct sk_buff *skb)
 			if (new_dst_dev)
 			{
 				skb_dst(skb)->dev = new_dst_dev;
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
+				mpip_log("send addr 1:");
+				print_addr(__FUNCTION__, iph->saddr);
+				print_addr(__FUNCTION__, new_saddr);
+				print_addr(__FUNCTION__, iph->daddr);
+				print_addr(__FUNCTION__, new_daddr);
+
+
 				iph->saddr = new_saddr;
 				iph->daddr = new_daddr;
 			}
@@ -250,6 +258,13 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled && new_saddr > 0 && new_daddr > 0 && mpip_opt_added)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("send addr 2:");
+		print_addr(__FUNCTION__, iph->saddr);
+		print_addr(__FUNCTION__, new_saddr);
+		print_addr(__FUNCTION__, iph->daddr);
+		print_addr(__FUNCTION__, new_daddr);
+
 		iph->daddr    = new_daddr;
 		iph->saddr    = new_saddr;
 	}
@@ -564,8 +579,15 @@ packet_routed:
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
 
-	if (new_saddr > 0 && new_daddr > 0)
+	if (mpip_opt_added && new_saddr > 0 && new_daddr > 0)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("send addr:");
+		print_addr(__FUNCTION__, iph->saddr);
+		print_addr(__FUNCTION__, new_saddr);
+		print_addr(__FUNCTION__, iph->daddr);
+		print_addr(__FUNCTION__, new_daddr);
+
 		iph->saddr = new_saddr;
 		iph->daddr = new_daddr;
 	}
