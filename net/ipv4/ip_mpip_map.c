@@ -130,10 +130,13 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
-	struct mpip_enabled_table *item = NULL;
+	struct mpip_enabled_table *item = find_mpip_enabled(addr);
 
-	if (find_mpip_enabled(addr))
+	if (item)
+	{
+		item->mpip_enabled = enabled;
 		return 0;
+	}
 
 	item = kzalloc(sizeof(struct mpip_enabled_table),	GFP_ATOMIC);
 	item->addr = addr;
@@ -145,21 +148,6 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 	mpip_log( "me:");
 
 	print_addr(__FUNCTION__, addr);
-
-	return 1;
-}
-
-
-int update_mpip_enabled(__be32 addr, bool enabled)
-{
-	/* todo: need sanity checks, leave it for now */
-	/* todo: need locks */
-	struct mpip_enabled_table *item = find_mpip_enabled(addr);
-
-	if (!item)
-		return 0;
-
-	item->mpip_enabled = enabled;
 
 	return 1;
 }
@@ -489,9 +477,14 @@ int icmp_send_mpip_enabled(struct sk_buff *skb)
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 {
+	struct working_ip_table *working_ip;
+	struct working_ip_table *tmp_ip;
+
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info;
 
+	struct path_stat_table *path_stat;
+	struct path_stat_table *tmp_stat;
 
 	if (!node_id || changed == 0)
 		return;
@@ -502,6 +495,19 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 	}
 
 	mpip_log("%s, %d\n", __FILE__, __LINE__);
+
+
+
+	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
+	{
+		if (is_equal_node_id(node_id, working_ip->node_id))
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			list_del(&(path_info->list));
+			kfree(path_info);
+		}
+	}
+
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
 		if (is_equal_node_id(node_id, path_info->node_id))
@@ -509,6 +515,16 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			list_del(&(path_info->list));
 			kfree(path_info);
+		}
+	}
+
+	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
+	{
+		if (is_equal_node_id(node_id, path_stat->node_id))
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			list_del(&(path_stat->list));
+			kfree(path_stat);
 		}
 	}
 }
@@ -1283,6 +1299,8 @@ void update_addr_change()
 	struct working_ip_table *working_ip;
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info;
+	struct path_stat_table *path_stat;
+	struct path_stat_table *tmp_stat;
 
 	mpip_log("%s, %d\n", __FILE__, __LINE__);
 
@@ -1313,6 +1331,12 @@ void update_addr_change()
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		add_path_info(working_ip->node_id, working_ip->addr);
+	}
+
+	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
+	{
+			list_del(&(path_stat->list));
+			kfree(path_stat);
 	}
 }
 

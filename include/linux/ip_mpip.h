@@ -29,7 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_OPT_LEN 14
+#define MPIP_OPT_LEN 15
 #define MPIP_OPT_NODE_ID_LEN 2
 #define MPIP_TCP_BUF_LEN 5
 
@@ -197,8 +197,6 @@ void send_mpip_enabled(struct sk_buff *skb);
 int icmp_send_mpip_enabled(struct sk_buff *skb);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
-
-int update_mpip_enabled(__be32 addr, bool enabled);
 
 int add_mpip_enabled(__be32 addr, bool enabled);
 

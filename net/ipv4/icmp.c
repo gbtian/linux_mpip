@@ -839,7 +839,7 @@ static void icmp_echo(struct sk_buff *skb)
 static void icmp_mpip_enable(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
-	update_mpip_enabled(iph->saddr, true);
+	add_mpip_enabled(iph->saddr, true);
 	send_mpip_enabled(skb);
 }
 
@@ -849,7 +849,7 @@ static void icmp_mpip_enable(struct sk_buff *skb)
 static void icmp_mpip_enabled(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
-	update_mpip_enabled(iph->saddr, true);
+	add_mpip_enabled(iph->saddr, true);
 }
 
 /*
