@@ -299,7 +299,7 @@ bool get_addr_notified(unsigned char *node_id)
 		else
 			addr_notified->count = 0;
 
-		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
+//		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
 		return notified;
 	}
 
@@ -1281,11 +1281,11 @@ void get_available_local_addr(void)
 
 		if (!netif_running(dev))
 		{
-			if (dev->ip_ptr && dev->ip_ptr->ifa_list)
-			{
-				mpip_log( "un-active: %lu  ", dev->state);
-				print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
-			}
+//			if (dev->ip_ptr && dev->ip_ptr->ifa_list)
+//			{
+//				mpip_log( "un-active: %lu  ", dev->state);
+//				print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
+//			}
 
 			continue;
 		}
