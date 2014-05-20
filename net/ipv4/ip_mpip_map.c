@@ -503,8 +503,8 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 		if (is_equal_node_id(node_id, working_ip->node_id))
 		{
 			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			list_del(&(path_info->list));
-			kfree(path_info);
+			list_del(&(working_ip->list));
+			kfree(working_ip);
 		}
 	}
 
