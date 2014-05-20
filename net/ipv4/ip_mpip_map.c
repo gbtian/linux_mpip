@@ -287,7 +287,18 @@ bool get_addr_notified(unsigned char *node_id)
 	if (addr_notified)
 	{
 		notified = addr_notified->notified;
-		addr_notified->notified = true;
+		if (!notified)
+		{
+			addr_notified->count += 1;
+			if (addr_notified->count > 5)
+			{
+				addr_notified->notified = true;
+				addr_notified->count = 0;
+			}
+		}
+		else
+			addr_notified->count = 0;
+
 		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
 		return notified;
 	}
@@ -316,6 +327,7 @@ int add_addr_notified(unsigned char *node_id)
 
 	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
 	item->notified = true;
+	item->count = 0;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &an_head);
 
@@ -1347,6 +1359,9 @@ struct net_device *find_dev_by_addr(__be32 addr)
 	for_each_netdev(&init_net, dev)
 	{
 		if (strstr(dev->name, "lo"))
+			continue;
+
+		if (!netif_running(dev))
 			continue;
 
 		if (dev->ip_ptr && dev->ip_ptr->ifa_list)

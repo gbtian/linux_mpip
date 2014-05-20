@@ -921,6 +921,9 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 
+	mpip_log("sending 1: ");
+	print_mpip_options(__FUNCTION__, &(mp_opt->opt));
+
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 
 	mpip_options_build(skb, false);

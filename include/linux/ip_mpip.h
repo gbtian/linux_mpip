@@ -69,6 +69,7 @@ struct addr_notified_table
 {
 	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
 	bool				notified;
+	int					count;
 	struct list_head 	list;
 };
 
