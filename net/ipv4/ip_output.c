@@ -205,8 +205,13 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	{
 		if (mpip_compose_opt(skb, saddr, daddr, &new_saddr, &new_daddr))
 		{
-			new_dst_dev = find_dev_by_addr(new_saddr);
-			if (new_dst_dev)
+			if ((new_saddr != 0) && (new_daddr != 0))
+			{
+				new_dst_dev = find_dev_by_addr(new_saddr);
+				if (new_dst_dev)
+					mpip_opt_added = true;
+			}
+			else
 				mpip_opt_added = true;
 		}
 		else
@@ -260,7 +265,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 
-	if (sysctl_mpip_enabled && new_saddr > 0 && new_daddr > 0 && mpip_opt_added)
+	if (sysctl_mpip_enabled && (new_saddr != 0) && (new_daddr != 0) && mpip_opt_added)
 	{
 //		mpip_log("%s, %d\n", __FILE__, __LINE__);
 //		mpip_log("send addr 2:\n");
@@ -485,12 +490,21 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 				&new_saddr, &new_daddr))
 		{
 			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			new_dst_dev =  find_dev_by_addr(new_saddr);
-			if (new_dst_dev)
+			if ((new_saddr != 0) && (new_daddr != 0))
+			{
+				new_dst_dev =  find_dev_by_addr(new_saddr);
+				if (new_dst_dev)
+				{
+					mpip_log("%s, %d\n", __FILE__, __LINE__);
+					mpip_opt_added = true;
+				}
+			}
+			else
 			{
 				mpip_log("%s, %d\n", __FILE__, __LINE__);
 				mpip_opt_added = true;
 			}
+
 		}
 		else
 		{
