@@ -496,6 +496,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 				if (new_dst_dev)
 				{
 					mpip_log("%s, %d\n", __FILE__, __LINE__);
+					print_addr(new_saddr);
 					mpip_opt_added = true;
 				}
 			}
@@ -545,6 +546,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 					   sk->sk_bound_dev_if);
 		if (IS_ERR(rt))
 		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			print_addr(inet->inet_saddr);
 			goto no_route;
 		}
 		sk_setup_caps(sk, &rt->dst);
@@ -645,7 +648,7 @@ packet_routed:
 	return res;
 
 no_route:
-//	printk("i: %s, %d\n", __FILE__, __LINE__);
+	mpip_log("no_route: %s, %d\n", __FILE__, __LINE__);
 	rcu_read_unlock();
 	IP_INC_STATS(sock_net(sk), IPSTATS_MIB_OUTNOROUTES);
 	kfree_skb(skb);
