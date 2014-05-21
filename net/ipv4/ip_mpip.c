@@ -433,10 +433,10 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 
 	if (session_id == 0)
 	{
-		//printk("%s, %d\n", __FILE__, __LINE__);
-//		print_addr(__FUNCTION__, saddr);
-//		print_addr(__FUNCTION__, daddr);
-		//printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
+		print_addr(__FUNCTION__, saddr);
+		print_addr(__FUNCTION__, daddr);
+		printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
 		if (src_node_id && dst_node_id)
@@ -447,7 +447,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 	}
 	else
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		*is_new = false;
 	}
 
@@ -612,6 +612,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	options[4] = get_session_id(static_node_id, dst_node_id,
 									old_saddr, sport,
 									old_daddr, dport, &is_new);
+    	mpip_log("options[4] = %d\n", options[4]);
     }
     else
     {

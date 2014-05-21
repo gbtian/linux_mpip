@@ -765,6 +765,12 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 {
 	struct socket_session_table *socket_session;
 
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(__FUNCTION__, saddr);
+	print_addr(__FUNCTION__, daddr);
+	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+
+
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
 		if ((socket_session->saddr == saddr) &&
@@ -772,6 +778,11 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 			(socket_session->daddr == daddr) &&
 			(socket_session->dport == dport))
 		{
+			printk("%s, %d\n", __FILE__, __LINE__);
+			print_addr(__FUNCTION__, saddr);
+			print_addr(__FUNCTION__, daddr);
+			printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+
 			return socket_session->session_id;
 		}
 	}
