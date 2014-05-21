@@ -537,13 +537,27 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		 * keep trying until route appears or the connection times
 		 * itself out.
 		 */
-		rt = ip_route_output_ports(sock_net(sk), fl4, sk,
-					   daddr, inet->inet_saddr,
-					   inet->inet_dport,
-					   inet->inet_sport,
-					   sk->sk_protocol,
-					   RT_CONN_FLAGS(sk),
-					   sk->sk_bound_dev_if);
+
+		if (sysctl_mpip_enabled && mpip_opt_added && (new_saddr != 0) && (new_daddr != 0) && new_dst_dev)
+		{
+			rt = ip_route_output_ports(sock_net(sk), fl4, sk,
+								   new_daddr, new_saddr,
+								   inet->inet_dport,
+								   inet->inet_sport,
+								   sk->sk_protocol,
+								   RT_CONN_FLAGS(sk),
+								   sk->sk_bound_dev_if);
+		}
+		else
+		{
+			rt = ip_route_output_ports(sock_net(sk), fl4, sk,
+						   daddr, inet->inet_saddr,
+						   inet->inet_dport,
+						   inet->inet_sport,
+						   sk->sk_protocol,
+						   RT_CONN_FLAGS(sk),
+						   sk->sk_bound_dev_if);
+		}
 		if (IS_ERR(rt))
 		{
 			mpip_log("%s, %d\n", __FILE__, __LINE__);
