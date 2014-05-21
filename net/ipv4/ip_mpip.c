@@ -889,7 +889,7 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 //	if (mp_opt->opt.ts > 0)
 	{
-		mpip_log("sending: ");
+		mpip_log("sending: %d", ip_hdr(skb)->id);
 		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
 	}
 
@@ -915,7 +915,7 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 
 //	if (mp_opt->opt.ts > 0)
 	{
-		mpip_log("sending 1: ");
+		mpip_log("sending 1: %d", ip_hdr(skb)->id);
 		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
 	}
 

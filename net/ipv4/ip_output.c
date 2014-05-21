@@ -484,9 +484,13 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		if (mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr,
 				&new_saddr, &new_daddr))
 		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			new_dst_dev =  find_dev_by_addr(new_saddr);
 			if (new_dst_dev)
+			{
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
 				mpip_opt_added = true;
+			}
 		}
 		else
 		{
@@ -540,8 +544,10 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		if (new_saddr != 0)
 		{
 //			new_dst_dev = find_dev_by_addr(new_saddr);
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			if (new_dst_dev)
 			{
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
 				rt->dst.dev = new_dst_dev;
 				skb_dst(skb)->dev = new_dst_dev;
 			}
@@ -591,7 +597,7 @@ packet_routed:
 //		print_addr(__FUNCTION__, new_saddr);
 //		print_addr(__FUNCTION__, iph->daddr);
 //		print_addr(__FUNCTION__, new_daddr);
-
+		mpip_log("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 		iph->saddr = new_saddr;
 		iph->daddr = new_daddr;
 	}
@@ -609,6 +615,7 @@ packet_routed:
 	}
 	else if (sysctl_mpip_enabled && mpip_opt_added)
 	{
+		mpip_log("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 		iph->ihl += optlen >> 2;
 		mpip_options_build(skb, true);
 	}
