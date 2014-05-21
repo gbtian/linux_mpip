@@ -510,15 +510,15 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 
 
 
-	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
-	{
-		if (is_equal_node_id(node_id, working_ip->node_id))
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			list_del(&(working_ip->list));
-			kfree(working_ip);
-		}
-	}
+//	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
+//	{
+//		if (is_equal_node_id(node_id, working_ip->node_id))
+//		{
+//			mpip_log("%s, %d\n", __FILE__, __LINE__);
+//			list_del(&(working_ip->list));
+//			kfree(working_ip);
+//		}
+//	}
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
