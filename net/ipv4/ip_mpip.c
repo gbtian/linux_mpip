@@ -788,7 +788,7 @@ int process_mpip_options(struct sk_buff *skb)
 //		mpip_log("r: udph->dest= %d, odport=%d, sport=%d\n", udph->dest, odport, sport);
 //	}
 
-	if (opt->ts > 0)
+//	if (opt->ts > 0)
 	{
 		mpip_log("receiving: ");
 		print_mpip_options(__FUNCTION__, opt);
@@ -909,7 +909,7 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 
-	if (mp_opt->opt.ts > 0)
+//	if (mp_opt->opt.ts > 0)
 	{
 		mpip_log("sending: ");
 		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
@@ -935,7 +935,7 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 
-	if (mp_opt->opt.ts > 0)
+//	if (mp_opt->opt.ts > 0)
 	{
 		mpip_log("sending 1: ");
 		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
