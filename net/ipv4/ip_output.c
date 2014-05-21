@@ -496,7 +496,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 				if (new_dst_dev)
 				{
 					mpip_log("%s, %d\n", __FILE__, __LINE__);
-					print_addr(new_saddr);
+					print_addr(__FUNCTION__, new_saddr);
 					mpip_opt_added = true;
 				}
 			}
@@ -547,7 +547,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		if (IS_ERR(rt))
 		{
 			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			print_addr(inet->inet_saddr);
+			print_addr(__FUNCTION__, inet->inet_saddr);
 			goto no_route;
 		}
 		sk_setup_caps(sk, &rt->dst);
