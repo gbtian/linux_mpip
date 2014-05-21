@@ -754,14 +754,14 @@ int process_mpip_options(struct sk_buff *skb)
 		update_path_info();
 	}
 
-	if ((iph->protocol != IPPROTO_ICMP) && (opt->session_id > 0))
+	if ((opt->path_id == 0) && (opt->session_id > 0) && (iph->protocol != IPPROTO_ICMP))
 	{
-		session_id = get_receiver_session_id(static_node_id, opt->node_id, iph->daddr, dport,
+		session_id = add_receiver_session_id(static_node_id, opt->node_id, iph->daddr, dport,
 											iph->saddr, sport, opt->session_id);
-
-		res = get_receiver_session_info(opt->node_id, session_id,
-								  &saddr, &sport, &daddr, &dport);
 	}
+
+	get_receiver_session_info(opt->node_id, session_id,
+							  &saddr, &sport, &daddr, &dport);
 
 //	mpip_log("r: iph->id=%d\n", iph->id);
 //	mpip_log("r: iph->saddr=");

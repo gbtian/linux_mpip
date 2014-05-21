@@ -238,7 +238,7 @@ unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
 											 __be32 saddr, __be16 sport,
 											 __be32 daddr, __be16 dport);
 
-unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
+unsigned char add_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id);
