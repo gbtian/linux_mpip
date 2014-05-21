@@ -770,16 +770,19 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	if (res && iph->protocol != IPPROTO_ICMP)
+	if (res && （iph->protocol != IPPROTO_ICMP)）
 	{
-		//mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		//mpip_log("r: modifying header\n");
+		mpip_log("receive addr: %d\n", iph->id);
+		print_addr(__FUNCTION__, iph->saddr);
+		print_addr(__FUNCTION__, daddr);
+		print_addr(__FUNCTION__, iph->daddr);
+		print_addr(__FUNCTION__, saddr);
 
 		//mpip_log("old_dst_dev: %s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		new_dst_dev = find_dev_by_addr(saddr);
 		if (new_dst_dev)
 		{
-			mpip_log("receive addr: %d\n", iph->id);
+			mpip_log("r: modifying header\n");
 			print_addr(__FUNCTION__, iph->saddr);
 			print_addr(__FUNCTION__, daddr);
 			print_addr(__FUNCTION__, iph->daddr);
