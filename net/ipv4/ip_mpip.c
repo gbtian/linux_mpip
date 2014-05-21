@@ -770,7 +770,7 @@ int process_mpip_options(struct sk_buff *skb)
 	}
 
 
-	if (res && （iph->protocol != IPPROTO_ICMP)）
+	if (res && (iph->protocol != IPPROTO_ICMP))
 	{
 		mpip_log("receive addr: %d\n", iph->id);
 		print_addr(__FUNCTION__, iph->saddr);
