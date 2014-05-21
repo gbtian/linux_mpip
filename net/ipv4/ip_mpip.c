@@ -373,26 +373,26 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 	prefix = NULL;
 	if (prefix)
 	{
-		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
-		mpip_log("%s: node_id= ");
-		print_node_id(NULL, opt->node_id);
+//		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
+//		mpip_log("%s: node_id= ");
+//		print_node_id(NULL, opt->node_id);
 		mpip_log("%s: session_id = %d\n", prefix, opt->session_id);
 		mpip_log("%s: path_id = %d\n",  prefix, opt->path_id);
-		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
-		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
-		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
+//		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
+//		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
+//		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
 		mpip_log("%s: changed = %d\n",  prefix, opt->ts);
 	}
 	else
 	{
-		mpip_log("optlen = %d\n", opt->optlen);
-		mpip_log("node_id = ");
-		print_node_id(NULL, opt->node_id);
+//		mpip_log("optlen = %d\n", opt->optlen);
+//		mpip_log("node_id = ");
+//		print_node_id(NULL, opt->node_id);
 		mpip_log("session_id = %d\n", opt->session_id);
 		mpip_log("path_id = %d\n", opt->path_id);
-		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
-		mpip_log("delay = %d\n", opt->delay);
-		mpip_log("nexthop = %d\n", opt->nexthop);
+//		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
+//		mpip_log("delay = %d\n", opt->delay);
+//		mpip_log("nexthop = %d\n", opt->nexthop);
 		mpip_log("changed = %d\n",  opt->ts);
 	}
 }
@@ -763,31 +763,6 @@ int process_mpip_options(struct sk_buff *skb)
 	get_receiver_session_info(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-//	mpip_log("r: iph->id=%d\n", iph->id);
-//	mpip_log("r: iph->saddr=");
-//	print_addr(__FUNCTION__, iph->saddr);
-//
-//	mpip_log("r: daddr=");
-//	print_addr(__FUNCTION__, daddr);
-//
-//	mpip_log("r: iph->daddr=");
-//	print_addr(__FUNCTION__, iph->daddr);
-//
-//
-//	mpip_log("r: saddr=");
-//	print_addr(__FUNCTION__, saddr);
-//
-//	if(iph->protocol==IPPROTO_TCP)
-//	{
-//		mpip_log("r: tcph->source= %d, osport=%d, dport=%d\n", tcph->source, osport, dport);
-//		mpip_log("r: tcph->dest= %d, odport=%d, sport=%d\n", tcph->dest, odport, sport);
-//	}
-//	else if(iph->protocol==IPPROTO_UDP)
-//	{
-//		mpip_log("r: udph->source= %d, osport=%d, dport=%d\n", udph->source, osport, dport);
-//		mpip_log("r: udph->dest= %d, odport=%d, sport=%d\n", udph->dest, odport, sport);
-//	}
-
 //	if (opt->ts > 0)
 	{
 		mpip_log("receiving: ");
@@ -804,7 +779,7 @@ int process_mpip_options(struct sk_buff *skb)
 		new_dst_dev = find_dev_by_addr(saddr);
 		if (new_dst_dev)
 		{
-			mpip_log("receive addr:\n");
+			mpip_log("receive addr: %d\n", iph->id);
 			print_addr(__FUNCTION__, iph->saddr);
 			print_addr(__FUNCTION__, daddr);
 			print_addr(__FUNCTION__, iph->daddr);

@@ -464,7 +464,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-	mpip_log("Original receive addr:\n");
+	mpip_log("Original receive %d, %d: \n", iph->id, iph->ihl);
 	print_addr(__FUNCTION__, iph->saddr);
 	print_addr(__FUNCTION__, iph->daddr);
 

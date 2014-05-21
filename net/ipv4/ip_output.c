@@ -129,12 +129,12 @@ int __ip_local_out(struct sk_buff *skb)
 			if (new_dst_dev)
 			{
 				skb_dst(skb)->dev = new_dst_dev;
-				mpip_log("%s, %d\n", __FILE__, __LINE__);
-				mpip_log("send addr 1\n:");
-				print_addr(__FUNCTION__, iph->saddr);
-				print_addr(__FUNCTION__, new_saddr);
-				print_addr(__FUNCTION__, iph->daddr);
-				print_addr(__FUNCTION__, new_daddr);
+//				mpip_log("%s, %d\n", __FILE__, __LINE__);
+//				mpip_log("send addr 1\n:");
+//				print_addr(__FUNCTION__, iph->saddr);
+//				print_addr(__FUNCTION__, new_saddr);
+//				print_addr(__FUNCTION__, iph->daddr);
+//				print_addr(__FUNCTION__, new_daddr);
 
 
 				iph->saddr = new_saddr;
@@ -150,6 +150,10 @@ int __ip_local_out(struct sk_buff *skb)
 			}
 		}
 	}
+
+	mpip_log("Final send %d, %d: \n", iph->id, iph->ihl);
+	print_addr(__FUNCTION__, iph->saddr);
+	print_addr(__FUNCTION__, iph->daddr);
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
@@ -258,12 +262,12 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled && new_saddr > 0 && new_daddr > 0 && mpip_opt_added)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		mpip_log("send addr 2:\n");
-		print_addr(__FUNCTION__, iph->saddr);
-		print_addr(__FUNCTION__, new_saddr);
-		print_addr(__FUNCTION__, iph->daddr);
-		print_addr(__FUNCTION__, new_daddr);
+//		mpip_log("%s, %d\n", __FILE__, __LINE__);
+//		mpip_log("send addr 2:\n");
+//		print_addr(__FUNCTION__, iph->saddr);
+//		print_addr(__FUNCTION__, new_saddr);
+//		print_addr(__FUNCTION__, iph->daddr);
+//		print_addr(__FUNCTION__, new_daddr);
 
 		iph->daddr    = new_daddr;
 		iph->saddr    = new_saddr;
@@ -581,12 +585,12 @@ packet_routed:
 
 	if (mpip_opt_added && new_saddr > 0 && new_daddr > 0)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		mpip_log("send addr:\n");
-		print_addr(__FUNCTION__, iph->saddr);
-		print_addr(__FUNCTION__, new_saddr);
-		print_addr(__FUNCTION__, iph->daddr);
-		print_addr(__FUNCTION__, new_daddr);
+//		mpip_log("%s, %d\n", __FILE__, __LINE__);
+//		mpip_log("send addr:\n");
+//		print_addr(__FUNCTION__, iph->saddr);
+//		print_addr(__FUNCTION__, new_saddr);
+//		print_addr(__FUNCTION__, iph->daddr);
+//		print_addr(__FUNCTION__, new_daddr);
 
 		iph->saddr = new_saddr;
 		iph->daddr = new_daddr;

@@ -2009,11 +2009,10 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	sk = __inet_lookup_skb(&tcp_hashinfo, skb, th->source, th->dest);
 	if (!sk)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 		print_addr(__FUNCTION__, iph->saddr);
 		print_addr(__FUNCTION__, iph->daddr);
 		printk("%d, %d, %s, %d\n", th->source, th->dest, __FILE__, __LINE__);
-		printk("%s, %d\n", __FILE__, __LINE__);
 		goto no_tcp_socket;
 	}
 	else
