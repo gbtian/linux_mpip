@@ -760,7 +760,7 @@ int process_mpip_options(struct sk_buff *skb)
 											iph->saddr, sport, opt->session_id);
 	}
 
-	get_receiver_session_info(opt->node_id, session_id,
+	res = get_receiver_session_info(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
 //	if (opt->ts > 0)
