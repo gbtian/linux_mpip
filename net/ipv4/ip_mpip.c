@@ -595,7 +595,21 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     if (sk->sk_protocol!=IPPROTO_ICMP)
     {
-		options[4] = get_session_id(static_node_id, dst_node_id,
+    	mpip_log("s: old_saddr=");
+		print_addr(NULL, old_saddr);
+
+		mpip_log("s: old_daddr=");
+		print_addr(NULL, old_daddr);
+
+		if(sk->sk_protocol==IPPROTO_TCP)
+		{
+			mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
+			mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
+		}
+
+
+
+    	options[4] = get_session_id(static_node_id, dst_node_id,
 									old_saddr, sport,
 									old_daddr, dport, &is_new);
     }
@@ -889,7 +903,7 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 //	if (mp_opt->opt.ts > 0)
 	{
-		mpip_log("sending: %d\n", ip_hdr(skb)->id);
+		mpip_log("sending:\n");
 		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
 	}
 
