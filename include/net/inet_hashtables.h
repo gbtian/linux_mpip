@@ -36,6 +36,8 @@
 #include <linux/atomic.h>
 #include <asm/byteorder.h>
 
+#include <linux/ip_mpip.h>
+
 /* This is for all connections with a full identity, no wildcards.
  * One chain is dedicated to TIME_WAIT sockets.
  * I'll experiment with dynamic table growth later.
@@ -402,16 +404,20 @@ static inline struct sock *__inet_lookup_skb(struct inet_hashinfo *hashinfo,
 {
 	struct sock *sk = skb_steal_sock(skb);
 	const struct iphdr *iph = ip_hdr(skb);
-//	__be32 addr = my_convert_addr(192, 168, 2, 21);
 
 	if (sk)
 	{
-		//mpip_log("%d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
+		mpip_log("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		print_addr(__FUNCTION__, iph->saddr);
+		print_addr(__FUNCTION__, iph->daddr);
 		return sk;
 	}
 	else
 	{
-		//mpip_log("%d, %d, %d, %d, %s, %d\n", iph->saddr, sport, iph->daddr, dport, __FILE__, __LINE__);
+		mpip_log("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		print_addr(__FUNCTION__, iph->saddr);
+		print_addr(__FUNCTION__, iph->daddr);
+
 		return __inet_lookup(dev_net(skb_dst(skb)->dev), hashinfo,
 				     iph->saddr, sport,
 				     iph->daddr, dport, inet_iif(skb));
