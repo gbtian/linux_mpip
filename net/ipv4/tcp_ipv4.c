@@ -2017,7 +2017,9 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	}
 	else
 	{
-		//mpip_log("%d, %d, %d, %d, %s, %d\n", iph->saddr, th->source, iph->daddr, th->dest, __FILE__, __LINE__);
+		mpip_log("%d, %d, %d, %d, %s, %d\n", iph->saddr, th->source, iph->daddr, th->dest, __FILE__, __LINE__);
+		print_addr(__FUNCTION__, inet_sk(sk)->inet_saddr);
+		print_addr(__FUNCTION__, inet_sk(sk)->inet_daddr);
 	}
 
 process:

@@ -540,6 +540,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 		if (sysctl_mpip_enabled && mpip_opt_added && (new_saddr != 0) && (new_daddr != 0) && new_dst_dev)
 		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			rt = ip_route_output_ports(sock_net(sk), fl4, sk,
 								   new_daddr, new_saddr,
 								   inet->inet_dport,
