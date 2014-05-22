@@ -183,6 +183,8 @@ void mpip_options_build(struct sk_buff *skb, bool pushed);
 
 int process_mpip_options(struct sk_buff *skb);
 
+int mpip_update_checksum(struct sk_buff *skb);
+
 bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
 
 void send_mpip_hb(struct sk_buff *skb);

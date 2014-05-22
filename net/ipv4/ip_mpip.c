@@ -835,6 +835,60 @@ int process_mpip_options(struct sk_buff *skb)
 }
 
 
+int mpip_update_checksum(struct sk_buff *skb)
+{
+	struct iphdr *iph;
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
+	int  res;
+
+	if (!skb)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return 0;
+	}
+
+	iph = ip_hdr(skb);
+
+	if(iph->protocol==IPPROTO_TCP)
+	{
+		tcph= tcp_hdr(skb); //this fixed the problem
+		if (!tcph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			return 0;
+		}
+		tcph->check = 0;
+		tcph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+										skb->len, iph->protocol,
+										csum_partial((char *)tcph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+	}
+	else if(iph->protocol==IPPROTO_UDP)
+	{
+		udph= udp_hdr(skb); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			return 0;
+		}
+		udph->check = 0;
+		udph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
+									   skb->len, iph->protocol,
+									   csum_partial((char *)udph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+		ip_send_check(iph);
+	}
+
+	ip_send_check(iph);
+
+	return 1;
+}
+
+
+
 void mpip_options_build(struct sk_buff *skb, bool pushed)
 {
 	unsigned char *tmp = NULL;

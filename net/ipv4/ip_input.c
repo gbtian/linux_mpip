@@ -377,6 +377,11 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
+	if (sysctl_mpip_enabled)
+	{
+		process_mpip_options(skb);
+		iph = ip_hdr(skb);
+	}
 
 	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
@@ -478,13 +483,13 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	print_addr(__FUNCTION__, iph->daddr);
 
 
-	if (sysctl_mpip_enabled)
-	{
-		//mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
-		skb->transport_header = skb->network_header + iph->ihl*4;
-		process_mpip_options(skb);
-		iph = ip_hdr(skb);
-	}
+//	if (sysctl_mpip_enabled)
+//	{
+//		//mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
+//		skb->transport_header = skb->network_header + iph->ihl*4;
+//		process_mpip_options(skb);
+//		iph = ip_hdr(skb);
+//	}
 
 	if (unlikely(ip_fast_csum((u8 *)iph, iph->ihl)))
 		goto csum_error;
@@ -505,8 +510,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		goto drop;
 	}
 
-	if (!sysctl_mpip_enabled)
-		skb->transport_header = skb->network_header + iph->ihl*4;
+	skb->transport_header = skb->network_header + iph->ihl*4;
 
 	/* Remove any debris in the socket control block */
 	memset(IPCB(skb), 0, sizeof(struct inet_skb_parm));
