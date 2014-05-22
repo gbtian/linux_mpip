@@ -351,6 +351,15 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	Initialise the virtual path cache for the packet. It describes
 	 *	how the packet travels inside Linux networking.
 	 */
+
+	if (sysctl_mpip_enabled && !sysctl_mpip_send)
+	{
+		process_mpip_options(skb);
+		iph = ip_hdr(skb);
+	}
+
+	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+
 	if (!skb_dst(skb)) {
 		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(__FUNCTION__, iph->saddr);
@@ -379,7 +388,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && sysctl_mpip_send)
 	{
 		process_mpip_options(skb);
 		iph = ip_hdr(skb);
@@ -409,13 +418,13 @@ static int ip_rcv_finish(struct sk_buff *skb)
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
 
 
-	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
-	{
-		unsigned char session_id = get_session(skb);
-		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
-			return NET_RX_SUCCESS;
-
-	}
+//	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
+//	{
+//		unsigned char session_id = get_session(skb);
+//		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
+//			return NET_RX_SUCCESS;
+//
+//	}
 
 	return dst_input(skb);
 
