@@ -343,7 +343,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	how the packet travels inside Linux networking.
 	 */
 	if (!skb_dst(skb)) {
-//		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		//dump_stack();
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
@@ -352,7 +352,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 				NET_INC_STATS_BH(dev_net(skb->dev),
 						 LINUX_MIB_IPRPFILTER);
 
-//			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 			goto drop;
 		}
 	}
@@ -387,7 +387,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		send_mpip_enable(skb);
 	}
 
-//	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
@@ -404,7 +404,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	return dst_input(skb);
 
 drop:
-//	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
@@ -512,9 +512,12 @@ csum_error:
 	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_CSUMERRORS);
 inhdr_error:
+	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 drop:
+	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
 	kfree_skb(skb);
 out:
+	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
 	return NET_RX_DROP;
 }
