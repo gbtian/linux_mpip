@@ -199,8 +199,12 @@ int raw_local_deliver(struct sk_buff *skb, int protocol)
 	/* If there maybe a raw socket we must check - if not we
 	 * don't care less
 	 */
+	printk("%s, %d\n", __FILE__, __LINE__);
 	if (raw_sk && !raw_v4_input(skb, ip_hdr(skb), hash))
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		raw_sk = NULL;
+	}
 	return raw_sk != NULL;
 
 }
