@@ -366,6 +366,19 @@ static inline struct sock *__inet_lookup(struct net *net,
 	struct sock *sk = __inet_lookup_established(net, hashinfo,
 				saddr, sport, daddr, hnum, dif);
 
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
+	print_addr(__FUNCTION__, saddr);
+	print_addr(__FUNCTION__, daddr);
+
+	if (sk)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+	}
+	else
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+	}
+
 	return sk ? : __inet_lookup_listener(net, hashinfo, saddr, sport,
 					     daddr, hnum, dif);
 }
