@@ -1607,6 +1607,7 @@ static int __mkroute_input(struct sk_buff *skb,
 out:
 	err = 0;
  cleanup:
+ 	printk("%s, %d\n", __FILE__, __LINE__);
 	return err;
 }
 
@@ -1621,6 +1622,7 @@ static int ip_mkroute_input(struct sk_buff *skb,
 		fib_select_multipath(res);
 #endif
 
+	printk("%s, %d\n", __FILE__, __LINE__);
 	/* create a routing cache entry */
 	return __mkroute_input(skb, res, in_dev, daddr, saddr, tos);
 }
@@ -1650,9 +1652,12 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
 	bool do_cache;
 
 	/* IP on this device is disabled. */
-
+	printk("%s, %d\n", __FILE__, __LINE__);
 	if (!in_dev)
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		goto out;
+	}
 
 	/* Check for the most weird martians, which can be not detected
 	   by fib_lookup.
@@ -1718,10 +1723,15 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
 	if (res.type != RTN_UNICAST)
 		goto martian_destination;
 
+	printk("%s, %d\n", __FILE__, __LINE__);
+
 	err = ip_mkroute_input(skb, &res, &fl4, in_dev, daddr, saddr, tos);
-out:	return err;
+out:
+	printk("%s, %d\n", __FILE__, __LINE__);
+	return err;
 
 brd_input:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	if (skb->protocol != htons(ETH_P_IP))
 		goto e_inval;
 
@@ -1736,6 +1746,7 @@ brd_input:
 	RT_CACHE_STAT_INC(in_brd);
 
 local_input:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	do_cache = false;
 	if (res.fi) {
 		if (!itag) {
@@ -1781,6 +1792,7 @@ local_input:
 	goto out;
 
 no_route:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	RT_CACHE_STAT_INC(in_no_route);
 	res.type = RTN_UNREACHABLE;
 	if (err == -ESRCH)
@@ -1791,6 +1803,7 @@ no_route:
 	 *	Do not cache martian addresses: they should be logged (RFC1812)
 	 */
 martian_destination:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	RT_CACHE_STAT_INC(in_martian_dst);
 #ifdef CONFIG_IP_ROUTE_VERBOSE
 	if (IN_DEV_LOG_MARTIANS(in_dev))
@@ -1799,16 +1812,20 @@ martian_destination:
 #endif
 
 e_inval:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	err = -EINVAL;
 	goto out;
 
 e_nobufs:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	err = -ENOBUFS;
 	goto out;
 
 martian_source:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	err = -EINVAL;
 martian_source_keep_err:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	ip_handle_martian_source(dev, in_dev, skb, daddr, saddr);
 	goto out;
 }
@@ -1853,6 +1870,7 @@ int ip_route_input_noref(struct sk_buff *skb, __be32 daddr, __be32 saddr,
 		rcu_read_unlock();
 		return -EINVAL;
 	}
+	printk("%s, %d\n", __FILE__, __LINE__);
 	res = ip_route_input_slow(skb, daddr, saddr, tos, dev);
 	rcu_read_unlock();
 	return res;
