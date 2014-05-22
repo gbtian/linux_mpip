@@ -906,6 +906,8 @@ static int ip_error(struct sk_buff *skb)
 	bool send;
 	int code;
 
+	printk("%s, %d\n", __FILE__, __LINE__);
+
 	net = dev_net(rt->dst.dev);
 	if (!IN_DEV_FORWARD(in_dev)) {
 		switch (rt->dst.error) {

@@ -56,7 +56,10 @@ int ip_forward(struct sk_buff *skb)
 {
 	struct iphdr *iph;	/* Our header */
 	struct rtable *rt;	/* Route we use */
+	printk("%s, %d\n", __FILE__, __LINE__);
 	struct ip_options *opt	= &(IPCB(skb)->opt);
+
+	printk("%s, %d\n", __FILE__, __LINE__);
 
 	if (skb_warn_if_lro(skb))
 		goto drop;
@@ -120,14 +123,17 @@ sr_failed:
 	/*
 	 *	Strict routing permits no gatewaying
 	 */
+	 printk("%s, %d\n", __FILE__, __LINE__);
 	 icmp_send(skb, ICMP_DEST_UNREACH, ICMP_SR_FAILED, 0);
 	 goto drop;
 
 too_many_hops:
 	/* Tell the sender its packet died... */
+	printk("%s, %d\n", __FILE__, __LINE__);
 	IP_INC_STATS_BH(dev_net(skb_dst(skb)->dev), IPSTATS_MIB_INHDRERRORS);
 	icmp_send(skb, ICMP_TIME_EXCEEDED, ICMP_EXC_TTL, 0);
 drop:
+	printk("%s, %d\n", __FILE__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }

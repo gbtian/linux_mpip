@@ -144,6 +144,7 @@ loop:
 
 int dst_discard(struct sk_buff *skb)
 {
+	printk("%s, %d\n", __FILE__, __LINE__);
 	kfree_skb(skb);
 	return 0;
 }
