@@ -472,6 +472,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
+	__be32 old_saddr = 0, old_daddr = 0;
 	__be32 new_saddr = 0, new_daddr = 0, gwaddr = 0;
 	struct net_device *new_dst_dev = NULL;
 
@@ -486,6 +487,12 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	inet_opt = rcu_dereference(inet->inet_opt);
 	if (sysctl_mpip_enabled && !(inet_opt && inet_opt->opt.optlen))
 	{
+    	mpip_log("s: old_saddr=");
+		print_addr(NULL, fl->u.ip4.saddr);
+
+		mpip_log("s: old_daddr=");
+		print_addr(NULL, fl->u.ip4.daddr);
+
 		if (mpip_compose_opt(skb, fl->u.ip4.saddr, fl->u.ip4.daddr,
 				&new_saddr, &new_daddr))
 		{
@@ -497,12 +504,16 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 				{
 					mpip_log("%s, %d\n", __FILE__, __LINE__);
 					print_addr(__FUNCTION__, new_saddr);
+					old_saddr = fl->u.ip4.saddr;
+					old_daddr = fl->u.ip4.daddr;
 					mpip_opt_added = true;
 				}
 			}
 			else
 			{
 				mpip_log("%s, %d\n", __FILE__, __LINE__);
+				old_saddr = fl->u.ip4.saddr;
+				old_daddr = fl->u.ip4.daddr;
 				mpip_opt_added = true;
 			}
 
@@ -525,6 +536,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	rt = (struct rtable *)__sk_dst_check(sk, 0);
 	if (rt == NULL)
 	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		__be32 daddr;
 
 		/* Use correct destination address if we have options. */
@@ -548,9 +560,13 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 								   sk->sk_protocol,
 								   RT_CONN_FLAGS(sk),
 								   sk->sk_bound_dev_if);
+
+			fl4->saddr = old_saddr;
+			fl4->daddr = old_daddr;
 		}
 		else
 		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			rt = ip_route_output_ports(sock_net(sk), fl4, sk,
 						   daddr, inet->inet_saddr,
 						   inet->inet_dport,
@@ -623,12 +639,6 @@ packet_routed:
 
 	if (mpip_opt_added && new_saddr > 0 && new_daddr > 0)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
-//		mpip_log("send addr:\n");
-//		print_addr(__FUNCTION__, iph->saddr);
-//		print_addr(__FUNCTION__, new_saddr);
-//		print_addr(__FUNCTION__, iph->daddr);
-//		print_addr(__FUNCTION__, new_daddr);
 		mpip_log("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 		iph->saddr = new_saddr;
 		iph->daddr = new_daddr;

@@ -595,17 +595,17 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     if (sk->sk_protocol!=IPPROTO_ICMP)
     {
-    	mpip_log("s: old_saddr=");
-		print_addr(NULL, old_saddr);
-
-		mpip_log("s: old_daddr=");
-		print_addr(NULL, old_daddr);
-
-		if(sk->sk_protocol==IPPROTO_TCP)
-		{
-			mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
-			mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
-		}
+//    	mpip_log("s: old_saddr=");
+//		print_addr(NULL, old_saddr);
+//
+//		mpip_log("s: old_daddr=");
+//		print_addr(NULL, old_daddr);
+//
+//		if(sk->sk_protocol==IPPROTO_TCP)
+//		{
+//			mpip_log("s: tcph->source= %d, osport=%d, sport=%d\n", tcph->source, osport, sport);
+//			mpip_log("s: tcph->dest= %d, odport=%d, dport=%d\n", tcph->dest, odport, dport);
+//		}
 
 
 
