@@ -352,15 +352,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	how the packet travels inside Linux networking.
 	 */
 
-	if (sysctl_mpip_enabled && !sysctl_mpip_send)
-	{
-		process_mpip_options(skb);
-		iph = ip_hdr(skb);
-	}
-
 	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 
-	if (!skb_dst(skb)) {
+	if (!skb_dst(skb) && !sysctl_mpip_enabled)
+	{
 		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(__FUNCTION__, iph->saddr);
 		print_addr(__FUNCTION__, iph->daddr);
@@ -388,7 +383,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
-	if (sysctl_mpip_enabled && sysctl_mpip_send)
+	if (sysctl_mpip_enabled)
 	{
 		process_mpip_options(skb);
 		iph = ip_hdr(skb);
@@ -397,13 +392,17 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
 
-	rt = skb_rtable(skb);
-	if (rt->rt_type == RTN_MULTICAST) {
-		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
-				skb->len);
-	} else if (rt->rt_type == RTN_BROADCAST)
-		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
-				skb->len);
+	if (!sysctl_mpip_enabled)
+	{
+		rt = skb_rtable(skb);
+		if (rt->rt_type == RTN_MULTICAST) {
+			IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
+					skb->len);
+		} else if (rt->rt_type == RTN_BROADCAST)
+			IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
+					skb->len);
+	}
+
 
 	if (sysctl_mpip_enabled)
 	{
@@ -411,8 +410,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		send_mpip_hb(skb);
 		send_mpip_enable(skb);
 	}
-
-	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
