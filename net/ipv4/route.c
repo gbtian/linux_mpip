@@ -1714,7 +1714,10 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
 					  LOOPBACK_IFINDEX,
 					  dev, in_dev, &itag);
 		if (err < 0)
+		{
+			printk("%s, %d\n", __FILE__, __LINE__);
 			goto martian_source_keep_err;
+		}
 		goto local_input;
 	}
 
@@ -1739,7 +1742,10 @@ brd_input:
 		err = fib_validate_source(skb, saddr, 0, tos, 0, dev,
 					  in_dev, &itag);
 		if (err < 0)
+		{
+			printk("%s, %d\n", __FILE__, __LINE__);
 			goto martian_source_keep_err;
+		}
 	}
 	flags |= RTCF_BROADCAST;
 	res.type = RTN_BROADCAST;
