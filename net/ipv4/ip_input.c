@@ -358,7 +358,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		iph = ip_hdr(skb);
 	}
 
-	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	if (!skb_dst(skb) && !sysctl_mpip_enabled)
 	{
@@ -430,7 +430,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		return ip_local_deliver(skb);
 
 drop:
-	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
