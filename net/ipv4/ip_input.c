@@ -352,6 +352,12 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	how the packet travels inside Linux networking.
 	 */
 
+	if (sysctl_mpip_enabled)
+	{
+		process_mpip_options(skb);
+		iph = ip_hdr(skb);
+	}
+
 	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	if (!skb_dst(skb) && !sysctl_mpip_enabled)
@@ -383,11 +389,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
-	if (sysctl_mpip_enabled)
-	{
-		process_mpip_options(skb);
-		iph = ip_hdr(skb);
-	}
 
 	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
@@ -403,13 +404,14 @@ static int ip_rcv_finish(struct sk_buff *skb)
 					skb->len);
 	}
 
-
 	if (sysctl_mpip_enabled)
 	{
 		//mpip_log("%s, %d\n", __FILE__, __LINE__);
 		send_mpip_hb(skb);
 		send_mpip_enable(skb);
 	}
+
+//	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
@@ -422,8 +424,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 //			return NET_RX_SUCCESS;
 //
 //	}
-
-	return dst_input(skb);
+	if (!sysctl_mpip_enabled)
+		return dst_input(skb);
+	else
+		return ip_local_deliver(skb);
 
 drop:
 	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
