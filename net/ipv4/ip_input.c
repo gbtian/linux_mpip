@@ -352,15 +352,11 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	how the packet travels inside Linux networking.
 	 */
 
-	if (sysctl_mpip_enabled)
-	{
-		process_mpip_options(skb);
-		iph = ip_hdr(skb);
-	}
+
 
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
-	if (!skb_dst(skb) && !sysctl_mpip_enabled)
+	if (!skb_dst(skb))
 	{
 		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(__FUNCTION__, iph->saddr);
@@ -393,41 +389,40 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
 
-	if (!sysctl_mpip_enabled)
-	{
-		rt = skb_rtable(skb);
-		if (rt->rt_type == RTN_MULTICAST) {
-			IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
-					skb->len);
-		} else if (rt->rt_type == RTN_BROADCAST)
-			IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
-					skb->len);
-	}
+	rt = skb_rtable(skb);
+	if (rt->rt_type == RTN_MULTICAST) {
+		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
+				skb->len);
+	} else if (rt->rt_type == RTN_BROADCAST)
+		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
+				skb->len);
 
 	if (sysctl_mpip_enabled)
 	{
-		//mpip_log("%s, %d\n", __FILE__, __LINE__);
+		process_mpip_options(skb);
+		iph = ip_hdr(skb);
+
 		send_mpip_hb(skb);
 		send_mpip_enable(skb);
 	}
 
-//	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
 
 
-//	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
-//	{
-//		unsigned char session_id = get_session(skb);
-//		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
-//			return NET_RX_SUCCESS;
-//
-//	}
-	if (!sysctl_mpip_enabled)
-		return dst_input(skb);
-	else
-		return ip_local_deliver(skb);
+	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
+	{
+		unsigned char session_id = get_session(skb);
+		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
+			return NET_RX_SUCCESS;
+
+	}
+
+
+
+	return dst_input(skb);
 
 drop:
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
