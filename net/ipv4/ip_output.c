@@ -561,8 +561,8 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 								   RT_CONN_FLAGS(sk),
 								   sk->sk_bound_dev_if);
 
-			fl4->saddr = old_saddr;
-			fl4->daddr = old_daddr;
+//			fl4->saddr = old_saddr;
+//			fl4->daddr = old_daddr;
 		}
 		else
 		{
@@ -587,29 +587,29 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	skb_dst_set_noref(skb, &rt->dst);
 
 
-	if (sysctl_mpip_enabled && mpip_opt_added)
-	{
-		if (new_saddr != 0)
-		{
-//			new_dst_dev = find_dev_by_addr(new_saddr);
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			if (new_dst_dev)
-			{
-				mpip_log("%s, %d\n", __FILE__, __LINE__);
-				rt->dst.dev = new_dst_dev;
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-		else
-		{
-			new_dst_dev = find_dev_by_addr(fl4->saddr);
-			if (new_dst_dev)
-			{
-				rt->dst.dev = new_dst_dev;
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-	}
+//	if (sysctl_mpip_enabled && mpip_opt_added)
+//	{
+//		if (new_saddr != 0)
+//		{
+////			new_dst_dev = find_dev_by_addr(new_saddr);
+//			mpip_log("%s, %d\n", __FILE__, __LINE__);
+//			if (new_dst_dev)
+//			{
+//				mpip_log("%s, %d\n", __FILE__, __LINE__);
+//				rt->dst.dev = new_dst_dev;
+//				skb_dst(skb)->dev = new_dst_dev;
+//			}
+//		}
+//		else
+//		{
+//			new_dst_dev = find_dev_by_addr(fl4->saddr);
+//			if (new_dst_dev)
+//			{
+//				rt->dst.dev = new_dst_dev;
+//				skb_dst(skb)->dev = new_dst_dev;
+//			}
+//		}
+//	}
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
