@@ -328,110 +328,97 @@ static int ip_rcv_finish(struct sk_buff *skb)
 //	struct tcphdr *tcph;
 	const struct iphdr *iph;
 	struct rtable *rt;
-	struct net_protocol *ipprot;
-	int protocol;
+
 	iph = ip_hdr(skb);
+
+	if (sysctl_ip_early_demux && !skb_dst(skb)) {
+		const struct net_protocol *ipprot;
+		int protocol = iph->protocol;
+
+		ipprot = rcu_dereference(inet_protos[protocol]);
+		if (ipprot && ipprot->early_demux) {
+			ipprot->early_demux(skb);
+			/* must reload iph, skb->head might have changed */
+			iph = ip_hdr(skb);
+		}
+	}
+
+	/*
+	 *	Initialise the virtual path cache for the packet. It describes
+	 *	how the packet travels inside Linux networking.
+	 */
+	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(__FUNCTION__, iph->saddr);
+	print_addr(__FUNCTION__, iph->daddr);
+	if (!skb_dst(skb))
+	{
+		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
+					       iph->tos, skb->dev);
+		if (unlikely(err)) {
+			if (err == -EXDEV)
+				NET_INC_STATS_BH(dev_net(skb->dev),
+						 LINUX_MIB_IPRPFILTER);
+
+			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+			goto drop;
+		}
+	}
+
+#ifdef CONFIG_IP_ROUTE_CLASSID
+	if (unlikely(skb_dst(skb)->tclassid)) {
+		struct ip_rt_acct *st = this_cpu_ptr(ip_rt_acct);
+		u32 idx = skb_dst(skb)->tclassid;
+		st[idx&0xFF].o_packets++;
+		st[idx&0xFF].o_bytes += skb->len;
+		st[(idx>>16)&0xFF].i_packets++;
+		st[(idx>>16)&0xFF].i_bytes += skb->len;
+	}
+#endif
+
+
+	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
+		goto drop;
+
+	rt = skb_rtable(skb);
+	if (rt->rt_type == RTN_MULTICAST) {
+		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
+				skb->len);
+	} else if (rt->rt_type == RTN_BROADCAST)
+		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
+				skb->len);
 
 	if (sysctl_mpip_enabled)
 	{
-		if (sysctl_ip_early_demux && !skb_dst(skb)) {
-			int protocol = iph->protocol;
-
-			ipprot = rcu_dereference(inet_protos[protocol]);
-			if (ipprot && ipprot->early_demux) {
-				ipprot->early_demux(skb);
-				/* must reload iph, skb->head might have changed */
-				iph = ip_hdr(skb);
-			}
-		}
-
-
-		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
-		print_addr(__FUNCTION__, iph->saddr);
-		print_addr(__FUNCTION__, iph->daddr);
-
 		process_mpip_options(skb);
 		iph = ip_hdr(skb);
 
 		send_mpip_hb(skb);
 		send_mpip_enable(skb);
-
-
-		if (sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
-		{
-			unsigned char session_id = get_session(skb);
-			if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
-				return NET_RX_SUCCESS;
-
-		}
-
-		ipprot = rcu_dereference(inet_protos[iph->protocol]);
-
-		return ipprot->handler(skb);
 	}
-	else
+
+	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
+
+	u16 tcp_header_len = sizeof(struct tcphdr) +
+			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
+
+
+	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
 	{
-		if (sysctl_ip_early_demux && !skb_dst(skb)) {
-			const struct net_protocol *ipprot;
-			int protocol = iph->protocol;
+		unsigned char session_id = get_session(skb);
+		if (session_id > 0 && add_to_tcp_skb_buf(skb, session_id))
+			return NET_RX_SUCCESS;
 
-			ipprot = rcu_dereference(inet_protos[protocol]);
-			if (ipprot && ipprot->early_demux) {
-				ipprot->early_demux(skb);
-				/* must reload iph, skb->head might have changed */
-				iph = ip_hdr(skb);
-			}
-		}
-
-		/*
-		 *	Initialise the virtual path cache for the packet. It describes
-		 *	how the packet travels inside Linux networking.
-		 */
-		if (!skb_dst(skb))
-		{
-			int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
-							   iph->tos, skb->dev);
-			if (unlikely(err)) {
-				if (err == -EXDEV)
-					NET_INC_STATS_BH(dev_net(skb->dev),
-							 LINUX_MIB_IPRPFILTER);
-
-				goto drop;
-			}
-		}
-
-	#ifdef CONFIG_IP_ROUTE_CLASSID
-		if (unlikely(skb_dst(skb)->tclassid)) {
-			struct ip_rt_acct *st = this_cpu_ptr(ip_rt_acct);
-			u32 idx = skb_dst(skb)->tclassid;
-			st[idx&0xFF].o_packets++;
-			st[idx&0xFF].o_bytes += skb->len;
-			st[(idx>>16)&0xFF].i_packets++;
-			st[(idx>>16)&0xFF].i_bytes += skb->len;
-		}
-	#endif
+	}
 
 
-		if (iph->ihl > 5 && ip_rcv_options(skb))
-			goto drop;
 
-		rt = skb_rtable(skb);
-		if (rt->rt_type == RTN_MULTICAST) {
-			IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INMCAST,
-					skb->len);
-		} else if (rt->rt_type == RTN_BROADCAST)
-			IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
-					skb->len);
-
-		return dst_input(skb);
+	return dst_input(skb);
 
 drop:
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		kfree_skb(skb);
-		return NET_RX_DROP;
-	}
-
-	return NET_RX_SUCCESS;
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	kfree_skb(skb);
+	return NET_RX_DROP;
 }
 
 /*
