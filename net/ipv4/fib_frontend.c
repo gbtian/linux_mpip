@@ -255,30 +255,22 @@ static int __fib_validate_source(struct sk_buff *skb, __be32 src, __be32 dst,
 	fl4.saddr = dst;
 	fl4.flowi4_tos = tos;
 	fl4.flowi4_scope = RT_SCOPE_UNIVERSE;
-	printk("%s, %d\n", __FILE__, __LINE__);
 	no_addr = idev->ifa_list == NULL;
-	printk("%s, %d\n", __FILE__, __LINE__);
 	accept_local = IN_DEV_ACCEPT_LOCAL(idev);
 	fl4.flowi4_mark = IN_DEV_SRC_VMARK(idev) ? skb->mark : 0;
-	printk("%s, %d\n", __FILE__, __LINE__);
 	net = dev_net(dev);
-	printk("%s, %d\n", __FILE__, __LINE__);
 	if (fib_lookup(net, &fl4, &res))
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
 		goto last_resort;
 	}
 	if (res.type != RTN_UNICAST) {
-		printk("%s, %d\n", __FILE__, __LINE__);
 		if (res.type != RTN_LOCAL || !accept_local)
 		{
-			printk("%s, %d\n", __FILE__, __LINE__);
 			goto e_inval;
 		}
 	}
 	fib_combine_itag(itag, &res);
 	dev_match = false;
-	printk("%s, %d\n", __FILE__, __LINE__);
 
 #ifdef CONFIG_IP_ROUTE_MULTIPATH
 	for (ret = 0; ret < res.fi->fib_nhs; ret++) {
@@ -301,18 +293,15 @@ static int __fib_validate_source(struct sk_buff *skb, __be32 src, __be32 dst,
 		goto last_resort;
 	if (rpf == 1)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
 		goto e_rpf;
 	}
 	fl4.flowi4_oif = dev->ifindex;
 
 	ret = 0;
 	if (fib_lookup(net, &fl4, &res) == 0) {
-		printk("%s, %d\n", __FILE__, __LINE__);
 		if (res.type == RTN_UNICAST)
 			ret = FIB_RES_NH(res).nh_scope >= RT_SCOPE_HOST;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
 	return ret;
 
 last_resort:
@@ -322,10 +311,8 @@ last_resort:
 	return 0;
 
 e_inval:
-	printk("%s, %d\n", __FILE__, __LINE__);
 	return -EINVAL;
 e_rpf:
-	printk("%s, %d\n", __FILE__, __LINE__);
 	return -EXDEV;
 }
 

@@ -198,7 +198,7 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 
 	__skb_pull(skb, skb_network_header_len(skb));
 
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 
 	rcu_read_lock();
 	{
@@ -207,9 +207,9 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 		int raw;
 
 	resubmit:
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 		raw = raw_local_deliver(skb, protocol);
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 		ipprot = rcu_dereference(inet_protos[protocol]);
 		if (ipprot != NULL) {
 			int ret;
@@ -221,9 +221,9 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 				}
 				nf_reset(skb);
 			}
-			printk("%s, %d\n", __FILE__, __LINE__);
+//			printk("%s, %d\n", __FILE__, __LINE__);
 			ret = ipprot->handler(skb);
-			printk("%s, %d\n", __FILE__, __LINE__);
+//			printk("%s, %d\n", __FILE__, __LINE__);
 			if (ret < 0) {
 				protocol = -ret;
 				goto resubmit;
@@ -231,9 +231,9 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 			IP_INC_STATS_BH(net, IPSTATS_MIB_INDELIVERS);
 		} else {
 			if (!raw) {
-				printk("%s, %d\n", __FILE__, __LINE__);
+//				printk("%s, %d\n", __FILE__, __LINE__);
 				if (xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
-					printk("%s, %d\n", __FILE__, __LINE__);
+//					printk("%s, %d\n", __FILE__, __LINE__);
 					IP_INC_STATS_BH(net, IPSTATS_MIB_INUNKNOWNPROTOS);
 					icmp_send(skb, ICMP_DEST_UNREACH,
 						  ICMP_PROT_UNREACH, 0);
@@ -246,7 +246,7 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 		}
 	}
  out:
- 	printk("%s, %d\n", __FILE__, __LINE__);
+// 	printk("%s, %d\n", __FILE__, __LINE__);
 	rcu_read_unlock();
 
 	return 0;
@@ -260,16 +260,16 @@ int ip_local_deliver(struct sk_buff *skb)
 	/*
 	 *	Reassemble IP fragments.
 	 */
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (ip_is_fragment(ip_hdr(skb))) {
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 		if (ip_defrag(skb, IP_DEFRAG_LOCAL_DELIVER))
 		{
-			printk("%s, %d\n", __FILE__, __LINE__);
+//			printk("%s, %d\n", __FILE__, __LINE__);
 			return 0;
 		}
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, skb, skb->dev, NULL,
 		       ip_local_deliver_finish);
 }
@@ -347,12 +347,12 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	Initialise the virtual path cache for the packet. It describes
 	 *	how the packet travels inside Linux networking.
 	 */
-	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, iph->saddr);
-	print_addr(__FUNCTION__, iph->daddr);
+//	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(__FUNCTION__, iph->saddr);
+//	print_addr(__FUNCTION__, iph->daddr);
 	if (!skb_dst(skb))
 	{
-		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
 		if (unlikely(err)) {
@@ -397,7 +397,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		send_mpip_enable(skb);
 	}
 
-	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
@@ -476,9 +476,9 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-	mpip_log("Original receive %d, %d: \n", iph->id, iph->ihl);
-	print_addr(__FUNCTION__, iph->saddr);
-	print_addr(__FUNCTION__, iph->daddr);
+//	mpip_log("Original receive %d, %d: \n", iph->id, iph->ihl);
+//	print_addr(__FUNCTION__, iph->saddr);
+//	print_addr(__FUNCTION__, iph->daddr);
 
 
 //	if (sysctl_mpip_enabled)

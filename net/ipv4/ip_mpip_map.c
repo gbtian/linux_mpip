@@ -145,9 +145,9 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &me_head);
 
-	mpip_log( "me:");
-
-	print_addr(__FUNCTION__, addr);
+//	mpip_log( "me:");
+//
+//	print_addr(__FUNCTION__, addr);
 
 	return 1;
 }
@@ -196,10 +196,10 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
 
-	mpip_log( "wi:");
-
-	print_node_id(__FUNCTION__, node_id);
-	print_addr(__FUNCTION__, addr);
+//	mpip_log( "wi:");
+//
+//	print_node_id(__FUNCTION__, node_id);
+//	print_addr(__FUNCTION__, addr);
 
 
 	return 1;
@@ -331,9 +331,9 @@ int add_addr_notified(unsigned char *node_id)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &an_head);
 
-	mpip_log( "an:");
-
-	print_node_id(__FUNCTION__, node_id);
+//	mpip_log( "an:");
+//
+//	print_node_id(__FUNCTION__, node_id);
 
 	return 1;
 }
@@ -524,7 +524,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 	{
 		if (is_equal_node_id(node_id, path_info->node_id))
 		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
+//			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			list_del(&(path_info->list));
 			kfree(path_info);
 		}
@@ -534,7 +534,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 	{
 		if (is_equal_node_id(node_id, path_stat->node_id))
 		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
+//			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			list_del(&(path_stat->list));
 			kfree(path_stat);
 		}
@@ -765,10 +765,10 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 {
 	struct socket_session_table *socket_session;
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-	print_addr(__FUNCTION__, saddr);
-	print_addr(__FUNCTION__, daddr);
-	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(__FUNCTION__, saddr);
+//	print_addr(__FUNCTION__, daddr);
+//	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 
 	list_for_each_entry(socket_session, &ss_head, list)
@@ -830,12 +830,12 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
-	print_addr(__FUNCTION__, saddr);
-	print_addr(__FUNCTION__, daddr);
-	mpip_log( "ss: %d,%d,%d\n", item->session_id,
-			sport, dport);
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(__FUNCTION__, saddr);
+//	print_addr(__FUNCTION__, daddr);
+//	mpip_log( "ss: %d,%d,%d\n", item->session_id,
+//			sport, dport);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
 
 	return 1;
 }
@@ -909,12 +909,12 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
-	print_addr(__FUNCTION__, saddr);
-	print_addr(__FUNCTION__, daddr);
-	mpip_log( "ss: %d,%d,%d\n", item->session_id,
-			sport, dport);
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(__FUNCTION__, saddr);
+//	print_addr(__FUNCTION__, daddr);
+//	mpip_log( "ss: %d,%d,%d\n", item->session_id,
+//			sport, dport);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
 
 	return item->session_id;
 }
@@ -1126,10 +1126,10 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
 
-		mpip_log( "pi: %d\n", item->path_id);
-
-		print_node_id(__FUNCTION__, node_id);
-		print_addr(__FUNCTION__, addr);
+//		mpip_log( "pi: %d\n", item->path_id);
+//
+//		print_node_id(__FUNCTION__, node_id);
+//		print_addr(__FUNCTION__, addr);
 	}
 
 	return 1;
@@ -1313,8 +1313,8 @@ void get_available_local_addr(void)
 			item->addr = dev->ip_ptr->ifa_list->ifa_address;
 			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &la_head);
-			mpip_log( "local addr: %lu  ", dev->state);
-			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
+//			mpip_log( "local addr: %lu  ", dev->state);
+//			print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		}
 	}
 }

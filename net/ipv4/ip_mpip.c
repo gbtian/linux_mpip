@@ -136,17 +136,12 @@ static int mpip_inetaddr_event(struct notifier_block *this,
 		dump_stack();
 		printk("%s, %d\n", __FILE__, __LINE__);
 	}
-	//struct net *net = dev_net(ifa->ifa_dev->dev);
 
 	if (dev && dev->ip_ptr && dev->ip_ptr->ifa_list)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		print_addr(__FUNCTION__, dev->ip_ptr->ifa_list->ifa_address);
 		if (sysctl_mpip_enabled)
 			update_addr_change();
 	}
-
-//	addr4_event_handler(ifa, event, net);
 
 	return NOTIFY_DONE;
 }
@@ -165,8 +160,6 @@ static int netdev_event(struct notifier_block *this, unsigned long event,
 	rcu_read_lock();
 	in_dev = __in_dev_get_rtnl(dev);
 
-	printk("%s, %d\n", __FILE__, __LINE__);
-
 	if (in_dev) {
 		for_ifa(in_dev) {
 			mpip_inetaddr_event(NULL, event, ifa);
@@ -180,132 +173,6 @@ static int netdev_event(struct notifier_block *this, unsigned long event,
 static struct notifier_block mpip_netdev_notifier = {
 		.notifier_call = netdev_event,
 };
-
-
-static void addr4_event_handler(struct in_ifaddr *ifa, unsigned long event,
-				struct net *net)
-{
-//	struct mptcp_loc_addr *mptcp_local, *old;
-//	struct net_device *netdev = ifa->ifa_dev->dev;
-//	struct mptcp_fm_ns *fm_ns = fm_get_ns(net);
-//	int i;
-//
-//	if (ifa->ifa_scope > RT_SCOPE_LINK ||
-//	    ipv4_is_loopback(ifa->ifa_local))
-//		return;
-//
-//	rcu_read_lock_bh();
-//	spin_lock(&fm_ns->local_lock);
-//
-//	mptcp_local = rcu_dereference(fm_ns->local);
-//
-//	if (event == NETDEV_DOWN ||!netif_running(netdev) ||
-//	    (netdev->flags & IFF_NOMULTIPATH)) {
-//		/* It's an event that removes the address */
-//		struct mptcp_addr_event event;
-//		bool found = false;
-//
-//		/* Look for the address among the local addresses */
-//		mptcp_for_each_bit_set(mptcp_local->loc4_bits, i) {
-//			if (mptcp_local->locaddr4[i].addr.s_addr == ifa->ifa_local) {
-//				found = true;
-//				break;
-//			}
-//		}
-//
-//		/* Not in the list - so we don't care */
-//		if (!found)
-//			goto exit;
-//
-//		old = mptcp_local;
-//		mptcp_local = kmemdup(mptcp_local, sizeof(*mptcp_local),
-//				      GFP_ATOMIC);
-//		if (!mptcp_local)
-//			goto exit;
-//		kfree(old);
-//
-//		mptcp_local->loc4_bits &= ~(1 << i);
-//
-//		rcu_assign_pointer(fm_ns->local, mptcp_local);
-//
-//		/* Now, we have to create an event for the MPTCP-sockets */
-//		event.code = MPTCP_EVENT_DEL;
-//		event.family = AF_INET;
-//		event.id = i;
-//		event.u.addr4.s_addr = ifa->ifa_local;
-//		add_pm_event(net, &event);
-//
-//	} else {
-//		/* The event modifies / adds an address */
-//		bool found = false;
-//
-//		/* Look for the address among the local addresses */
-//		mptcp_for_each_bit_set(mptcp_local->loc4_bits, i) {
-//			if (mptcp_local->locaddr4[i].addr.s_addr == ifa->ifa_local) {
-//				found = true;
-//				break;
-//			}
-//		}
-//
-//		if (!found) {
-//			/* Not in the list, so we have to find an empty slot */
-//			i = __mptcp_find_free_index(mptcp_local->loc4_bits, 0,
-//						    mptcp_local->next_v4_index);
-//			if (i < 0)
-//				goto exit;
-//		} else {
-//			struct mptcp_addr_event event;
-//
-//			/* Let's check if anything changes */
-//			if ((netdev->flags & IFF_MPBACKUP) ? 1 : 0 == mptcp_local->locaddr4[i].low_prio)
-//				goto exit;
-//
-//
-//			/* Now, we have to create an event for the MPTCP-sockets */
-//			event.code = MPTCP_EVENT_MOD;
-//			event.family = AF_INET;
-//			event.id = i;
-//			event.low_prio = mptcp_local->locaddr4[i].low_prio;
-//			event.u.addr4.s_addr = ifa->ifa_local;
-//			add_pm_event(net, &event);
-//		}
-//
-//		old = mptcp_local;
-//		mptcp_local = kmemdup(mptcp_local, sizeof(*mptcp_local),
-//				      GFP_ATOMIC);
-//		if (!mptcp_local)
-//			goto exit;
-//		kfree(old);
-//
-//		mptcp_local->locaddr4[i].addr.s_addr = ifa->ifa_local;
-//		mptcp_local->locaddr4[i].id = i;
-//		mptcp_local->locaddr4[i].low_prio = (netdev->flags & IFF_MPBACKUP) ? 1 : 0;
-//
-//		if (!found) {
-//			mptcp_local->loc4_bits |= (1 << i);
-//			mptcp_local->next_v4_index = i + 1;
-//		}
-//
-//		rcu_assign_pointer(fm_ns->local, mptcp_local);
-//
-//		if (!found) {
-//			struct mptcp_addr_event event;
-//
-//			/* Now, we have to create an event for the MPTCP-sockets */
-//			event.code = MPTCP_EVENT_ADD;
-//			event.family = AF_INET;
-//			event.id = i;
-//			event.low_prio = mptcp_local->locaddr4[i].low_prio;
-//			event.u.addr4.s_addr = ifa->ifa_local;
-//			add_pm_event(net, &event);
-//		}
-//	}
-//
-//exit:
-//	spin_unlock(&fm_ns->local_lock);
-//	rcu_read_unlock_bh();
-//	return;
-}
 
 static struct notifier_block mpip_inetaddr_notifier = {
 		.notifier_call = mpip_inetaddr_event,
@@ -373,26 +240,26 @@ void print_mpip_options(const char *prefix, struct ip_options *opt)
 	prefix = NULL;
 	if (prefix)
 	{
-//		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
-//		mpip_log("%s: node_id= ");
-//		print_node_id(NULL, opt->node_id);
+		mpip_log("%s: optlen = %d\n", prefix, opt->optlen);
+		mpip_log("%s: node_id= ");
+		print_node_id(NULL, opt->node_id);
 		mpip_log("%s: session_id = %d\n", prefix, opt->session_id);
 		mpip_log("%s: path_id = %d\n",  prefix, opt->path_id);
-//		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
-//		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
-//		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
+		mpip_log("%s: stat_path_id = %d\n",  prefix, opt->stat_path_id);
+		mpip_log("%s: delay = %d\n",  prefix, opt->delay);
+		mpip_log("%s: nexthop = %d\n",  prefix, opt->nexthop);
 		mpip_log("%s: changed = %d\n",  prefix, opt->ts);
 	}
 	else
 	{
-//		mpip_log("optlen = %d\n", opt->optlen);
-//		mpip_log("node_id = ");
-//		print_node_id(NULL, opt->node_id);
+		mpip_log("optlen = %d\n", opt->optlen);
+		mpip_log("node_id = ");
+		print_node_id(NULL, opt->node_id);
 		mpip_log("session_id = %d\n", opt->session_id);
 		mpip_log("path_id = %d\n", opt->path_id);
-//		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
-//		mpip_log("delay = %d\n", opt->delay);
-//		mpip_log("nexthop = %d\n", opt->nexthop);
+		mpip_log("stat_path_id = %d\n", opt->stat_path_id);
+		mpip_log("delay = %d\n", opt->delay);
+		mpip_log("nexthop = %d\n", opt->nexthop);
 		mpip_log("changed = %d\n",  opt->ts);
 	}
 }
@@ -433,10 +300,10 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 
 	if (session_id == 0)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		print_addr(__FUNCTION__, saddr);
-		print_addr(__FUNCTION__, daddr);
-		printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
+//		print_addr(__FUNCTION__, saddr);
+//		print_addr(__FUNCTION__, daddr);
+//		printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
 		if (src_node_id && dst_node_id)
@@ -447,7 +314,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 	}
 	else
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
+//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		*is_new = false;
 	}
 
@@ -497,9 +364,9 @@ bool check_bad_addr(__be32 saddr, __be32 daddr)
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 
-//	addr = convert_addr(192, 168, 2, 1);
-//	if ((addr == saddr) || (addr == daddr))
-//		return false;
+	addr = convert_addr(192, 168, 2, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
 
 	addr = convert_addr(224, 0, 0, 251);
 	if ((addr == saddr) || (addr == daddr))
@@ -530,7 +397,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (!skb)
 	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
 	}
 
@@ -539,7 +406,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
 	}
 
@@ -554,7 +421,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
 		{
-//			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return 0;
 		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
@@ -568,7 +435,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		udph = udp_hdr(skb); //this fixed the problem
 		if (!udph)
 		{
-//			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return 0;
 		}
 		osport = htons((unsigned short int) udph->source); //sport now has the source port
@@ -612,7 +479,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	options[4] = get_session_id(static_node_id, dst_node_id,
 									old_saddr, sport,
 									old_daddr, dport, &is_new);
-    	mpip_log("options[4] = %d\n", options[4]);
+//    	mpip_log("options[4] = %d\n", options[4]);
     }
     else
     {
@@ -778,20 +645,15 @@ int process_mpip_options(struct sk_buff *skb)
 	res = get_receiver_session_info(opt->node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-//	if (opt->ts > 0)
-	{
-		mpip_log("receiving: ");
-		print_mpip_options(__FUNCTION__, opt);
-	}
 
 
 	if (res && (iph->protocol != IPPROTO_ICMP))
 	{
-		mpip_log("receive addr: %d\n", iph->id);
-		print_addr(__FUNCTION__, iph->saddr);
-		print_addr(__FUNCTION__, daddr);
-		print_addr(__FUNCTION__, iph->daddr);
-		print_addr(__FUNCTION__, saddr);
+//		mpip_log("receive addr: %d\n", iph->id);
+//		print_addr(__FUNCTION__, iph->saddr);
+//		print_addr(__FUNCTION__, daddr);
+//		print_addr(__FUNCTION__, iph->daddr);
+//		print_addr(__FUNCTION__, saddr);
 
 		iph->saddr = daddr;
 		iph->daddr = saddr;
@@ -949,11 +811,6 @@ bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 
-//	if (mp_opt->opt.ts > 0)
-	{
-		mpip_log("sending:\n");
-		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
-	}
 
 	return true;
 }
@@ -975,12 +832,6 @@ bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_dad
 
 	res = mpip_options_get(sock_net(skb->sk), mp_opt, options, MPIP_OPT_LEN);
 
-//	if (mp_opt->opt.ts > 0)
-	{
-		mpip_log("sending 1: %d\n", ip_hdr(skb)->id);
-		print_mpip_options(__FUNCTION__, &(mp_opt->opt));
-	}
-
 	iph->ihl += (mp_opt->opt.optlen)>>2;
 
 	mpip_options_build(skb, false);
@@ -998,7 +849,7 @@ unsigned char get_session(struct sk_buff *skb)
 
 	if (!skb)
 	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
 	}
 
@@ -1010,7 +861,7 @@ unsigned char get_session(struct sk_buff *skb)
 	tcph= tcp_hdr(skb); //this fixed the problem
 	if (!tcph)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return 0;
 	}
 	sport = tcph->source;
