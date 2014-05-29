@@ -154,6 +154,8 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 
 bool is_mpip_enabled(__be32 addr)
 {
+	return true;
+
 	bool enabled = false;
 	struct mpip_enabled_table *item = NULL;
 
@@ -409,7 +411,7 @@ void send_mpip_enable(struct sk_buff *skb)
 	struct iphdr *iph = ip_hdr(skb);
 
 	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr);
-	if (item && ((item->sent_count > 10) || (item->mpip_enabled)))
+	if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
 	{
 		return;
 	}
@@ -778,10 +780,10 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 			(socket_session->daddr == daddr) &&
 			(socket_session->dport == dport))
 		{
-			printk("%s, %d\n", __FILE__, __LINE__);
-			print_addr(__FUNCTION__, saddr);
-			print_addr(__FUNCTION__, daddr);
-			printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+//			printk("%s, %d\n", __FILE__, __LINE__);
+//			print_addr(__FUNCTION__, saddr);
+//			print_addr(__FUNCTION__, daddr);
+//			printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 			return socket_session->session_id;
 		}

@@ -406,7 +406,7 @@ int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
 	}
 
