@@ -63,7 +63,7 @@ struct mpip_cm
 	unsigned char	node_id[2];
 	unsigned char	session_id;
 	unsigned char	path_id;
-	unsigned char	stat_path_id;
+	unsigned char	path_stat_id;
 	__s32			timestamp;
 	__s32			delay;
 	unsigned char	changed;

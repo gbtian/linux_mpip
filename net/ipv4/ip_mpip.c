@@ -23,12 +23,10 @@
 //int MPIP_CM_NODE_ID_LEN = 3;
 static unsigned char *static_node_id = NULL;
 static char log_buf[256];
-static char options[MPIP_CM_LEN];
 static char send_cm[MPIP_CM_LEN];
 static char rcv_cm[MPIP_CM_LEN];
-static struct mpip_cm rcv_mpip_cv;
-
-static struct ip_options_rcu *mp_opt = NULL;
+static struct mpip_cm send_mpip_cm;
+static struct mpip_cm rcv_mpip_cm;
 
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
@@ -441,16 +439,16 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	get_node_id();
 	get_available_local_addr();
 
+	send_mpip_cm.len = send_cm[0] = MPIP_CM_LEN;
 
-	send_cm[0] = MPIP_CM_LEN;
 
     for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
-    	send_cm[1 + i] =  static_node_id[i];
+    	send_mpip_cm.node_id[1 + i] = send_cm[1 + i] =  static_node_id[i];
 
 
-    send_cm[3] = get_session_id(static_node_id, dst_node_id,
-									old_saddr, sport,
-									old_daddr, dport, &is_new);
+    send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
+														old_saddr, sport,
+														old_daddr, dport, &is_new);
 
     if (!is_new)
     {
@@ -460,16 +458,18 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     path_stat_id = get_path_stat_id(dst_node_id, &delay);
 
-    send_cm[4] = path_id;
-    send_cm[5] = path_stat_id;
+    send_mpip_cm.path_id = send_cm[4] = path_id;
+    send_mpip_cm.path_stat_id = send_cm[5] = path_stat_id;
 
     getnstimeofday(&tv);
-	midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
+    send_mpip_cm.timestamp = midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
 
 	send_cm[6] = midtime & 0xff;
 	send_cm[7] = (midtime>>8) & 0xff;
 	send_cm[8] = (midtime>>16) & 0xff;
 	send_cm[9] = (midtime>>24) & 0xff;
+
+	send_mpip_cm.delay = delay;
 
 	send_cm[10] = delay & 0xff;
 	send_cm[11] = (delay>>8) & 0xff;
@@ -477,9 +477,12 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[13] = (delay>>24) & 0xff;
 
 	if (get_addr_notified(dst_node_id))
-		send_cm[14] = 0;
+		send_mpip_cm.changed = send_cm[14] = 0;
 	else
-		send_cm[14] = 1;
+		send_mpip_cm.changed = send_cm[14] = 1;
+
+	mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	print_mpip_cm(&send_mpip_cm);
 
 	memcpy(skb_tail_pointer(skb), send_cm, MPIP_CM_LEN);
 	skb_put(skb, send_cm[0]);
@@ -526,17 +529,20 @@ int process_mpip_cm(struct sk_buff *skb)
 	skb->tail -= MPIP_CM_LEN;
 	skb->len  -= MPIP_CM_LEN;
 
-	rcv_mpip_cv.len 			= rcv_cm[0];
-	rcv_mpip_cv.node_id[0] 		= rcv_cm[1];
-	rcv_mpip_cv.node_id[1]		= rcv_cm[2];
-	rcv_mpip_cv.session_id		= rcv_cm[3];
-	rcv_mpip_cv.path_id  		= rcv_cm[4];
-	rcv_mpip_cv.stat_path_id  	= rcv_cm[5];
-	rcv_mpip_cv.timestamp  		= (rcv_cm[9]<<24) | (rcv_cm[8]<<16) |
+	rcv_mpip_cm.len 			= rcv_cm[0];
+	rcv_mpip_cm.node_id[0] 		= rcv_cm[1];
+	rcv_mpip_cm.node_id[1]		= rcv_cm[2];
+	rcv_mpip_cm.session_id		= rcv_cm[3];
+	rcv_mpip_cm.path_id  		= rcv_cm[4];
+	rcv_mpip_cm.stat_path_id  	= rcv_cm[5];
+	rcv_mpip_cm.timestamp  		= (rcv_cm[9]<<24) | (rcv_cm[8]<<16) |
 				   	   	    	(rcv_cm[7]<<8) | rcv_cm[6];
-	rcv_mpip_cv.delay 	 		= (rcv_cm[13]<<24) | (rcv_cm[12]<<16) |
+	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24) | (rcv_cm[12]<<16) |
 				   	   	    	(rcv_cm[11]<<8) | rcv_cm[10];
-	rcv_mpip_cv.changed 		= rcv_cm[14];
+	rcv_mpip_cm.changed 		= rcv_cm[14];
+
+	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	print_mpip_cm(&rcv_mpip_cm);
 
 	if(iph->protocol == IPPROTO_TCP)
 	{
@@ -569,28 +575,28 @@ int process_mpip_cm(struct sk_buff *skb)
 
 
 	add_mpip_enabled(iph->saddr, true);
-	add_addr_notified(rcv_mpip_cv.node_id);
-	process_addr_notified_event(rcv_mpip_cv.node_id, rcv_mpip_cv.changed);
+	add_addr_notified(rcv_mpip_cm.node_id);
+	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.changed);
 
-	add_working_ip(rcv_mpip_cv.node_id, iph->saddr);
-	add_path_info(rcv_mpip_cv.node_id, iph->saddr);
-	add_path_stat(rcv_mpip_cv.node_id, rcv_mpip_cv.path_id, iph->saddr, iph->daddr);
+	add_working_ip(rcv_mpip_cm.node_id, iph->saddr);
+	add_path_info(rcv_mpip_cm.node_id, iph->saddr);
+	add_path_stat(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id, iph->saddr, iph->daddr);
 
-	update_path_stat_delay(iph->saddr, iph->daddr, rcv_mpip_cv.timestamp);
-	update_path_delay(rcv_mpip_cv.stat_path_id, rcv_mpip_cv.delay);
+	update_path_stat_delay(iph->saddr, iph->daddr, rcv_mpip_cm.timestamp);
+	update_path_delay(rcv_mpip_cm.stat_path_id, rcv_mpip_cm.delay);
 	update_path_info();
 
-	if ((rcv_mpip_cv.session_id > 0) && (iph->protocol != IPPROTO_ICMP))
+	if ((rcv_mpip_cm.session_id > 0) && (iph->protocol != IPPROTO_ICMP))
 	{
 		session_id = get_receiver_session_id(static_node_id,
-											rcv_mpip_cv.node_id,
+											rcv_mpip_cm.node_id,
 											iph->daddr, dport,
 											iph->saddr, sport,
-											rcv_mpip_cv.session_id,
-											rcv_mpip_cv.path_id);
+											rcv_mpip_cm.session_id,
+											rcv_mpip_cm.path_id);
 	}
 
-	res = get_receiver_session_info(rcv_mpip_cv.node_id, session_id,
+	res = get_receiver_session_info(rcv_mpip_cm.node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
 	if (res && (iph->protocol != IPPROTO_ICMP))
