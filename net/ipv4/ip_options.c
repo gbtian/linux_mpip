@@ -114,9 +114,6 @@ int ip_options_echo(struct ip_options *dopt, struct sk_buff *skb)
 	if (sopt->optlen == 0)
 		return 0;
 
-	if (sysctl_mpip_enabled)
-		return 0;
-
 	sptr = skb_network_header(skb);
 	dptr = dopt->__data;
 
@@ -379,18 +376,6 @@ int ip_options_compile(struct net *net,
 		    		opt->rr_needaddr = 1;
 		    	}
 		    	opt->rr = optptr - iph;
-		    	break;
-		    case IPOPT_MPIP:
-		    	opt->node_id[0] = optptr[2];
-		    	opt->node_id[1] = optptr[3];
-		    	opt->session_id = optptr[4];
-		    	opt->path_id = (optptr[5] & 0xf0) >> 4;
-		    	opt->stat_path_id = (optptr[5] & 0x0f);
-		    	opt->nexthop = (optptr[9]<<24) | (optptr[8]<<16) |
-		    				   (optptr[7]<<8) | optptr[6];
-		    	opt->delay = (optptr[13]<<24) | (optptr[12]<<16) |
-							   (optptr[11]<<8) | optptr[10];
-		    	opt->ts = optptr[14];
 		    	break;
 		    case IPOPT_TIMESTAMP:
 		    	if (opt->ts)

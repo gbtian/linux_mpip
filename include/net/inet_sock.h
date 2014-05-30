@@ -55,12 +55,6 @@ struct ip_options {
 	unsigned char	router_alert;
 	unsigned char	cipso;
 
-	unsigned char	node_id[2];
-	unsigned char	session_id;
-	unsigned char	path_id:4;
-	unsigned char	stat_path_id:4;
-	__s32 			delay;
-
 	unsigned char	__data[0];
 
 };

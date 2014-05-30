@@ -29,8 +29,8 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_OPT_LEN 15
-#define MPIP_OPT_NODE_ID_LEN 2
+#define MPIP_CM_LEN 15
+#define MPIP_CM_NODE_ID_LEN 2
 #define MPIP_TCP_BUF_LEN 5
 
 extern int sysctl_mpip_enabled;
@@ -57,6 +57,17 @@ extern int global_stat_3;
 //extern struct list_head la_head;
 //extern struct list_head ps_head;
 
+struct mpip_cm
+{
+	unsigned char	len;
+	unsigned char	node_id[2];
+	unsigned char	session_id;
+	unsigned char	path_id;
+	unsigned char	stat_path_id;
+	__s32			timestamp;
+	__s32			delay;
+	unsigned char	changed;
+};
 struct mpip_enabled_table
 {
 	__be32				addr; /* receiver' ip seen by sender */
@@ -67,7 +78,7 @@ struct mpip_enabled_table
 
 struct addr_notified_table
 {
-	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
+	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /*receiver's node id. */
 	bool				notified;
 	int					count;
 	struct list_head 	list;
@@ -76,7 +87,7 @@ struct addr_notified_table
 
 struct working_ip_table
 {
-	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /*receiver's node id. */
+	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /*receiver's node id. */
 									   /*the node id is defined as the MAC*/
 	__be32				addr; /* receiver' ip seen by sender */
 	struct list_head 	list;
@@ -87,7 +98,7 @@ struct path_info_table
 {
 	/*when sending pkts, check the bw to choose the fastest one*/
 	/*update sent*/
-	unsigned char 		node_id[MPIP_OPT_NODE_ID_LEN]; /*destination node id*/
+	unsigned char 		node_id[MPIP_CM_NODE_ID_LEN]; /*destination node id*/
 	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
 	unsigned long 		fbjiffies; /* last feedback time of this path */
 	__be32				saddr; /* source ip address*/
@@ -112,8 +123,8 @@ struct tcp_skb_buf
 
 struct socket_session_table
 {
-	unsigned char		src_node_id[MPIP_OPT_NODE_ID_LEN]; /* local node id*/
-	unsigned char		dst_node_id[MPIP_OPT_NODE_ID_LEN]; /* remote node id*/
+	unsigned char		src_node_id[MPIP_CM_NODE_ID_LEN]; /* local node id*/
+	unsigned char		dst_node_id[MPIP_CM_NODE_ID_LEN]; /* remote node id*/
 	unsigned char   	session_id; /* sender's session id*/
 
 	struct list_head 	tcp_buf;
@@ -132,7 +143,7 @@ struct socket_session_table
 
 struct path_stat_table
 {
-	unsigned char		node_id[MPIP_OPT_NODE_ID_LEN]; /* sender's node id*/
+	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
 	__be32				saddr; /* source ip address*/
 	__be32				daddr; /* destination ip address*/
@@ -153,9 +164,9 @@ int mpip_init(void);
 
 void mpip_log(const char *fmt, ...);
 
-void print_node_id(const char *prefix, unsigned char *node_id);
+void print_node_id(unsigned char *node_id);
 
-void print_addr(const char *prefix, __be32 addr);
+void print_addr(__be32 addr);
 
 __be32 convert_addr(char a1, char a2, char a3, char a4);
 
@@ -169,23 +180,17 @@ int		mpip_xmit(struct sk_buff *skb);
 
 struct net_device *find_dev_by_addr(__be32 addr);
 
+void print_mpip_cm(struct mpip_cm *cm);
+
+int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+					__be32 *new_saddr, __be32 *new_daddr);
+
+int process_mpip_cm(struct sk_buff *skb);
+
 int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
 bool check_bad_addr(__be32 saddr, __be32 daddr);
-
-void print_mpip_options(const char *prefix, struct ip_options *opt);
-
-bool mpip_compose_opt(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-					__be32 *new_saddr, __be32 *new_daddr);
-
-void mpip_options_build(struct sk_buff *skb, bool pushed);
-
-int process_mpip_options(struct sk_buff *skb);
-
-int mpip_update_checksum(struct sk_buff *skb);
-
-bool insert_mpip_options(struct sk_buff *skb, __be32 *new_saddr, __be32 *new_daddr);
 
 void send_mpip_hb(struct sk_buff *skb);
 

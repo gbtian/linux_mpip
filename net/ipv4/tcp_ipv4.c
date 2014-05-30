@@ -1679,7 +1679,7 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 	}
 	sk_setup_caps(newsk, dst);
 //	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, dst->dev->ip_ptr->ifa_list->ifa_address);
+	print_addr(dst->dev->ip_ptr->ifa_list->ifa_address);
 
 	tcp_mtup_init(newsk);
 	tcp_sync_mss(newsk, dst_mtu(dst));

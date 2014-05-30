@@ -836,7 +836,7 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	if (sysctl_mpip_enabled && (dnsport != 53) &&
 		is_mpip_enabled(inet->inet_daddr))
 	{
-		len -= ((MPIP_OPT_LEN + 3) & ~3);
+		len -= ((MPIP_CM_LEN + 3) & ~3);
 
 	}
 

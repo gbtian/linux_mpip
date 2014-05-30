@@ -1194,7 +1194,7 @@ static int inet_sk_reselect_saddr(struct sock *sk)
 	inet->inet_saddr = inet->inet_rcv_saddr = new_saddr;
 
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(__FUNCTION__, inet->inet_saddr);
+	print_addr(inet->inet_saddr);
 	/*
 	 * XXX The only one ugly spot where we need to
 	 * XXX really change the sockets identity after

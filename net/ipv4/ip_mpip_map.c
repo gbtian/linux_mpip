@@ -29,7 +29,7 @@ bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 	if (!node_id_1 || !node_id_2)
 		return false;
 
-	for(i = 0; i < MPIP_OPT_NODE_ID_LEN; i++)
+	for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
 	{
 		if (node_id_1[i] != node_id_2[i])
 			return false;
@@ -38,22 +38,11 @@ bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 	return true;
 }
 
-void print_node_id(const char *prefix, unsigned char *node_id)
+void print_node_id(unsigned char *node_id)
 {
 	if (!node_id)
 		return;
-
-	prefix = NULL;
-	if (prefix)
-	{
-		mpip_log("%s: %02x-%02x\n", prefix,
-					node_id[0], node_id[1]);
-	}
-	else
-	{
-		mpip_log( "%02x-%02x\n",
-				node_id[0], node_id[1]);
-	}
+	mpip_log( "%02x-%02x\n", node_id[0], node_id[1]);
 }
 
 bool is_lan_addr(__be32 addr)
@@ -68,20 +57,12 @@ bool is_lan_addr(__be32 addr)
 	return false;
 }
 
-void print_addr(const char *prefix, __be32 addr)
+void print_addr(__be32 addr)
 {
 	char *p = (char *) &addr;
-	prefix = NULL;
-	if (prefix)
-	{
-		mpip_log("%s: %d.%d.%d.%d\n", prefix,
-					(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-	}
-	else
-	{
-		mpip_log( "%d.%d.%d.%d\n",
+	mpip_log( "%d.%d.%d.%d\n",
 			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-	}
+
 }
 
 
@@ -154,8 +135,6 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 
 bool is_mpip_enabled(__be32 addr)
 {
-	return true;
-
 	bool enabled = false;
 	struct mpip_enabled_table *item = NULL;
 
@@ -193,7 +172,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 	item->addr = addr;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
@@ -327,7 +306,7 @@ int add_addr_notified(unsigned char *node_id)
 
 	item = kzalloc(sizeof(struct addr_notified_table),	GFP_ATOMIC);
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 	item->notified = true;
 	item->count = 0;
 	INIT_LIST_HEAD(&(item->list));
@@ -746,7 +725,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, _
 	item = kzalloc(sizeof(struct path_stat_table),	GFP_ATOMIC);
 
 
-	memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 	item->path_id = path_id;
 	item->saddr = saddr;
 	item->daddr = daddr;
@@ -817,8 +796,8 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 
 	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
 
-	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
-	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->src_node_id, src_node_id, MPIP_CM_NODE_ID_LEN);
+	memcpy(item->dst_node_id, dst_node_id, MPIP_CM_NODE_ID_LEN);
 
 	INIT_LIST_HEAD(&(item->tcp_buf));
 	item->next_seq = 0;
@@ -896,8 +875,8 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
-	memcpy(item->src_node_id, src_node_id, MPIP_OPT_NODE_ID_LEN);
-	memcpy(item->dst_node_id, dst_node_id, MPIP_OPT_NODE_ID_LEN);
+	memcpy(item->src_node_id, src_node_id, MPIP_CM_NODE_ID_LEN);
+	memcpy(item->dst_node_id, dst_node_id, MPIP_CM_NODE_ID_LEN);
 
 	INIT_LIST_HEAD(&(item->tcp_buf));
 	item->next_seq = 0;
@@ -1114,7 +1093,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
-		memcpy(item->node_id, node_id, MPIP_OPT_NODE_ID_LEN);
+		memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 		item->fbjiffies = jiffies;
 		item->saddr = local_addr->addr;
 		item->daddr = addr;

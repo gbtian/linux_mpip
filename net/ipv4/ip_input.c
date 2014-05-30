@@ -347,12 +347,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	 *	Initialise the virtual path cache for the packet. It describes
 	 *	how the packet travels inside Linux networking.
 	 */
-//	mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
-//	print_addr(__FUNCTION__, iph->saddr);
-//	print_addr(__FUNCTION__, iph->daddr);
 	if (!skb_dst(skb))
 	{
-//		mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 		int err = ip_route_input_noref(skb, iph->daddr, iph->saddr,
 					       iph->tos, skb->dev);
 		if (unlikely(err)) {
@@ -377,7 +373,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 #endif
 
 
-	if (!sysctl_mpip_enabled && iph->ihl > 5 && ip_rcv_options(skb))
+	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
 
 	rt = skb_rtable(skb);
@@ -390,14 +386,10 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
-		process_mpip_options(skb);
+		process_mpip_cm(skb);
 		iph = ip_hdr(skb);
-
-		send_mpip_hb(skb);
-		send_mpip_enable(skb);
 	}
 
-//	mpip_log("rt: %s, %s, %s, %d\n", rt->dst.dev->name, __FILE__, __FUNCTION__, __LINE__);
 
 	u16 tcp_header_len = sizeof(struct tcphdr) +
 			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
@@ -410,8 +402,6 @@ static int ip_rcv_finish(struct sk_buff *skb)
 			return NET_RX_SUCCESS;
 
 	}
-
-
 
 	return dst_input(skb);
 
@@ -476,18 +466,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	iph = ip_hdr(skb);
 
-//	mpip_log("Original receive %d, %d: \n", iph->id, iph->ihl);
-//	print_addr(__FUNCTION__, iph->saddr);
-//	print_addr(__FUNCTION__, iph->daddr);
-
-
-//	if (sysctl_mpip_enabled)
-//	{
-//		//mpip_log("%d, %d, %s, %s, %d\n", iph->id, iph->ihl, __FILE__, __FUNCTION__, __LINE__);
-//		skb->transport_header = skb->network_header + iph->ihl*4;
-//		process_mpip_options(skb);
-//		iph = ip_hdr(skb);
-//	}
 
 	if (unlikely(ip_fast_csum((u8 *)iph, iph->ihl)))
 		goto csum_error;
