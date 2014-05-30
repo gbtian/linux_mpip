@@ -68,6 +68,7 @@ struct mpip_cm
 	__s32			delay;
 	unsigned char	changed;
 };
+
 struct mpip_enabled_table
 {
 	__be32				addr; /* receiver' ip seen by sender */
@@ -266,8 +267,7 @@ int add_path_info(unsigned char *node_id, __be32 addr);
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr,
 								   __be32 origin_saddr, __be32 origin_daddr);
-
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, __s32 *delay);
+unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay);
 
 unsigned char get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);
@@ -280,7 +280,7 @@ __be32 find_local_addr(__be32 addr);
 
 void get_available_local_addr(void);
 
-void update_addr_change();
+void update_addr_change(void);
 
 int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id);
 

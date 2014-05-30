@@ -1205,7 +1205,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 }
 
 
-unsigned char find_earliest_stat_path_id(unsigned char *dest_node_id, __s32 *delay)
+unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay)
 {
 	struct path_stat_table *path_stat;
 	struct path_stat_table *e_path_stat;

@@ -36,8 +36,6 @@
 #include <linux/atomic.h>
 #include <asm/byteorder.h>
 
-#include <linux/ip_mpip.h>
-
 /* This is for all connections with a full identity, no wildcards.
  * One chain is dedicated to TIME_WAIT sockets.
  * I'll experiment with dynamic table growth later.

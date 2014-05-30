@@ -137,7 +137,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct inet_sock *inet;
 	struct rtable *rt;
 	struct iphdr *iph;
-	__be32 new_saddr=0, new_daddr=0, gwaddr = 0;
+	__be32 new_saddr=0, new_daddr=0;
 	struct net_device *new_dst_dev = NULL;
 
 	bool mpip_cm_added = false;
@@ -237,9 +237,6 @@ static inline int ip_finish_output2(struct sk_buff *skb)
 	unsigned int hh_len = LL_RESERVED_SPACE(dev);
 	struct neighbour *neigh;
 	u32 nexthop;
-
-	struct sock *sk = skb->sk;
-//	struct inet_sock *inet = inet_sk(sk);
 
 	if (rt->rt_type == RTN_MULTICAST) {
 		IP_UPD_PO_STATS(dev_net(dev), IPSTATS_MIB_OUTMCAST, skb->len);
@@ -396,7 +393,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct iphdr *iph;
 	int res;
 	__be32 old_saddr = 0, old_daddr = 0;
-	__be32 new_saddr = 0, new_daddr = 0, gwaddr = 0;
+	__be32 new_saddr = 0, new_daddr = 0;
 	struct net_device *new_dst_dev = NULL;
 
 	bool mpip_cm_added = false;

@@ -245,7 +245,7 @@ void print_mpip_cm(struct mpip_cm *cm)
 	print_node_id(cm->node_id);
 	mpip_log("session_id = %d\n", cm->session_id);
 	mpip_log("path_id = %d\n",   cm->path_id);
-	mpip_log("stat_path_id = %d\n",  cm->stat_path_id);
+	mpip_log("path_stat_id = %d\n",  cm->path_stat_id);
 	mpip_log("delay = %d\n",   cm->delay);
 	mpip_log("timestamp = %d\n",   cm->timestamp);
 	mpip_log("changed = %d\n",   cm->changed);
@@ -334,7 +334,7 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id,  __s32 *delay)
 		return 0;
 	}
 
-	return find_earliest_stat_path_id(dest_node_id,  delay);
+	return find_earliest_path_stat_id(dest_node_id,  delay);
 }
 
 bool check_bad_addr(__be32 saddr, __be32 daddr)
@@ -371,7 +371,6 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     struct timespec tv;
 	u32  midtime;
 	struct tcphdr *tcph = NULL;
-	struct udphdr *udph = NULL;
 	unsigned char *dst_node_id = NULL;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
@@ -496,7 +495,6 @@ EXPORT_SYMBOL(insert_mpip_cm);
 int process_mpip_cm(struct sk_buff *skb)
 {
 	struct iphdr *iph;
-	struct net_device *dev;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	int  res;
@@ -534,7 +532,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.node_id[1]		= rcv_cm[2];
 	rcv_mpip_cm.session_id		= rcv_cm[3];
 	rcv_mpip_cm.path_id  		= rcv_cm[4];
-	rcv_mpip_cm.stat_path_id  	= rcv_cm[5];
+	rcv_mpip_cm.path_stat_id  	= rcv_cm[5];
 	rcv_mpip_cm.timestamp  		= (rcv_cm[9]<<24) | (rcv_cm[8]<<16) |
 				   	   	    	(rcv_cm[7]<<8) | rcv_cm[6];
 	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24) | (rcv_cm[12]<<16) |
@@ -583,7 +581,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	add_path_stat(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id, iph->saddr, iph->daddr);
 
 	update_path_stat_delay(iph->saddr, iph->daddr, rcv_mpip_cm.timestamp);
-	update_path_delay(rcv_mpip_cm.stat_path_id, rcv_mpip_cm.delay);
+	update_path_delay(rcv_mpip_cm.path_stat_id, rcv_mpip_cm.delay);
 	update_path_info();
 
 	if ((rcv_mpip_cm.session_id > 0) && (iph->protocol != IPPROTO_ICMP))
@@ -641,7 +639,6 @@ unsigned char get_session(struct sk_buff *skb)
 	struct iphdr *iph;
 	struct tcphdr *tcph = NULL;
 	__be16 sport = 0, dport = 0;
-	unsigned char session_id = 0;
 
 	if (!skb)
 	{

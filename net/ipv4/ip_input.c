@@ -498,15 +498,15 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		       ip_rcv_finish);
 
 csum_error:
-	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_CSUMERRORS);
 inhdr_error:
-	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error:  %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 drop:
-	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	kfree_skb(skb);
 out:
-	mpip_log("Checksum Error: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	return NET_RX_DROP;
 }
