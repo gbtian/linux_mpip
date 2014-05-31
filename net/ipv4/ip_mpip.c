@@ -527,9 +527,10 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
-	if (rcv_cm[0] != MPIP_CM_LEN)
+	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 1))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		add_mpip_enabled(iph->saddr, false);
 		return 0;
 	}
 
@@ -549,6 +550,8 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.changed 		= rcv_cm[14];
 
 	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 	print_mpip_cm(&rcv_mpip_cm);
 
 	if(iph->protocol == IPPROTO_TCP)
