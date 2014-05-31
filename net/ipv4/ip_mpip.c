@@ -23,8 +23,8 @@
 //int MPIP_CM_NODE_ID_LEN = 3;
 static unsigned char *static_node_id = NULL;
 static char log_buf[256];
-static char send_cm[MPIP_CM_LEN];
-static char rcv_cm[MPIP_CM_LEN];
+static unsigned char send_cm[MPIP_CM_LEN];
+static unsigned char rcv_cm[MPIP_CM_LEN];
 static struct mpip_cm send_mpip_cm;
 static struct mpip_cm rcv_mpip_cm;
 
