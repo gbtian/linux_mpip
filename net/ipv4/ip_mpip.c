@@ -387,6 +387,12 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
+	if (!sk)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
 	if((sk->sk_protocol != IPPROTO_TCP) && (sk->sk_protocol != IPPROTO_UDP))
 		return 0;
 

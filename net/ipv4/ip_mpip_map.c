@@ -384,7 +384,6 @@ bool send_mpip_msg(struct sk_buff *skb)
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0;
 
-
 	struct sk_buff *nskb = NULL;
 	if(!skb)
 	{
