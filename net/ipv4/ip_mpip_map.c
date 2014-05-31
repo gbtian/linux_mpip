@@ -336,31 +336,6 @@ struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
-int icmp_send_mpip_hb(struct sk_buff *skb)
-{
-	struct sk_buff *nskb = NULL;
-	struct iphdr *iph = NULL;
-	if(!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-	nskb = skb_copy(skb, GFP_ATOMIC);
-
-	if (nskb == NULL)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-
-	iph = ip_hdr(nskb);
-	icmp_send(nskb, ICMP_MPIP_HEARTBEAT, 0, 0);
-
-//	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
-
-	return 1;
-}
-
 
 void send_mpip_hb(struct sk_buff *skb)
 {
@@ -370,11 +345,9 @@ void send_mpip_hb(struct sk_buff *skb)
 		return;
 	}
 
-	//mpip_log("%s, %d\n", __FILE__, __LINE__);
 	if ((jiffies - earliest_fbjiffies) / (HZ / 100) >= sysctl_mpip_hb)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		icmp_send_mpip_hb(skb);
+		send_mpip_msg(skb);
 		earliest_fbjiffies = jiffies;
 	}
 }
@@ -389,7 +362,7 @@ void send_mpip_enable(struct sk_buff *skb)
 
 	struct iphdr *iph = ip_hdr(skb);
 
-	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr);
+	struct mpip_enabled_table *item = find_mpip_enabled(iph->daddr);
 	if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
 	{
 		return;
@@ -397,81 +370,56 @@ void send_mpip_enable(struct sk_buff *skb)
 	else if (item)
 	{
 		item->sent_count += 1;
-		icmp_send_mpip_enable(skb);
+		send_mpip_msg(skb);
 	}
 	else
 	{
 		add_mpip_enabled(iph->saddr, false);
-		icmp_send_mpip_enable(skb);
+		send_mpip_msg(skb);
 	}
 }
 
-int icmp_send_mpip_enable(struct sk_buff *skb)
+bool send_mpip_msg(struct sk_buff *skb)
 {
+	struct iphdr *iph;
+	__be32 new_saddr=0, new_daddr=0;
+
+
 	struct sk_buff *nskb = NULL;
-	struct iphdr *iph = NULL;
 	if(!skb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
+		return false;
 	}
 	nskb = skb_copy(skb, GFP_ATOMIC);
 
 	if (nskb == NULL)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
+		return false;
 	}
 
 	iph = ip_hdr(nskb);
-	icmp_send(nskb, ICMP_MPIP_ENABLE, 0, 0);
 
-//	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
-
-	return 1;
-}
-
-void send_mpip_enabled(struct sk_buff *skb)
-{
-	if (!skb)
+	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr))
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-
-	icmp_send_mpip_enabled(skb);
-}
-
-int icmp_send_mpip_enabled(struct sk_buff *skb)
-{
-	struct sk_buff *nskb = NULL;
-	struct iphdr *iph = NULL;
-	if(!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
-	}
-	nskb = skb_copy(skb, GFP_ATOMIC);
-
-	if (nskb == NULL)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return 0;
+		return false;
 	}
 
 	iph = ip_hdr(nskb);
-	icmp_send(nskb, ICMP_MPIP_ENABLED, 0, 0);
+	iph->tot_len = htons(nskb->len);
+	ip_send_check(iph);
 
-//	mpip_log("%d, %s, %d\n", iph->ihl, __FILE__,  __LINE__);
+	nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL,
+			skb_dst(nskb)->dev, dst_output);
 
-	return 1;
+	return true;
 }
-
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 {
-	struct working_ip_table *working_ip;
-	struct working_ip_table *tmp_ip;
+//	struct working_ip_table *working_ip;
+//	struct working_ip_table *tmp_ip;
 
 	struct path_info_table *path_info;
 	struct path_info_table *tmp_info;
@@ -585,7 +533,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 
 
 
-__s32 calc_si_diff()
+__s32 calc_si_diff(void)
 {
 	__s32 si = 0;
 	__s32 K = 0;
@@ -632,9 +580,9 @@ __s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
 	return diff / (sysctl_mpip_bw_factor * si);
 }
 
-int update_path_info()
+int update_path_info(void)
 {
-	struct path_info_table *path_info, *min_path = NULL, *max_path = NULL;
+	struct path_info_table *path_info;
 	__s32 min_queuing_delay = -1;
 	__s32 max_queuing_delay = 0;
 
@@ -1300,7 +1248,7 @@ void get_available_local_addr(void)
 	}
 }
 
-void update_addr_change()
+void update_addr_change(void)
 {
 	struct local_addr_table *local_addr;
 	struct local_addr_table *tmp_addr;

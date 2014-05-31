@@ -140,8 +140,6 @@ struct socket_session_table
 	struct list_head 	list;
 };
 
-
-
 struct path_stat_table
 {
 	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /* sender's node id*/
@@ -152,7 +150,6 @@ struct path_stat_table
 	unsigned long 		fbjiffies; /* last feedback time of this path's stat */
 	struct list_head 	list;
 };
-
 
 struct local_addr_table
 {
@@ -183,27 +180,18 @@ struct net_device *find_dev_by_addr(__be32 addr);
 
 void print_mpip_cm(struct mpip_cm *cm);
 
-int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+bool send_mpip_msg(struct sk_buff *skb);
+
+bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr);
 
 int process_mpip_cm(struct sk_buff *skb);
-
-int get_mpip_options(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-		__be32 *new_saddr, __be32 *new_daddr, unsigned char *options);
 
 bool check_bad_addr(__be32 saddr, __be32 daddr);
 
 void send_mpip_hb(struct sk_buff *skb);
 
-int icmp_send_mpip_hb(struct sk_buff *skb);
-
 void send_mpip_enable(struct sk_buff *skb);
-
-int icmp_send_mpip_enable(struct sk_buff *skb);
-
-void send_mpip_enabled(struct sk_buff *skb);
-
-int icmp_send_mpip_enabled(struct sk_buff *skb);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
 

@@ -99,6 +99,34 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
+	__be32 new_saddr = 0, new_daddr = 0;
+	struct net_device *new_dst_dev = NULL;
+
+	if (sysctl_mpip_enabled && (iph->protocol==IPPROTO_UDP) && is_mpip_enabled(iph->daddr))
+	{
+		insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr);
+		iph = ip_hdr(skb);
+
+		if (new_saddr != 0)
+		{
+			new_dst_dev = find_dev_by_addr(new_saddr);
+			if (new_dst_dev)
+			{
+				skb_dst(skb)->dev = new_dst_dev;
+				iph->saddr = new_saddr;
+				iph->daddr = new_daddr;
+			}
+		}
+		else
+		{
+			new_dst_dev = find_dev_by_addr(iph->saddr);
+			if (new_dst_dev)
+			{
+				skb_dst(skb)->dev = new_dst_dev;
+			}
+		}
+	}
+
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 
@@ -109,10 +137,19 @@ int __ip_local_out(struct sk_buff *skb)
 int ip_local_out(struct sk_buff *skb)
 {
 	int err;
+	struct iphdr *iph = ip_hdr(skb);
 
 	err = __ip_local_out(skb);
 	if (likely(err == 1))
 		err = dst_output(skb);
+
+	if (sysctl_mpip_enabled)
+	{
+		if (!is_mpip_enabled(iph->daddr))
+			send_mpip_enable(skb);
+		else
+			send_mpip_hb(skb);
+	}
 
 	return err;
 }
@@ -144,7 +181,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	inet = inet_sk(sk);
 
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && is_mpip_enabled(daddr))
 	{
 		if (insert_mpip_cm(skb, saddr, daddr, &new_saddr, &new_daddr))
 		{
@@ -404,7 +441,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	 */
 	rcu_read_lock();
 	inet_opt = rcu_dereference(inet->inet_opt);
-	if (sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled && is_mpip_enabled(fl->u.ip4.daddr))
 	{
 		if (insert_mpip_cm(skb, fl->u.ip4.saddr, fl->u.ip4.daddr,
 				&new_saddr, &new_daddr))

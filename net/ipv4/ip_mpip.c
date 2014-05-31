@@ -363,7 +363,7 @@ bool check_bad_addr(__be32 saddr, __be32 daddr)
 }
 
 
-int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
+bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr)
 {
 	struct sock *sk = skb->sk;
@@ -371,6 +371,7 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     struct timespec tv;
 	u32  midtime;
 	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
 	unsigned char *dst_node_id = NULL;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
@@ -383,21 +384,21 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	if (!skb)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return 0;
+		return false;
 	}
 
-	if(sk->sk_protocol != IPPROTO_TCP)
+	if((sk->sk_protocol != IPPROTO_TCP) && (sk->sk_protocol != IPPROTO_UDP))
 		return 0;
 
 	if (skb_tailroom(skb) < MPIP_CM_LEN)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return 0;
+		return false;
 	}
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
-		return 0;
+		return false;
 	}
 
 	dst_node_id = find_node_id_in_working_ip(old_daddr);
@@ -409,7 +410,7 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		if (!tcph)
 		{
 			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return 0;
+			return false;
 		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
 		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
@@ -417,22 +418,22 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		dport = tcph->dest;   //dport now has the dest port
 
 	}
-//	else if(sk->sk_protocol==IPPROTO_UDP)
-//	{
-//		udph = udp_hdr(skb); //this fixed the problem
-//		if (!udph)
-//		{
-//			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//			return 0;
-//		}
-//		osport = htons((unsigned short int) udph->source); //sport now has the source port
-//		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
-//		sport = udph->source; //sport now has the source port
-//		dport = udph->dest;   //dport now has the dest port
-//	}
+	else if(sk->sk_protocol==IPPROTO_UDP)
+	{
+		udph = udp_hdr(skb); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return 0;
+		}
+		osport = htons((unsigned short int) udph->source); //sport now has the source port
+		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
+		sport = udph->source; //sport now has the source port
+		dport = udph->dest;   //dport now has the dest port
+	}
 	else
 	{
-		return 0;
+		return false;
 	}
 
 	get_node_id();
@@ -486,7 +487,7 @@ int insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	memcpy(skb_tail_pointer(skb), send_cm, MPIP_CM_LEN);
 	skb_put(skb, send_cm[0]);
 
-	return 1;
+	return true;
 
 }
 EXPORT_SYMBOL(insert_mpip_cm);
@@ -513,7 +514,12 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	if(iph->protocol != IPPROTO_TCP)
+	if (!is_mpip_enabled(iph->saddr))
+	{
+		add_mpip_enabled(iph->saddr, true);
+	}
+
+	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 		return 0;
 
 	memcpy(rcv_cm, skb_tail_pointer(skb) - MPIP_CM_LEN, MPIP_CM_LEN);
@@ -555,20 +561,20 @@ int process_mpip_cm(struct sk_buff *skb)
 		sport = tcph->source;
 		dport = tcph->dest;
 	}
-//	else if(iph->protocol == IPPROTO_UDP)
-//	{
-//		udph= udp_hdr(skb);
-//		if (!udph)
-//		{
-//			mpip_log("%s, %d\n", __FILE__, __LINE__);
-//			return 0;
-//		}
-//		osport = htons((unsigned short int) udph->source);
-//		odport = htons((unsigned short int) udph->dest);
-//		sport = udph->source;
-//		dport = udph->dest;
-//	}
-//
+	else if(iph->protocol == IPPROTO_UDP)
+	{
+		udph= udp_hdr(skb);
+		if (!udph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			return 0;
+		}
+		osport = htons((unsigned short int) udph->source);
+		odport = htons((unsigned short int) udph->dest);
+		sport = udph->source;
+		dport = udph->dest;
+	}
+
 	get_available_local_addr();
 
 
