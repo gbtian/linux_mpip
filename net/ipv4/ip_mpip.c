@@ -23,8 +23,7 @@
 //int MPIP_CM_NODE_ID_LEN = 3;
 static unsigned char *static_node_id = NULL;
 static char log_buf[256];
-static unsigned char send_cm[MPIP_CM_LEN];
-static unsigned char rcv_cm[MPIP_CM_LEN];
+
 static struct mpip_cm send_mpip_cm;
 static struct mpip_cm rcv_mpip_cm;
 
@@ -377,6 +376,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	__be16 osport = 0, odport = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
+	unsigned char *send_cm = NULL;
 
 	__s32 delay = 0;
 	bool is_new = true;
@@ -406,6 +406,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	{
 		return false;
 	}
+
+	send_cm = skb_tail_pointer(skb);
 
 	dst_node_id = find_node_id_in_working_ip(old_daddr);
 
@@ -490,8 +492,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	print_mpip_cm(&send_mpip_cm);
 
-	memcpy(skb_tail_pointer(skb), send_cm, MPIP_CM_LEN);
-	skb_put(skb, send_cm[0]);
+	skb_put(skb, MPIP_CM_LEN);
 
 	return true;
 
@@ -511,6 +512,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
+	unsigned char *rcv_cm = NULL;
 
 	if (!skb)
 	{
@@ -520,15 +522,10 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	if (!is_mpip_enabled(iph->saddr))
-	{
-		add_mpip_enabled(iph->saddr, true);
-	}
-
 	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 		return 0;
 
-	memcpy(rcv_cm, skb_tail_pointer(skb) - MPIP_CM_LEN, MPIP_CM_LEN);
+	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if (rcv_cm[0] != MPIP_CM_LEN)
 	{

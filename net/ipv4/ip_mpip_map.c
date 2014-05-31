@@ -409,6 +409,8 @@ bool send_mpip_msg(struct sk_buff *skb)
 	iph->tot_len = htons(nskb->len);
 	ip_send_check(iph);
 
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 	nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL,
 			skb_dst(nskb)->dev, dst_output);
 
