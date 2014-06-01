@@ -363,7 +363,8 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 	struct iphdr *iph = ip_hdr(skb);
 
 	struct mpip_enabled_table *item = find_mpip_enabled(iph->daddr);
-	if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
+	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
+	if (item && item->mpip_enabled)
 	{
 		return;
 	}
@@ -416,7 +417,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	iph->tot_len = htons(nskb->len);
 	ip_send_check(iph);
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL,
 			skb_dst(nskb)->dev, dst_output);
