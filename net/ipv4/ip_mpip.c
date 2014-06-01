@@ -508,24 +508,26 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	skb_put(skb, MPIP_CM_LEN);
 
-	if(protocol==IPPROTO_TCP)
+	if (sysctl_mpip_send)
 	{
-		tcph->check = 0;
-		tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
-										skb->len, protocol,
-										csum_partial((char *)tcph, skb->len, 0));
-		skb->ip_summed = CHECKSUM_UNNECESSARY;
+		if(protocol==IPPROTO_TCP)
+		{
+			tcph->check = 0;
+			tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
+											skb->len, protocol,
+											csum_partial((char *)tcph, skb->len, 0));
+			skb->ip_summed = CHECKSUM_UNNECESSARY;
 
+		}
+		else if(protocol==IPPROTO_UDP)
+		{
+			udph->check = 0;
+			udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
+										   skb->len, protocol,
+										   csum_partial((char *)udph, skb->len, 0));
+			skb->ip_summed = CHECKSUM_UNNECESSARY;
+		}
 	}
-	else if(protocol==IPPROTO_UDP)
-	{
-		udph->check = 0;
-		udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
-									   skb->len, protocol,
-									   csum_partial((char *)udph, skb->len, 0));
-		skb->ip_summed = CHECKSUM_UNNECESSARY;
-	}
-
 
 	return true;
 
