@@ -339,15 +339,15 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id,  __s32 *delay)
 
 bool check_bad_addr(__be32 saddr, __be32 daddr)
 {
-	__be32 addr = convert_addr(127, 0, 0, 1);
-	if ((addr == saddr) || (addr == daddr))
-		return false;
+//	__be32 addr = convert_addr(127, 0, 0, 1);
+//	if ((addr == saddr) || (addr == daddr))
+//		return false;
+//
+//	addr = convert_addr(127, 0, 1, 1);
+//	if ((addr == saddr) || (addr == daddr))
+//		return false;
 
-	addr = convert_addr(127, 0, 1, 1);
-	if ((addr == saddr) || (addr == daddr))
-		return false;
-
-	addr = convert_addr(192, 168, 1, 1);
+	__be32 addr = convert_addr(192, 168, 1, 1);
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 
@@ -402,9 +402,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 
 	if((protocol != IPPROTO_TCP) && (protocol != IPPROTO_UDP))
-		return 0;
+		return false;
 
-	if (skb_tailroom(skb) < MPIP_CM_LEN)
+	if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
@@ -415,7 +415,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
-	send_cm = skb_tail_pointer(skb);
+	send_cm = skb_tail_pointer(skb) + 1;
 
 	dst_node_id = find_node_id_in_working_ip(old_daddr);
 
@@ -508,6 +508,25 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	skb_put(skb, MPIP_CM_LEN);
 
+	if(protocol==IPPROTO_TCP)
+	{
+		tcph->check = 0;
+		tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
+										skb->len, protocol,
+										csum_partial((char *)tcph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+	}
+	else if(protocol==IPPROTO_UDP)
+	{
+		udph->check = 0;
+		udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
+									   skb->len, protocol,
+									   csum_partial((char *)udph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
+	}
+
+
 	return true;
 
 }
@@ -543,7 +562,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);
-	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
+	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN + 1;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 1))
 	{
