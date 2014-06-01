@@ -369,8 +369,9 @@ void send_mpip_enable(struct sk_buff *skb)
 	}
 	else if (item)
 	{
-		item->sent_count += 1;
-		send_mpip_msg(skb);
+		if (send_mpip_msg(skb))
+			item->sent_count += 1;
+
 	}
 	else
 	{
@@ -402,6 +403,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr))
 	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
