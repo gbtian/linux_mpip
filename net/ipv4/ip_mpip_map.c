@@ -385,8 +385,9 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 {
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0;
-
+	int err;
 	struct sk_buff *nskb = NULL;
+
 	if(!skb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
@@ -413,14 +414,11 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
-	iph = ip_hdr(nskb);
-	iph->tot_len = htons(nskb->len);
-	ip_send_check(iph);
+	err = __ip_local_out(nskb);
+	if (likely(err == 1))
+		err = dst_output(nskb);
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-	nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, nskb, NULL,
-			skb_dst(nskb)->dev, dst_output);
 
 	return true;
 }

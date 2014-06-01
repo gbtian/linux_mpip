@@ -99,34 +99,6 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	__be32 new_saddr = 0, new_daddr = 0;
-	struct net_device *new_dst_dev = NULL;
-
-	if (sysctl_mpip_enabled && (iph->protocol==IPPROTO_UDP) && is_mpip_enabled(iph->daddr))
-	{
-		insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol);
-		iph = ip_hdr(skb);
-
-		if (new_saddr != 0)
-		{
-			new_dst_dev = find_dev_by_addr(new_saddr);
-			if (new_dst_dev)
-			{
-				skb_dst(skb)->dev = new_dst_dev;
-				iph->saddr = new_saddr;
-				iph->daddr = new_daddr;
-			}
-		}
-		else
-		{
-			new_dst_dev = find_dev_by_addr(iph->saddr);
-			if (new_dst_dev)
-			{
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-	}
-
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 
@@ -136,6 +108,8 @@ int __ip_local_out(struct sk_buff *skb)
 
 int ip_local_out(struct sk_buff *skb)
 {
+	__be32 new_saddr = 0, new_daddr = 0;
+	struct net_device *new_dst_dev = NULL;
 	int err;
 	struct iphdr *iph = ip_hdr(skb);
 
@@ -145,9 +119,35 @@ int ip_local_out(struct sk_buff *skb)
 		if (!is_mpip_enabled(iph->daddr))
 			send_mpip_enable(skb, iph->protocol);
 		else
+		{
 			send_mpip_hb(skb, iph->protocol);
-	}
 
+			if (iph->protocol==IPPROTO_UDP)
+			{
+				insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol);
+				iph = ip_hdr(skb);
+
+				if (new_saddr != 0)
+				{
+					new_dst_dev = find_dev_by_addr(new_saddr);
+					if (new_dst_dev)
+					{
+						skb_dst(skb)->dev = new_dst_dev;
+						iph->saddr = new_saddr;
+						iph->daddr = new_daddr;
+					}
+				}
+				else
+				{
+					new_dst_dev = find_dev_by_addr(iph->saddr);
+					if (new_dst_dev)
+					{
+						skb_dst(skb)->dev = new_dst_dev;
+					}
+				}
+			}
+		}
+	}
 
 	err = __ip_local_out(skb);
 	if (likely(err == 1))
