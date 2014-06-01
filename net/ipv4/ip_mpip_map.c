@@ -337,7 +337,7 @@ struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
 }
 
 
-void send_mpip_hb(struct sk_buff *skb)
+void send_mpip_hb(struct sk_buff *skb, unsigned int protocol)
 {
 	if (!skb)
 	{
@@ -347,12 +347,12 @@ void send_mpip_hb(struct sk_buff *skb)
 
 	if ((jiffies - earliest_fbjiffies) / (HZ / 100) >= sysctl_mpip_hb)
 	{
-		send_mpip_msg(skb);
+		send_mpip_msg(skb, protocol);
 		earliest_fbjiffies = jiffies;
 	}
 }
 
-void send_mpip_enable(struct sk_buff *skb)
+void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 {
 	if (!skb)
 	{
@@ -369,18 +369,18 @@ void send_mpip_enable(struct sk_buff *skb)
 	}
 	else if (item)
 	{
-		if (send_mpip_msg(skb))
+		if (send_mpip_msg(skb, protocol))
 			item->sent_count += 1;
 
 	}
 	else
 	{
 		add_mpip_enabled(iph->saddr, false);
-		send_mpip_msg(skb);
+		send_mpip_msg(skb, protocol);
 	}
 }
 
-bool send_mpip_msg(struct sk_buff *skb)
+bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 {
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0;
@@ -401,7 +401,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 
 	iph = ip_hdr(nskb);
 
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr))
+	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;

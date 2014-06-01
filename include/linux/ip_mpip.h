@@ -181,18 +181,18 @@ struct net_device *find_dev_by_addr(__be32 addr);
 
 void print_mpip_cm(struct mpip_cm *cm);
 
-bool send_mpip_msg(struct sk_buff *skb);
+bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol);
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-					__be32 *new_saddr, __be32 *new_daddr);
+					__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol);
 
 int process_mpip_cm(struct sk_buff *skb);
 
 bool check_bad_addr(__be32 saddr, __be32 daddr);
 
-void send_mpip_hb(struct sk_buff *skb);
+void send_mpip_hb(struct sk_buff *skb, unsigned int protocol);
 
-void send_mpip_enable(struct sk_buff *skb);
+void send_mpip_enable(struct sk_buff *skb, unsigned int protocol);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
 

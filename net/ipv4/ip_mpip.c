@@ -376,9 +376,8 @@ __s16 calc_checksum(unsigned char *cm)
 }
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-		__be32 *new_saddr, __be32 *new_daddr)
+		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol)
 {
-	struct sock *sk = skb->sk;
 	int  i;
     struct timespec tv;
 	u32  midtime;
@@ -401,13 +400,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
-	if (!sk)
-	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
 
-	if((sk->sk_protocol != IPPROTO_TCP) && (sk->sk_protocol != IPPROTO_UDP))
+	if((protocol != IPPROTO_TCP) && (protocol != IPPROTO_UDP))
 		return 0;
 
 	if (skb_tailroom(skb) < MPIP_CM_LEN)
@@ -426,7 +420,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	dst_node_id = find_node_id_in_working_ip(old_daddr);
 
 	//if TCP PACKET
-	if(sk->sk_protocol==IPPROTO_TCP)
+	if(protocol == IPPROTO_TCP)
 	{
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
@@ -440,7 +434,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		dport = tcph->dest;   //dport now has the dest port
 
 	}
-	else if(sk->sk_protocol==IPPROTO_UDP)
+	else if(protocol == IPPROTO_UDP)
 	{
 		udph = udp_hdr(skb); //this fixed the problem
 		if (!udph)

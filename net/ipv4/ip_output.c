@@ -104,7 +104,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && (iph->protocol==IPPROTO_UDP) && is_mpip_enabled(iph->daddr))
 	{
-		insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr);
+		insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol);
 		iph = ip_hdr(skb);
 
 		if (new_saddr != 0)
@@ -146,9 +146,9 @@ int ip_local_out(struct sk_buff *skb)
 	if (sysctl_mpip_enabled)
 	{
 		if (!is_mpip_enabled(iph->daddr))
-			send_mpip_enable(skb);
+			send_mpip_enable(skb, iph->protocol);
 		else
-			send_mpip_hb(skb);
+			send_mpip_hb(skb, iph->protocol);
 	}
 
 	return err;
@@ -183,7 +183,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	if (sysctl_mpip_enabled && is_mpip_enabled(daddr))
 	{
-		if (insert_mpip_cm(skb, saddr, daddr, &new_saddr, &new_daddr))
+		if (insert_mpip_cm(skb, saddr, daddr, &new_saddr, &new_daddr, IPPROTO_TCP))
 		{
 			if ((new_saddr != 0) && (new_daddr != 0))
 			{
@@ -444,7 +444,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	if (sysctl_mpip_enabled && is_mpip_enabled(fl->u.ip4.daddr))
 	{
 		if (insert_mpip_cm(skb, fl->u.ip4.saddr, fl->u.ip4.daddr,
-				&new_saddr, &new_daddr))
+				&new_saddr, &new_daddr, IPPROTO_TCP))
 		{
 			if ((new_saddr != 0) && (new_daddr != 0))
 			{
