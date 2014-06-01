@@ -139,10 +139,6 @@ int ip_local_out(struct sk_buff *skb)
 	int err;
 	struct iphdr *iph = ip_hdr(skb);
 
-	err = __ip_local_out(skb);
-	if (likely(err == 1))
-		err = dst_output(skb);
-
 	if (sysctl_mpip_enabled)
 	{
 		if (!is_mpip_enabled(iph->daddr))
@@ -150,6 +146,10 @@ int ip_local_out(struct sk_buff *skb)
 		else
 			send_mpip_hb(skb, iph->protocol);
 	}
+
+	err = __ip_local_out(skb);
+	if (likely(err == 1))
+		err = dst_output(skb);
 
 	return err;
 }

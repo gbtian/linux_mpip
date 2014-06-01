@@ -400,6 +400,11 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	}
 
 	iph = ip_hdr(nskb);
+	if (iph == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
 
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol))
 	{
