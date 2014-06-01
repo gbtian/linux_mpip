@@ -553,7 +553,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	}
 
 	checksum = calc_checksum(rcv_cm);
-	if (checksum != (rcv_cm[16]<<8) | rcv_cm[15])
+	if (checksum != (rcv_cm[16]<<8 | rcv_cm[15]))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, false);
@@ -569,12 +569,12 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.session_id		= rcv_cm[3];
 	rcv_mpip_cm.path_id  		= rcv_cm[4];
 	rcv_mpip_cm.path_stat_id  	= rcv_cm[5];
-	rcv_mpip_cm.timestamp  		= (rcv_cm[9]<<24) | (rcv_cm[8]<<16) |
-				   	   	    	(rcv_cm[7]<<8) | rcv_cm[6];
-	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24) | (rcv_cm[12]<<16) |
-				   	   	    	(rcv_cm[11]<<8) | rcv_cm[10];
+	rcv_mpip_cm.timestamp  		= (rcv_cm[9]<<24 | rcv_cm[8]<<16 |
+				   	   	    	rcv_cm[7]<<8 | rcv_cm[6]);
+	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24 | rcv_cm[12]<<16 |
+				   	   	    	rcv_cm[11]<<8 | rcv_cm[10]);
 	rcv_mpip_cm.changed 		= rcv_cm[14];
-	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8) | rcv_cm[15];
+	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
 
 //	print_mpip_cm(&rcv_mpip_cm);
