@@ -248,6 +248,7 @@ void print_mpip_cm(struct mpip_cm *cm)
 	mpip_log("delay = %d\n",   cm->delay);
 	mpip_log("timestamp = %d\n",   cm->timestamp);
 	mpip_log("changed = %d\n",   cm->changed);
+	mpip_log("checksum = %d\n",   cm->checksum);
 }
 EXPORT_SYMBOL(print_mpip_cm);
 
@@ -361,6 +362,18 @@ bool check_bad_addr(__be32 saddr, __be32 daddr)
 	return true;
 }
 
+__s16 calc_checksum(unsigned char *cm)
+{
+	__s16 checksum = 0;
+	int i;
+	if (!cm)
+		return 0;
+
+	for (i = 0; i < MPIP_CM_LEN - 2; ++i)
+		checksum += cm[i];
+
+	return checksum;
+}
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr)
@@ -377,8 +390,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
 	unsigned char *send_cm = NULL;
-
 	__s32 delay = 0;
+	__s16 checksum = 0;
+
 	bool is_new = true;
 
 	if (!skb)
@@ -489,6 +503,13 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	else
 		send_mpip_cm.changed = send_cm[14] = 1;
 
+
+	checksum = calc_checksum(send_cm);
+
+	send_mpip_cm.checksum = checksum;
+	send_cm[15] = checksum & 0xff;
+	send_cm[16] = (checksum>>8) & 0xff;
+
 	mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	print_mpip_cm(&send_mpip_cm);
 
@@ -513,6 +534,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
 	unsigned char *rcv_cm = NULL;
+	__s16 checksum = 0;
 
 	if (!skb)
 	{
@@ -534,6 +556,14 @@ int process_mpip_cm(struct sk_buff *skb)
 		return 0;
 	}
 
+	checksum = calc_checksum(rcv_cm);
+	if (checksum != (rcv_cm[16]<<8) | rcv_cm[15])
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		add_mpip_enabled(iph->saddr, false);
+		return 0;
+	}
+
 	skb->tail -= MPIP_CM_LEN;
 	skb->len  -= MPIP_CM_LEN;
 
@@ -548,6 +578,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24) | (rcv_cm[12]<<16) |
 				   	   	    	(rcv_cm[11]<<8) | rcv_cm[10];
 	rcv_mpip_cm.changed 		= rcv_cm[14];
+	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8) | rcv_cm[15];
 
 	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	print_addr(iph->saddr);

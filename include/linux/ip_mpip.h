@@ -29,7 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_CM_LEN 15
+#define MPIP_CM_LEN 17
 #define MPIP_CM_NODE_ID_LEN 2
 #define MPIP_TCP_BUF_LEN 5
 
@@ -67,6 +67,7 @@ struct mpip_cm
 	__s32			timestamp;
 	__s32			delay;
 	unsigned char	changed;
+	__s16			checksum;
 };
 
 struct mpip_enabled_table
