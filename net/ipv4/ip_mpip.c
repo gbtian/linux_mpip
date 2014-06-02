@@ -506,8 +506,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[15] = checksum & 0xff;
 	send_cm[16] = (checksum>>8) & 0xff;
 
-	mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	mpip_log("%d, %d, %d\n", send_cm[15], send_cm[16], checksum);
+	//mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//mpip_log("%d, %d, %d\n", send_cm[15], send_cm[16], checksum);
 	//print_mpip_cm(&send_mpip_cm);
 
 	skb_put(skb, MPIP_CM_LEN + 1);
