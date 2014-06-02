@@ -434,7 +434,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 	struct path_stat_table *path_stat;
 	struct path_stat_table *tmp_stat;
 
-	if (!node_id || changed == 0)
+	if (!node_id || changed == 0 || changed == 2)
 		return;
 
 	if (node_id[0] == node_id[1])
