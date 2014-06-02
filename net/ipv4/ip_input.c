@@ -386,7 +386,9 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
-		process_mpip_cm(skb);
+		if (process_mpip_cm(skb) == 2)
+			return NET_RX_SUCCESS;
+
 		iph = ip_hdr(skb);
 	}
 

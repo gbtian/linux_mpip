@@ -408,7 +408,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol))
+	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol, true))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;

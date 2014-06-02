@@ -376,7 +376,7 @@ __s16 calc_checksum(unsigned char *cm)
 }
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol)
+		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol, bool heartbeat)
 {
 	int  i;
     struct timespec tv;
@@ -497,6 +497,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	else
 		send_mpip_cm.changed = send_cm[14] = 1;
 
+	if (heartbeat)
+		send_mpip_cm.changed = send_cm[14] = 2;
+
 	checksum = calc_checksum(send_cm);
 
 	send_mpip_cm.checksum = checksum;
@@ -567,7 +570,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	print_addr(iph->daddr);
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
-	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 1))
+	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, false);
@@ -690,6 +693,9 @@ int process_mpip_cm(struct sk_buff *skb)
 
 		ip_send_check(iph);
 	}
+
+	if (rcv_mpip_cm.changed == 2)
+		return 2;
 
 	return 1;
 }
