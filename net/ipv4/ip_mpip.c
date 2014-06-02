@@ -573,7 +573,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		add_mpip_enabled(iph->saddr, false);
+//		add_mpip_enabled(iph->saddr, false);
 		return 0;
 	}
 
@@ -583,7 +583,7 @@ int process_mpip_cm(struct sk_buff *skb)
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	        mpip_log("%d, %d, %d, %d\n", rcv_cm[15], rcv_cm[16], checksum, (rcv_cm[16]<<8 | rcv_cm[15]));
 
-		add_mpip_enabled(iph->saddr, false);
+//		add_mpip_enabled(iph->saddr, false);
 		return 0;
 	}
 
