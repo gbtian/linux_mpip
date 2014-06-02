@@ -507,7 +507,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	mpip_log("%d, %d, %d\n", send_cm[15], send_cm[16], checksum);
 	//print_mpip_cm(&send_mpip_cm);
 
-	skb_put(skb, MPIP_CM_LEN);
+	skb_put(skb, MPIP_CM_LEN + 1);
 
 	if (sysctl_mpip_send)
 	{
@@ -565,7 +565,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);
-	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN + 1;
+	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 1))
 	{
@@ -584,8 +584,8 @@ int process_mpip_cm(struct sk_buff *skb)
 		return 0;
 	}
 
-	skb->tail -= MPIP_CM_LEN;
-	skb->len  -= MPIP_CM_LEN;
+	skb->tail -= MPIP_CM_LEN + 1;
+	skb->len  -= MPIP_CM_LEN + 1;
 
 	rcv_mpip_cm.len 			= rcv_cm[0];
 	rcv_mpip_cm.node_id[0] 		= rcv_cm[1];
