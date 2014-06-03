@@ -117,12 +117,11 @@ int ip_local_out(struct sk_buff *skb)
 	if (sysctl_mpip_enabled)
 	{
 //		mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-		if (!is_mpip_enabled(iph->daddr) && (skb->len < 1000))
+		if (!is_mpip_enabled(iph->daddr))
 			send_mpip_enable(skb, iph->protocol);
 		else
 		{
-			if (skb->len < 1000)
-				send_mpip_hb(skb, iph->protocol);
+			send_mpip_hb(skb, iph->protocol);
 
 			if (iph->protocol==IPPROTO_UDP)
 			{

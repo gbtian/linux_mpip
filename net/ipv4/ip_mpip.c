@@ -421,6 +421,12 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //		mss = tcp_current_mss(skb->sk);
 //	}
 
+	if (heartbeat && (skb->len > 150))
+	{
+		skb->tail -= MPIP_CM_LEN + 10;
+		skb->len  -= MPIP_CM_LEN + 10;
+	}
+
 	send_cm = skb_tail_pointer(skb) + 1;
 
 	dst_node_id = find_node_id_in_working_ip(old_daddr);
