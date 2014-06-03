@@ -339,15 +339,15 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id,  __s32 *delay)
 
 bool check_bad_addr(__be32 saddr, __be32 daddr)
 {
-//	__be32 addr = convert_addr(127, 0, 0, 1);
-//	if ((addr == saddr) || (addr == daddr))
-//		return false;
-//
-//	addr = convert_addr(127, 0, 1, 1);
-//	if ((addr == saddr) || (addr == daddr))
-//		return false;
+	__be32 addr = convert_addr(127, 0, 0, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
 
-	__be32 addr = convert_addr(192, 168, 1, 1);
+	addr = convert_addr(127, 0, 1, 1);
+	if ((addr == saddr) || (addr == daddr))
+		return false;
+
+	addr = convert_addr(192, 168, 1, 1);
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 
