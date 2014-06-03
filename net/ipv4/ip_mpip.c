@@ -391,6 +391,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	unsigned char *send_cm = NULL;
 	__s32 delay = 0;
 	__s16 checksum = 0;
+	unsigned int mss = 0;
 
 	bool is_new = true;
 
@@ -414,6 +415,11 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	{
 		return false;
 	}
+
+//	if ((protocol == IPPROTO_TCP) && skb->sk)
+//	{
+//		mss = tcp_current_mss(skb->sk);
+//	}
 
 	send_cm = skb_tail_pointer(skb) + 1;
 
@@ -565,9 +571,9 @@ int process_mpip_cm(struct sk_buff *skb)
 	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 		return 0;
 
-	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
+//	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(iph->saddr);
+//	print_addr(iph->daddr);
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))

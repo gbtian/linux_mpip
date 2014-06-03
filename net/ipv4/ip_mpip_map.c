@@ -418,7 +418,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	if (likely(err == 1))
 		err = dst_output(nskb);
 
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	return true;
 }

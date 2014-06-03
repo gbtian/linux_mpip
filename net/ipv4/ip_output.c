@@ -83,6 +83,7 @@
 #include <linux/netdevice.h>
 #include <linux/inetdevice.h>
 #include <linux/ip_mpip.h>
+#include <net/tcp.h>
 
 int sysctl_ip_default_ttl __read_mostly = IPDEFTTL;
 EXPORT_SYMBOL(sysctl_ip_default_ttl);
@@ -115,7 +116,7 @@ int ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
-		mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		if (!is_mpip_enabled(iph->daddr) && (skb->len < 1000))
 			send_mpip_enable(skb, iph->protocol);
 		else
@@ -147,6 +148,22 @@ int ip_local_out(struct sk_buff *skb)
 					}
 				}
 			}
+		}
+
+		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+		{
+			unsigned int mss = tcp_current_mss(skb->sk);
+			const struct tcp_sock *tp = tcp_sk(skb->sk);
+			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
+		}
+	}
+	else
+	{
+		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+		{
+			unsigned int mss = tcp_current_mss(skb->sk);
+			const struct tcp_sock *tp = tcp_sk(skb->sk);
+			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
 		}
 	}
 
