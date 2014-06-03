@@ -405,7 +405,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	if((protocol != IPPROTO_TCP) && (protocol != IPPROTO_UDP))
 		return false;
 
-	if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
+	if (!heartbeat && (skb_tailroom(skb) < MPIP_CM_LEN + 1))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
