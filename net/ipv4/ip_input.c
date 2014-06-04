@@ -386,13 +386,15 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
+
+		if (process_mpip_cm(skb) == 2)
+			return NET_RX_SUCCESS;
+
 		if (!is_mpip_enabled(iph->saddr))
 			send_mpip_enable(skb, iph->protocol);
 		else
 			send_mpip_hb(skb, iph->protocol);
 
-		if (process_mpip_cm(skb) == 2)
-			return NET_RX_SUCCESS;
 
 		iph = ip_hdr(skb);
 	}
