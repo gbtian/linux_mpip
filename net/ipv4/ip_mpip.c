@@ -464,7 +464,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		dport = udph->dest;   //dport now has the dest port
 	}
 	else
-	{a
+	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	}
 
