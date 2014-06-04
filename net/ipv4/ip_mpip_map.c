@@ -458,6 +458,10 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		}
 	}
 
+	rt->rt_flags = 0;
+	rt->rt_is_input = 0;
+	rt->rt_type = 1;
+
 	printk("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
 			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
 			rt->rt_type, rt->rt_uses_gateway);
