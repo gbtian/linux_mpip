@@ -103,6 +103,16 @@ int __ip_local_out(struct sk_buff *skb)
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 
+	struct rtable *rt = skb_rtable(skb);
+	printk("sending: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
+			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
+			rt->rt_type, rt->rt_uses_gateway);
+
+	char *p = (char *) &(rt->rt_gateway);
+	printk( "%d.%d.%d.%d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+
 	return nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL,
 		       skb_dst(skb)->dev, dst_output);
 }

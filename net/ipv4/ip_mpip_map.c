@@ -347,7 +347,7 @@ void send_mpip_hb(struct sk_buff *skb, unsigned int protocol)
 
 	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, protocol))
 			earliest_fbjiffies = jiffies;
 	}
@@ -416,14 +416,17 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	iph->daddr = iph->saddr;
 	iph->saddr = tmp_addr;
 
-	printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol, true))
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
-	rt = skb_rtable(skb);
+//	rt = ip_route_output(sock_net(nskb->sk), iph->daddr, iph->saddr,
+//			RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
+
+	rt = skb_rtable(nskb);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
@@ -445,11 +448,20 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		}
 	}
 
+	struct rtable *rt1 = skb_rtable(nskb);
+	printk("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt1->dst.dev->name, skb_dst(skb)->dev->name,
+			rt1->rt_flags, rt1->rt_genid, rt1->rt_iif, rt1->rt_is_input, rt1->rt_pmtu,
+			rt1->rt_type, rt1->rt_uses_gateway);
+
+	char *p = (char *) &(rt1->rt_gateway);
+	printk( "%d.%d.%d.%d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
 	err = __ip_local_out(nskb);
 	if (likely(err == 1))
 		err = dst_output(nskb);
 
-	printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	return true;
 }

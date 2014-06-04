@@ -135,7 +135,7 @@ static int mpip_inetaddr_event(struct notifier_block *this,
 	else
 	{
 		dump_stack();
-		printk("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 	}
 
 	if (dev && dev->ip_ptr && dev->ip_ptr->ifa_list)
@@ -397,20 +397,20 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (!skb)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
 
 	if((protocol != IPPROTO_TCP) && (protocol != IPPROTO_UDP))
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	if (!heartbeat && (skb_tailroom(skb) < MPIP_CM_LEN + 1))
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -441,7 +441,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
 		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return false;
 		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
@@ -455,7 +455,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		udph = udp_hdr(skb); //this fixed the problem
 		if (!udph)
 		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return false;
 		}
 		osport = htons((unsigned short int) udph->source); //sport now has the source port
@@ -465,7 +465,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	}
 	else
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	get_node_id();
