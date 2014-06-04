@@ -416,6 +416,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -440,7 +441,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return false;
 		}
 		osport = htons((unsigned short int) tcph->source); //sport now has the source port
@@ -454,8 +455,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		udph = udp_hdr(skb); //this fixed the problem
 		if (!udph)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return 0;
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
 		}
 		osport = htons((unsigned short int) udph->source); //sport now has the source port
 		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
@@ -464,7 +465,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	}
 	else
 	{
-		return false;
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	get_node_id();
