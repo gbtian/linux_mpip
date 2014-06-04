@@ -368,6 +368,9 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 	char *p = (char *) &(iph->saddr);
 	printk( "%d.%d.%d.%d\n",
 			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	p = (char *) &(iph->daddr);
+	printk( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
 	if (item && item->mpip_enabled)
