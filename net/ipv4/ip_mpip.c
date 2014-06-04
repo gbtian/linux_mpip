@@ -478,7 +478,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 														old_saddr, sport,
 														old_daddr, dport, &is_new);
 
-    if (!is_new)
+    if (!is_new || heartbeat)
     {
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr,
     							old_saddr, old_daddr);
