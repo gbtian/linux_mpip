@@ -386,6 +386,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 {
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
+	struct net_device *new_dst_dev = NULL;
 
 	int err;
 	struct sk_buff *nskb = NULL;
@@ -419,6 +420,25 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
+	}
+
+	if (new_saddr != 0)
+	{
+		new_dst_dev = find_dev_by_addr(new_saddr);
+		if (new_dst_dev)
+		{
+			skb_dst(nskb)->dev = new_dst_dev;
+			iph->saddr = new_saddr;
+			iph->daddr = new_daddr;
+		}
+	}
+	else
+	{
+		new_dst_dev = find_dev_by_addr(iph->saddr);
+		if (new_dst_dev)
+		{
+			skb_dst(nskb)->dev = new_dst_dev;
+		}
 	}
 
 	err = __ip_local_out(nskb);
