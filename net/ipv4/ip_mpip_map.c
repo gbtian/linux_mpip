@@ -387,6 +387,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
 	struct net_device *new_dst_dev = NULL;
+	struct rtable *rt;
 
 	int err;
 	struct sk_buff *nskb = NULL;
@@ -422,11 +423,13 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
+	rt = skb_rtable(skb);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
+			rt->dst.dev = new_dst_dev;
 			skb_dst(nskb)->dev = new_dst_dev;
 			iph->saddr = new_saddr;
 			iph->daddr = new_daddr;
@@ -437,6 +440,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		new_dst_dev = find_dev_by_addr(iph->saddr);
 		if (new_dst_dev)
 		{
+			rt->dst.dev = new_dst_dev;
 			skb_dst(nskb)->dev = new_dst_dev;
 		}
 	}
