@@ -423,15 +423,16 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
+	rt = skb_rtable(nskb);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
-			rt = ip_route_output(sock_net(nskb->sk), new_daddr, new_saddr,
-						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
-
-			skb_dst_set_noref(nskb, &rt->dst);
+//			rt = ip_route_output(sock_net(nskb->sk), new_daddr, new_saddr,
+//						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
+//
+//			skb_dst_set_noref(nskb, &rt->dst);
 
 			rt->dst.dev = new_dst_dev;
 			skb_dst(nskb)->dev = new_dst_dev;
@@ -446,9 +447,9 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		new_dst_dev = find_dev_by_addr(iph->saddr);
 		if (new_dst_dev)
 		{
-			rt = ip_route_output(sock_net(nskb->sk), iph->daddr, iph->saddr,
-						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
-			skb_dst_set_noref(nskb, &rt->dst);
+//			rt = ip_route_output(sock_net(nskb->sk), iph->daddr, iph->saddr,
+//						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
+//			skb_dst_set_noref(nskb, &rt->dst);
 
 			rt->dst.dev = new_dst_dev;
 			skb_dst(nskb)->dev = new_dst_dev;
@@ -457,12 +458,11 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		}
 	}
 
-	struct rtable *rt1 = skb_rtable(nskb);
-	printk("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt1->dst.dev->name, skb_dst(skb)->dev->name,
-			rt1->rt_flags, rt1->rt_genid, rt1->rt_iif, rt1->rt_is_input, rt1->rt_pmtu,
-			rt1->rt_type, rt1->rt_uses_gateway);
+	printk("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
+			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
+			rt->rt_type, rt->rt_uses_gateway);
 
-	char *p = (char *) &(rt1->rt_gateway);
+	char *p = (char *) &(rt->rt_gateway);
 	printk( "%d.%d.%d.%d\n",
 			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
