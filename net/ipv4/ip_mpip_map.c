@@ -363,7 +363,7 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 
 	struct iphdr *iph = ip_hdr(skb);
 
-	struct mpip_enabled_table *item = find_mpip_enabled(iph->daddr);
+	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr);
 	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
 	if (item && item->mpip_enabled)
 	{
@@ -385,7 +385,8 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 {
 	struct iphdr *iph;
-	__be32 new_saddr=0, new_daddr=0;
+	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
+
 	int err;
 	struct sk_buff *nskb = NULL;
 
@@ -408,6 +409,10 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return false;
 	}
+
+	tmp_addr = iph->daddr;
+	iph->daddr = iph->saddr;
+	iph->saddr = tmp_addr;
 
 	printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol, true))

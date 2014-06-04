@@ -117,53 +117,46 @@ int ip_local_out(struct sk_buff *skb)
 	if (sysctl_mpip_enabled)
 	{
 //		mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-		if (!is_mpip_enabled(iph->daddr))
-			send_mpip_enable(skb, iph->protocol);
-		else
+		if (iph->protocol==IPPROTO_UDP)
 		{
-			send_mpip_hb(skb, iph->protocol);
+			insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, false);
+			iph = ip_hdr(skb);
 
-			if (iph->protocol==IPPROTO_UDP)
+			if (new_saddr != 0)
 			{
-				insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, false);
-				iph = ip_hdr(skb);
-
-				if (new_saddr != 0)
+				new_dst_dev = find_dev_by_addr(new_saddr);
+				if (new_dst_dev)
 				{
-					new_dst_dev = find_dev_by_addr(new_saddr);
-					if (new_dst_dev)
-					{
-						skb_dst(skb)->dev = new_dst_dev;
-						iph->saddr = new_saddr;
-						iph->daddr = new_daddr;
-					}
+					skb_dst(skb)->dev = new_dst_dev;
+					iph->saddr = new_saddr;
+					iph->daddr = new_daddr;
 				}
-				else
+			}
+			else
+			{
+				new_dst_dev = find_dev_by_addr(iph->saddr);
+				if (new_dst_dev)
 				{
-					new_dst_dev = find_dev_by_addr(iph->saddr);
-					if (new_dst_dev)
-					{
-						skb_dst(skb)->dev = new_dst_dev;
-					}
+					skb_dst(skb)->dev = new_dst_dev;
 				}
 			}
 		}
 
-		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
-		{
-			unsigned int mss = tcp_current_mss(skb->sk);
-			const struct tcp_sock *tp = tcp_sk(skb->sk);
-			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
-		}
+//		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+//		{
+//			unsigned int mss = tcp_current_mss(skb->sk);
+//			const struct tcp_sock *tp = tcp_sk(skb->sk);
+//			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
+//		}
 	}
 	else
 	{
-		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
-		{
-			unsigned int mss = tcp_current_mss(skb->sk);
-			const struct tcp_sock *tp = tcp_sk(skb->sk);
-			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
-		}
+//		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+//		{
+//			unsigned int mss = tcp_current_mss(skb->sk);
+//			const struct tcp_sock *tp = tcp_sk(skb->sk);
+//			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
+//		}
 	}
 
 	err = __ip_local_out(skb);

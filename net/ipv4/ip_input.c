@@ -386,15 +386,14 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
+		send_mpip_hb(skb, iph->protocol);
+		send_mpip_enable(skb, iph->protocol);
+
 		if (process_mpip_cm(skb) == 2)
 			return NET_RX_SUCCESS;
 
 		iph = ip_hdr(skb);
 	}
-
-
-	u16 tcp_header_len = sizeof(struct tcphdr) +
-			(sysctl_tcp_timestamps ? TCPOLEN_TSTAMP_ALIGNED : 0);
 
 
 //	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
