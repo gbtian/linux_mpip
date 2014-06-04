@@ -345,7 +345,7 @@ void send_mpip_hb(struct sk_buff *skb, unsigned int protocol)
 		return;
 	}
 
-	if ((jiffies - earliest_fbjiffies) / (HZ / 100) >= sysctl_mpip_hb)
+	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
 	{
 		if (send_mpip_msg(skb, protocol))
 			earliest_fbjiffies = jiffies;
