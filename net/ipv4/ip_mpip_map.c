@@ -423,19 +423,22 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
-//	rt = ip_route_output(sock_net(nskb->sk), iph->daddr, iph->saddr,
-//			RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
-
-	rt = skb_rtable(nskb);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
+			rt = ip_route_output(sock_net(nskb->sk), new_daddr, new_saddr,
+						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
+
+			skb_dst_set_noref(nskb, &rt->dst);
+
 			rt->dst.dev = new_dst_dev;
 			skb_dst(nskb)->dev = new_dst_dev;
 			iph->saddr = new_saddr;
 			iph->daddr = new_daddr;
+			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 		}
 	}
 	else
@@ -443,8 +446,14 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		new_dst_dev = find_dev_by_addr(iph->saddr);
 		if (new_dst_dev)
 		{
+			rt = ip_route_output(sock_net(nskb->sk), iph->daddr, iph->saddr,
+						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
+			skb_dst_set_noref(nskb, &rt->dst);
+
 			rt->dst.dev = new_dst_dev;
 			skb_dst(nskb)->dev = new_dst_dev;
+			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 		}
 	}
 
