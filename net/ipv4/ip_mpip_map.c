@@ -410,6 +410,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	iph = ip_hdr(nskb);
 	if (iph == NULL)
 	{
+		kfree_skb(nskb);
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return false;
 	}
@@ -421,6 +422,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol, true))
 	{
+		kfree_skb(nskb);
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
@@ -465,7 +467,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	rt->rt_type = 1;
 	rt->dst.output = ip_output;
 
-	mpip_log("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
+	mpip_log("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(nskb)->dev->name,
 			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
 			rt->rt_type, rt->rt_uses_gateway);
 

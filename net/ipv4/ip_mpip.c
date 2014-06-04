@@ -359,6 +359,10 @@ bool check_bad_addr(__be32 saddr, __be32 daddr)
 	if ((addr == saddr) || (addr == daddr))
 		return false;
 
+	if (((saddr & 0xff) == 255) || ((saddr>>8 & 0xff) == 255) || ((saddr>>16 & 0xff) == 255) || ((saddr>>24 & 0xff) == 255) ||
+		((daddr & 0xff) == 255) || ((daddr>>8 & 0xff) == 255) || ((daddr>>16 & 0xff) == 255) || ((daddr>>24 & 0xff) == 255))
+		return false;
+
 	return true;
 }
 
