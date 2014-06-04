@@ -347,7 +347,7 @@ void send_mpip_hb(struct sk_buff *skb, unsigned int protocol)
 
 	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, protocol))
 			earliest_fbjiffies = jiffies;
 	}
@@ -371,12 +371,14 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 	}
 	else if (item)
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, protocol))
 			item->sent_count += 1;
 
 	}
 	else
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, false);
 		send_mpip_msg(skb, protocol);
 	}
@@ -463,13 +465,22 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	rt->rt_type = 1;
 	rt->dst.output = ip_output;
 
-	printk("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
+	mpip_log("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
 			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
 			rt->rt_type, rt->rt_uses_gateway);
 
 	char *p = (char *) &(rt->rt_gateway);
-	printk( "%d.%d.%d.%d\n",
+	mpip_log( "%d.%d.%d.%d\n",
 			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+
+	p = (char *) &(iph->saddr);
+	printk( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+	p = (char *) &(iph->daddr);
+	mpip_log( "%d.%d.%d.%d\n",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 	err = __ip_local_out(nskb);
 	if (likely(err == 1))
