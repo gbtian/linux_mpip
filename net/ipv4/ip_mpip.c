@@ -587,9 +587,15 @@ int process_mpip_cm(struct sk_buff *skb)
 	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 		return 0;
 
-//	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-//	print_addr(iph->saddr);
-//	print_addr(iph->daddr);
+	printk("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	char *p = (char *) &(iph->saddr);
+	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+
+	p = (char *) &(iph->daddr);
+	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
@@ -683,7 +689,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	res = get_receiver_session_info(rcv_mpip_cm.node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-	if (res && (iph->protocol != IPPROTO_ICMP))
+	if (res)
 	{
 		iph->saddr = daddr;
 		iph->daddr = saddr;
@@ -693,6 +699,14 @@ int process_mpip_cm(struct sk_buff *skb)
 		{
 			skb->dev = new_dst_dev;
 		}
+
+		p = (char *) &(iph->saddr);
+		printk( "%d.%d.%d.%d: %s, %s, %d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+
+		p = (char *) &(iph->daddr);
+		printk( "%d.%d.%d.%d: %s, %s, %d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	if(iph->protocol==IPPROTO_TCP)
