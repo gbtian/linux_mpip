@@ -401,40 +401,15 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 	}
 }
 
-static void mpip_copy_metadata(struct sk_buff *to, struct sk_buff *from)
-{
-	to->pkt_type = from->pkt_type;
-	to->priority = from->priority;
-	to->protocol = from->protocol;
-	skb_dst_drop(to);
-	skb_dst_copy(to, from);
-	to->dev = from->dev;
-	to->mark = from->mark;
-
-	/* Copy the flags to each fragment. */
-	IPCB(to)->flags = IPCB(from)->flags;
-
-#ifdef CONFIG_NET_SCHED
-	to->tc_index = from->tc_index;
-#endif
-	nf_copy(to, from);
-#if IS_ENABLED(CONFIG_NETFILTER_XT_TARGET_TRACE)
-	to->nf_trace = from->nf_trace;
-#endif
-#if defined(CONFIG_IP_VS) || defined(CONFIG_IP_VS_MODULE)
-	to->ipvs_property = from->ipvs_property;
-#endif
-	skb_copy_secmark(to, from);
-}
 
 bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 {
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0, tmp_addr_1 = 0, tmp_addr_2 = 0;
 	struct net_device *new_dst_dev = NULL;
-	struct rtable *rt;
-
-	int err;
+	struct ethhdr *  ethdr = NULL;
+	unsigned char	tmp_eth[ETH_ALEN];
+	int nret = 1;
 	struct sk_buff *nskb = NULL;
 
 	if(!skb)
@@ -471,20 +446,11 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
-	mpip_copy_metadata(nskb, skb);
-
-//	rt = skb_rtable(nskb);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
-//			rt = ip_route_output(sock_net(nskb->sk), new_daddr, new_saddr,
-//						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
-//
-//			sk_setup_caps(nskb->sk, &rt->dst);
-//			skb_dst_set_noref(nskb, &rt->dst);
-
 			iph->saddr = new_saddr;
 			iph->daddr = new_daddr;
 			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
@@ -496,33 +462,21 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		new_dst_dev = find_dev_by_addr(iph->saddr);
 		if (new_dst_dev)
 		{
-//			rt = ip_route_output(sock_net(nskb->sk), iph->daddr, iph->saddr,
-//						RT_CONN_FLAGS(nskb->sk), nskb->sk->sk_bound_dev_if);
-//
-//			sk_setup_caps(nskb->sk, &rt->dst);
-//			skb_dst_set_noref(nskb, &rt->dst);
-//
 			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 		}
 	}
 
-//	rt->rt_flags = 0;
-//	rt->rt_is_input = 0;
-//	rt->rt_type = 1;
-//	rt->dst.output = ip_output;
-//	rt->dst.dev = new_dst_dev;
-	skb_dst(nskb)->dev = new_dst_dev;
-	skb_dst(nskb)->output = ip_output;
+	nskb->dev = new_dst_dev;
 
-//	mpip_log("HB: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(nskb)->dev->name,
-//			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
-//			rt->rt_type, rt->rt_uses_gateway);
-//
-//	char *p = (char *) &(rt->rt_gateway);
-//	mpip_log( "%d.%d.%d.%d\n",
-//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-
+	if (sysctl_mpip_enabled && sysctl_mpip_send)
+	{
+		ethdr = (struct ethhdr *) nskb->mac_header;
+		memcpy (tmp_eth, ethdr->h_dest, ETH_ALEN);
+		memcpy (ethdr->h_dest, ethdr->h_source, ETH_ALEN);
+		memcpy (ethdr->h_source, tmp_eth, ETH_ALEN);
+		ethdr->h_proto = __constant_htons (ETH_P_IP);
+	}
 
 	char *p = (char *) &(iph->saddr);
 	printk( "%d.%d.%d.%d: %s, %s, %d\n",
@@ -532,9 +486,17 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 	printk( "%d.%d.%d.%d: %s, %s, %d\n",
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 
-	err = __ip_local_out(nskb);
-	if (likely(err == 1))
-		err = dst_output(nskb);
+	if (dev_queue_xmit(nskb) < 0)
+		goto out;
+
+	nret = 0;
+
+out:
+	if (0 != nret && NULL != nskb)
+	{
+		dev_put(new_dst_dev);
+		kfree_skb(nskb);
+	}
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
@@ -1650,3 +1612,103 @@ asmlinkage long sys_reset_mpip(void)
 	printk("reset ended\n");
 	return 0;
 }
+
+
+//int cp_dev_xmit_tcp (char * eth, u_char * smac, u_char * dmac,
+//             u_char * pkt, int pkt_len,
+//             u_long sip, u_long dip,
+//             u_short sport, u_short dport, u_long seq, u_long ack_seq, u_char psh, u_char fin)
+//{
+//  struct sk_buff * skb = NULL;
+//  struct net_device * dev = NULL;
+//  struct ethhdr * ethdr = NULL;
+//  struct iphdr * iph = NULL;
+//  struct tcphdr * tcph = NULL;
+//  u_char * pdata = NULL;
+//  int nret = 1;
+//
+//  if (NULL == smac || NULL == dmac) goto out;
+//
+//  dev = dev_get_by_name (&init_net , eth);
+//
+//  if (NULL == dev) goto out;
+//
+//  skb = alloc_skb (pkt_len + sizeof (struct iphdr) + sizeof (struct tcphdr) + LL_RESERVED_SPACE (dev), GFP_ATOMIC);
+//
+//  if (NULL == skb) goto out;
+//
+//  skb_reserve (skb, LL_RESERVED_SPACE (dev));
+//
+//  skb->dev = dev;
+//  skb->pkt_type = PACKET_OTHERHOST;
+//  skb->protocol = __constant_htons(ETH_P_IP);
+//  skb->ip_summed = CHECKSUM_NONE;
+//  skb->destructor = cup_destroy;
+//  skb->priority = 0;
+//
+//  skb->network_header = skb_put (skb, sizeof (struct iphdr));
+//  skb->transport_header = skb_put (skb, sizeof (struct tcphdr));
+//  pdata = skb_put (skb, pkt_len);
+//
+//  {
+//    if (NULL != pkt)
+//    	memcpy (pdata, pkt, pkt_len);
+//  }
+//
+//  {
+//    tcph = (struct tcphdr *) skb->transport_header;
+//    memset (tcph, 0, sizeof (struct tcphdr));
+//    tcph->source = sport;
+//    tcph->dest = dport;
+//    tcph->seq = seq;
+//    tcph->ack_seq = ack_seq;
+//    tcph->doff = 5;
+//    tcph->psh = psh;
+//    tcph->fin = fin;
+//    tcph->ack = 1;
+//    tcph->window = __constant_htons (65535);
+//    skb->csum = 0;
+//    tcph->check = 0;
+//  }
+//
+//  {
+//    iph = (struct iphdr*) skb->network_header;
+//    iph->version = 4;
+//    iph->ihl = sizeof(struct iphdr)>>2;
+//    iph->frag_off = 0;
+//    iph->protocol = IPPROTO_TCP;
+//    iph->tos = 0;
+//    iph->daddr = dip;
+//    iph->saddr = sip;
+//    iph->ttl = 0x40;
+//    iph->tot_len = __constant_htons(skb->len);
+//    iph->check = 0;
+//  }
+//
+//  skb->csum = skb_checksum (skb, iph->ihl*4, skb->len - iph->ihl * 4, 0);
+//  tcph->check = csum_tcpudp_magic (sip, dip, skb->len - iph->ihl * 4, IPPROTO_TCP, skb->csum);
+//
+//  ip_send_check(iph);
+//
+//  skb->mac_header = skb_push (skb, 14);
+//  { //eth header
+//    ethdr = (struct ethhdr *) skb->mac_header;
+//    memcpy (ethdr->h_dest, dmac, ETH_ALEN);
+//    memcpy (ethdr->h_source, smac, ETH_ALEN);
+//    ethdr->h_proto = __constant_htons (ETH_P_IP);
+//  }
+//
+//  print_ip ((struct iphdr *)skb->network_header);
+//
+//  dump_block ("before xmit", skb->data, skb->len);
+//
+//  if (0 > dev_queue_xmit(skb)) goto out;
+//  MSG_DEBUG ("dev_queue_xmit succ/n");
+//  MSG_DEBUG ("skb->len = %d/n", skb->len);
+//
+//  nret = 0;
+// out:
+//  if (0 != nret && NULL != skb) {dev_put (dev); kfree_skb (skb);}
+//
+//  return (nret);
+//}

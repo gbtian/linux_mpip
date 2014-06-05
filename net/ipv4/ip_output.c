@@ -154,15 +154,15 @@ int ip_local_out(struct sk_buff *skb)
 //			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
 //		}
 	}
-
-	struct rtable *rt = skb_rtable(skb);
-	mpip_log("sending: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
-			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
-			rt->rt_type, rt->rt_uses_gateway);
-
-	char *p = (char *) &(rt->rt_gateway);
-	mpip_log( "%d.%d.%d.%d\n",
-			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+//
+//	struct rtable *rt = skb_rtable(skb);
+//	mpip_log("sending: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
+//			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
+//			rt->rt_type, rt->rt_uses_gateway);
+//
+//	char *p = (char *) &(rt->rt_gateway);
+//	mpip_log( "%d.%d.%d.%d\n",
+//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 
 	err = __ip_local_out(skb);
