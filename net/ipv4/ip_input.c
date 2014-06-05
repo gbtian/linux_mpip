@@ -392,7 +392,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 		if (!is_mpip_enabled(iph->saddr) && !is_local_addr(iph->saddr))
 			send_mpip_enable(skb, iph->protocol);
-		else
+		else if (!is_local_addr(iph->saddr))
 			send_mpip_hb(skb, iph->protocol);
 
 
