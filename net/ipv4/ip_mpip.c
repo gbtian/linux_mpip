@@ -584,9 +584,6 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
-		return 0;
-
 	printk("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	char *p = (char *) &(iph->saddr);
 	printk( "%d.%d.%d.%d: %s, %s, %d\n",
@@ -595,6 +592,12 @@ int process_mpip_cm(struct sk_buff *skb)
 	p = (char *) &(iph->daddr);
 	printk( "%d.%d.%d.%d: %s, %s, %d\n",
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+
+	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
+	{
+		printk("%d, %s, %s, %d\n", iph->protocol, __FILE__, __FUNCTION__, __LINE__);
+		return 0;
+	}
 
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
