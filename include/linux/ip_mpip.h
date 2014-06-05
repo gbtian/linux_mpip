@@ -201,6 +201,8 @@ int add_mpip_enabled(__be32 addr, bool enabled);
 
 bool is_mpip_enabled(__be32 addr);
 
+bool is_local_addr(__be32 addr);
+
 bool get_addr_notified(unsigned char *node_id);
 
 struct addr_notified_table *find_addr_notified(unsigned char *node_id);
