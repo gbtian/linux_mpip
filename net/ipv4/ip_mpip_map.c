@@ -369,9 +369,9 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 	char *p = (char *) &(iph->saddr);
 	printk( "%d.%d.%d.%d\n",
 			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-	p = (char *) &(iph->daddr);
+	char *p2 = (char *) &(iph->daddr);
 	printk( "%d.%d.%d.%d\n",
-				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+				(p2[0] & 255), (p2[1] & 255), (p2[2] & 255), (p2[3] & 255));
 
 	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
 	if (item && item->mpip_enabled)
@@ -396,7 +396,7 @@ void send_mpip_enable(struct sk_buff *skb, unsigned int protocol)
 bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 {
 	struct iphdr *iph;
-	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
+	__be32 new_saddr=0, new_daddr=0, tmp_addr_1 = 0, tmp_addr_2 = 0;
 	struct net_device *new_dst_dev = NULL;
 	struct rtable *rt;
 
@@ -424,9 +424,10 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		return false;
 	}
 
-	tmp_addr = iph->daddr;
-	iph->daddr = iph->saddr;
-	iph->saddr = tmp_addr;
+	tmp_addr_1 = iph->saddr;
+	tmp_addr_2 = iph->daddr;
+	iph->saddr = tmp_addr_2;
+	iph->daddr = tmp_addr_1;
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, protocol, true))
