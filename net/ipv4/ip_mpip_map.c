@@ -473,7 +473,7 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 
 	mpip_copy_metadata(nskb, skb);
 
-	rt = skb_rtable(nskb);
+//	rt = skb_rtable(nskb);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
@@ -507,11 +507,11 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 		}
 	}
 
-	rt->rt_flags = 0;
-	rt->rt_is_input = 0;
-	rt->rt_type = 1;
-	rt->dst.output = ip_output;
-	rt->dst.dev = new_dst_dev;
+//	rt->rt_flags = 0;
+//	rt->rt_is_input = 0;
+//	rt->rt_type = 1;
+//	rt->dst.output = ip_output;
+//	rt->dst.dev = new_dst_dev;
 	skb_dst(nskb)->dev = new_dst_dev;
 	skb_dst(nskb)->output = ip_output;
 
@@ -525,12 +525,12 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol)
 
 
 	char *p = (char *) &(iph->saddr);
-	printk( "%d.%d.%d.%d\n",
-				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 
 	p = (char *) &(iph->daddr);
-	mpip_log( "%d.%d.%d.%d\n",
-				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 
 	err = __ip_local_out(nskb);
 	if (likely(err == 1))
