@@ -151,6 +151,14 @@ bool is_mpip_enabled(__be32 addr)
 	return enabled;
 }
 
+bool is_local_addr(__be32 addr)
+{
+	if (find_local_addr(addr) > 0)
+		return true;
+
+	return false;
+}
+
 int add_working_ip(unsigned char *node_id, __be32 addr)
 {
 	/* todo: need sanity checks, leave it for now */
