@@ -524,6 +524,8 @@ bool send_mpip_msg(struct sk_buff *skb)
 		return false;
 	}
 
+	rt = skb_rtable(nskb);
+
 	if ((u8 *)iph < nskb->head ||
 	    (skb_network_header(nskb) + sizeof(*iph)) >
 	    skb_tail_pointer(nskb))
@@ -595,7 +597,6 @@ bool send_mpip_msg(struct sk_buff *skb)
 		}
 	}
 
-	rt = skb_rtable(nskb);
 	net = dev_net(rt->dst.dev);
 	rt = mpip_msg_route_lookup(net, &fl4, nskb, iph);
 	rt->dst.dev = new_dst_dev;
