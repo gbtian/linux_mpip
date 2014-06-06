@@ -632,11 +632,6 @@ int process_mpip_cm(struct sk_buff *skb)
 		dport = udph->dest;
 	}
 
-	if (!is_mpip_enabled(iph->saddr, sport))
-		send_mpip_enable(skb, sport);
-	else
-		send_mpip_hb(skb);
-
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
