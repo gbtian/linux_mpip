@@ -338,7 +338,30 @@ void send_mpip_enable(struct sk_buff *skb)
 
 	struct iphdr *iph = ip_hdr(skb);
 
-	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr, port);
+	if(iph->protocol == IPPROTO_TCP)
+	{
+		tcph= tcp_hdr(skb);
+		if (!tcph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			return;
+		}
+		sport = tcph->source;
+	}
+	else if(iph->protocol == IPPROTO_UDP)
+	{
+		udph= udp_hdr(skb);
+		if (!udph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			return;
+		}
+		sport = udph->source;
+	}
+	else
+		return;
+
+	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr, sport);
 
 	char *p = (char *) &(iph->saddr);
 	printk( "%d.%d.%d.%d\n",
@@ -361,29 +384,6 @@ void send_mpip_enable(struct sk_buff *skb)
 	else
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-
-		if(iph->protocol == IPPROTO_TCP)
-		{
-			tcph= tcp_hdr(skb);
-			if (!tcph)
-			{
-				mpip_log("%s, %d\n", __FILE__, __LINE__);
-				return;
-			}
-			sport = tcph->source;
-		}
-		else if(iph->protocol == IPPROTO_UDP)
-		{
-			udph= udp_hdr(skb);
-			if (!udph)
-			{
-				mpip_log("%s, %d\n", __FILE__, __LINE__);
-				return;
-			}
-			sport = udph->source;
-		}
-		else
-			return;
 
 		add_mpip_enabled(iph->saddr, sport, false);
 		send_mpip_msg(skb);
