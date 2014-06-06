@@ -181,7 +181,7 @@ struct net_device *find_dev_by_addr(__be32 addr);
 
 void print_mpip_cm(struct mpip_cm *cm);
 
-bool send_mpip_msg(struct sk_buff *skb, unsigned int protocol);
+bool send_mpip_msg(struct sk_buff *skb);
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr,
