@@ -422,7 +422,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
-//		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -459,9 +459,11 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	}
 
-	if (!is_mpip_enabled(old_daddr, dport))
+	if (!is_mpip_enabled(old_daddr, dport) && !heartbeat)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
-
+	}
 
 	if (heartbeat && (skb->len > 150))
 	{
@@ -557,6 +559,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
 		}
 	}
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	return true;
 
