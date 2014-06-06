@@ -73,6 +73,7 @@ struct mpip_cm
 struct mpip_enabled_table
 {
 	__be32				addr; /* receiver' ip seen by sender */
+	__be16				port;
 	bool				mpip_enabled;
 	int 				sent_count;
 	struct list_head 	list;
@@ -90,8 +91,8 @@ struct addr_notified_table
 struct working_ip_table
 {
 	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /*receiver's node id. */
-									   /*the node id is defined as the MAC*/
 	__be32				addr; /* receiver' ip seen by sender */
+	__be16				port;
 	struct list_head 	list;
 };
 
@@ -105,6 +106,7 @@ struct path_info_table
 	unsigned long 		fbjiffies; /* last feedback time of this path */
 	__be32				saddr; /* source ip address*/
 	__be32				daddr; /* destination ip address*/
+	__be16				dport; /* destination port*/
 	__s32 				min_delay;
 	__s32     			delay;
 	__s32     			queuing_delay;
@@ -145,8 +147,6 @@ struct path_stat_table
 {
 	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /* sender's node id*/
 	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
-	__be32				saddr; /* source ip address*/
-	__be32				daddr; /* destination ip address*/
 	__s32     			delay;
 	unsigned long 		fbjiffies; /* last feedback time of this path's stat */
 	struct list_head 	list;
@@ -193,13 +193,13 @@ bool check_bad_addr(__be32 saddr, __be32 daddr);
 
 void send_mpip_hb(struct sk_buff *skb);
 
-void send_mpip_enable(struct sk_buff *skb);
+void send_mpip_enable(struct sk_buff *skb, __be16 port);
 
-struct mpip_enabled_table *find_mpip_enabled(__be32 addr);
+struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port);
 
-int add_mpip_enabled(__be32 addr, bool enabled);
+int add_mpip_enabled(__be32 addr, __be16 port, bool enabled);
 
-bool is_mpip_enabled(__be32 addr);
+bool is_mpip_enabled(__be32 addr, __be16 port);
 
 bool is_local_addr(__be32 addr);
 
@@ -211,21 +211,17 @@ int add_addr_notified(unsigned char *node_id);
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char changed);
 
-int add_working_ip(unsigned char *node_id, __be32 addr);
+int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port);
 
-int del_working_ip(unsigned char *node_id, __be32 addr);
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port);
 
-struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr);
-
-unsigned char * find_node_id_in_working_ip(__be32 addr);
+unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port);
 
 struct path_stat_table *find_path_stat(unsigned char *node_id, unsigned char path_id);
 
-struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr);
+int add_path_stat(unsigned char *node_id, unsigned char path_id);
 
-int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, __be32 daddr);
-
-int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay);
+int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 delay);
 
 int update_path_delay(unsigned char path_id, __s32 delay);
 
@@ -248,17 +244,18 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport);
 
-struct path_info_table *find_path_info(__be32 saddr, __be32 daddr);
+struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport);
 
-unsigned char find_path_id(__be32 saddr, __be32 daddr);
+unsigned char find_path_id(__be32 saddr, __be32 daddr, __be16 dport);
 
-bool is_dest_added(unsigned char *node_id, __be32 add);
+bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port);
 
-int add_path_info(unsigned char *node_id, __be32 addr);
+int add_path_info(unsigned char *node_id, __be32 addr, __be16 port);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
-								   __be32 *saddr, __be32 *daddr,
-								   __be32 origin_saddr, __be32 origin_daddr);
+								   __be32 *saddr, __be32 *daddr, __be16 *dport,
+								   __be32 origin_saddr, __be32 origin_daddr,
+								   __be16 origin_port);
 unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay);
 
 unsigned char get_sender_session(__be32 saddr, __be16 sport,

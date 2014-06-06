@@ -92,13 +92,13 @@ char *in_ntoa(unsigned long in)
 	return(buff);
 }
 
-struct mpip_enabled_table *find_mpip_enabled(__be32 addr)
+struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port)
 {
 	struct mpip_enabled_table *mpip_enabled;
 
 	list_for_each_entry(mpip_enabled, &me_head, list)
 	{
-		if (addr == mpip_enabled->addr)
+		if ((addr == mpip_enabled->addr) || (port == mpip_enabled->port))
 		{
 			return mpip_enabled;
 		}
@@ -108,11 +108,11 @@ struct mpip_enabled_table *find_mpip_enabled(__be32 addr)
 }
 
 
-int add_mpip_enabled(__be32 addr, bool enabled)
+int add_mpip_enabled(__be32 addr, __be16 port, bool enabled)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
-	struct mpip_enabled_table *item = find_mpip_enabled(addr);
+	struct mpip_enabled_table *item = find_mpip_enabled(addr, port);
 
 	if (item)
 	{
@@ -122,6 +122,7 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 
 	item = kzalloc(sizeof(struct mpip_enabled_table),	GFP_ATOMIC);
 	item->addr = addr;
+	item->port = port;
 	item->mpip_enabled = enabled;
 	item->sent_count = 0;
 	INIT_LIST_HEAD(&(item->list));
@@ -134,7 +135,7 @@ int add_mpip_enabled(__be32 addr, bool enabled)
 	return 1;
 }
 
-bool is_mpip_enabled(__be32 addr)
+bool is_mpip_enabled(__be32 addr, __be16 port)
 {
 	bool enabled = false;
 	struct mpip_enabled_table *item = NULL;
@@ -142,7 +143,7 @@ bool is_mpip_enabled(__be32 addr)
 	if (!sysctl_mpip_enabled)
 		enabled = false;
 
-	item = find_mpip_enabled(addr);
+	item = find_mpip_enabled(addr, port);
 
 	if (!item)
 		enabled = false;
@@ -160,7 +161,7 @@ bool is_local_addr(__be32 addr)
 	return false;
 }
 
-int add_working_ip(unsigned char *node_id, __be32 addr)
+int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -175,7 +176,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 		return 0;
 	}
 
-	if (find_working_ip(node_id, addr))
+	if (find_working_ip(node_id, addr, port))
 		return 0;
 
 
@@ -183,6 +184,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 
 	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 	item->addr = addr;
+	item->port = port;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
 
@@ -195,30 +197,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr)
 	return 1;
 }
 
-int del_working_ip(unsigned char *node_id, __be32 addr)
-{
-	/* todo: need locks */
-	struct working_ip_table *working_ip;
-	struct working_ip_table *tmp_ip;
-
-
-	list_for_each_entry_safe(working_ip, tmp_ip, &wi_head, list)
-	{
-		if (is_equal_node_id(node_id, working_ip->node_id) &&
-				(addr == working_ip->addr))
-		{
-
-			list_del(&(working_ip->list));
-			kfree(working_ip);
-
-			break;
-		}
-	}
-
-	return 1;
-}
-
-struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr)
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port)
 {
 	struct working_ip_table *working_ip;
 
@@ -228,7 +207,7 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr)
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
 		if (is_equal_node_id(node_id, working_ip->node_id) &&
-				(addr == working_ip->addr))
+				(addr == working_ip->addr) && (port == working_ip->port))
 		{
 			return working_ip;
 		}
@@ -237,13 +216,13 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr)
 	return NULL;
 }
 
-unsigned char * find_node_id_in_working_ip(__be32 addr)
+unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port)
 {
 	struct working_ip_table *working_ip;
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
-		if (addr == working_ip->addr)
+		if ((addr == working_ip->addr) && (port == working_ip->port))
 		{
 			return working_ip->node_id;
 		}
@@ -328,24 +307,6 @@ int add_addr_notified(unsigned char *node_id)
 	return 1;
 }
 
-
-
-struct path_stat_table *find_path_stat_by_addr(__be32 saddr, __be32 daddr)
-{
-	struct path_stat_table *path_stat;
-
-	list_for_each_entry(path_stat, &ps_head, list)
-	{
-		if ((path_stat->saddr == saddr) &&
-			(path_stat->daddr == daddr))
-		{
-			return path_stat;
-		}
-	}
-	return NULL;
-}
-
-
 void send_mpip_hb(struct sk_buff *skb)
 {
 	if (!skb)
@@ -363,7 +324,7 @@ void send_mpip_hb(struct sk_buff *skb)
 	}
 }
 
-void send_mpip_enable(struct sk_buff *skb)
+void send_mpip_enable(struct sk_buff *skb, __be16 port)
 {
 	if (!skb)
 	{
@@ -373,7 +334,7 @@ void send_mpip_enable(struct sk_buff *skb)
 
 	struct iphdr *iph = ip_hdr(skb);
 
-	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr);
+	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr, port);
 
 	char *p = (char *) &(iph->saddr);
 	printk( "%d.%d.%d.%d\n",
@@ -392,12 +353,11 @@ void send_mpip_enable(struct sk_buff *skb)
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb))
 			item->sent_count += 1;
-
 	}
 	else
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		add_mpip_enabled(iph->saddr, false);
+		add_mpip_enabled(iph->saddr, port, false);
 		send_mpip_msg(skb);
 	}
 }
@@ -495,8 +455,6 @@ bool send_mpip_msg(struct sk_buff *skb)
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0, tmp_addr_1 = 0, tmp_addr_2 = 0;
 	struct net_device *new_dst_dev = NULL;
-	struct ethhdr *  ethdr = NULL;
-	unsigned char	tmp_eth[ETH_ALEN];
 	int err = 0;
 	struct sk_buff *nskb = NULL;
 	struct flowi4 fl4;
@@ -674,7 +632,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 	}
 }
 
-int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay)
+int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 delay)
 {
 /* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -682,7 +640,13 @@ int update_path_stat_delay(__be32 saddr, __be32 daddr, u32 delay)
     struct timespec tv;
 	u32  midtime;
 
-	path_stat = find_path_stat_by_addr(saddr, daddr);
+	if (!node_id || (path_id == 0))
+		return 0;
+
+	if (node_id[0] == node_id[1])
+		return 0;
+
+	path_stat = find_path_stat(node_id, path_id);
 	if (path_stat)
 	{
 		getnstimeofday(&tv);
@@ -790,8 +754,6 @@ int update_path_info(void)
 	__s32 min_queuing_delay = -1;
 	__s32 max_queuing_delay = 0;
 
-	__s32 min_max_queuing_delay = -1;
-	__s32 max_max_queuing_delay = 0;
 
 	__u64 max_bw = 0;
 
@@ -858,7 +820,7 @@ struct path_stat_table *find_path_stat(unsigned char *node_id, unsigned char pat
 	return NULL;
 }
 
-int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, __be32 daddr)
+int add_path_stat(unsigned char *node_id, unsigned char path_id)
 {
 	struct path_stat_table *item = NULL;
 
@@ -879,8 +841,6 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id, __be32 saddr, _
 
 	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 	item->path_id = path_id;
-	item->saddr = saddr;
-	item->daddr = daddr;
 	item->delay = 0;
 	item->fbjiffies = jiffies;
 	INIT_LIST_HEAD(&(item->list));
@@ -1172,14 +1132,15 @@ fail:
 	return 0;
 }
 
-struct path_info_table *find_path_info(__be32 saddr, __be32 daddr)
+struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport)
 {
 	struct path_info_table *path_info;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if ((path_info->saddr == saddr) &&
-			(path_info->daddr == daddr))
+			(path_info->daddr == daddr) &&
+			(path_info->dport == dport))
 		{
 			return path_info;
 		}
@@ -1187,14 +1148,15 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr)
 	return NULL;
 }
 
-unsigned char find_path_id(__be32 saddr, __be32 daddr)
+unsigned char find_path_id(__be32 saddr, __be32 daddr, __be16 dport)
 {
 	struct path_info_table *path_info;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if ((path_info->saddr == saddr) &&
-			(path_info->daddr == daddr))
+			(path_info->daddr == daddr) &&
+			(path_info->dport == dport))
 		{
 			return path_info->path_id;
 		}
@@ -1202,7 +1164,7 @@ unsigned char find_path_id(__be32 saddr, __be32 daddr)
 	return 0;
 }
 
-bool is_dest_added(unsigned char *node_id, __be32 addr)
+bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port)
 {
 	struct path_info_table *path_info;
 
@@ -1212,7 +1174,7 @@ bool is_dest_added(unsigned char *node_id, __be32 addr)
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if (is_equal_node_id(path_info->node_id, node_id) &&
-		   (path_info->daddr == addr))
+		   (path_info->daddr == addr) && (path_info->dport == port))
 		{
 			return true;
 		}
@@ -1221,7 +1183,7 @@ bool is_dest_added(unsigned char *node_id, __be32 addr)
 }
 
 
-int add_path_info(unsigned char *node_id, __be32 addr)
+int add_path_info(unsigned char *node_id, __be32 addr, __be16 port)
 {
 	struct local_addr_table *local_addr;
 	struct path_info_table *item = NULL;
@@ -1236,7 +1198,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		return 0;
 	}
 
-	if (is_dest_added(node_id, addr))
+	if (is_dest_added(node_id, addr, port))
 		return 0;
 
 
@@ -1249,6 +1211,7 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 		item->fbjiffies = jiffies;
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
+		item->dport = port;
 		item->min_delay = 0;
 		item->delay = 0;
 		item->queuing_delay = 0;
@@ -1270,8 +1233,8 @@ int add_path_info(unsigned char *node_id, __be32 addr)
 
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
-								   __be32 *saddr, __be32 *daddr,
-								   __be32 origin_saddr, __be32 origin_daddr)
+			   __be32 *saddr, __be32 *daddr, __be16 *dport,
+			   __be32 origin_saddr, __be32 origin_daddr,  __be16 origin_dport)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -1341,14 +1304,16 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	{
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
+		*dport = f_path->dport;
 	}
 	else
 	{
-		f_path = find_path_info(origin_saddr, origin_daddr);
+		f_path = find_path_info(origin_saddr, origin_daddr, origin_dport);
 		if (f_path)
 		{
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
+			*dport = f_path->dport;
 			f_path_id = f_path->path_id;
 		}
 	}
@@ -1490,7 +1455,7 @@ void update_addr_change(void)
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
 //		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		add_path_info(working_ip->node_id, working_ip->addr);
+		add_path_info(working_ip->node_id, working_ip->addr, working_ip->port);
 	}
 
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
@@ -1616,6 +1581,8 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
+		printk("%d  ", mpip_enbaled->port);
+
 		printk("%d  ", mpip_enbaled->sent_count);
 
 		printk("%d\n", mpip_enbaled->mpip_enabled);
@@ -1637,8 +1604,10 @@ asmlinkage long sys_mpip(void)
 				working_ip->node_id[0], working_ip->node_id[1]);
 
 		p = (char *) &(working_ip->addr);
-		printk( "%d.%d.%d.%d\n",
+		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		printk("%d\n", working_ip->port);
 	}
 
 	printk("******************ss*************\n");
@@ -1704,6 +1673,8 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
+		printk("%d  ", path_info->dport);
+
 		printk("%d  ", path_info->min_delay);
 
 		printk("%d  ", path_info->delay);
@@ -1715,9 +1686,9 @@ asmlinkage long sys_mpip(void)
 		printk("%lu  \n", path_info->bw);
 
 	}
-
-	printk("******************global stat*************\n");
-	printk("%d  %d  %d\n", global_stat_1, global_stat_2, global_stat_3);
+//
+//	printk("******************global stat*************\n");
+//	printk("%d  %d  %d\n", global_stat_1, global_stat_2, global_stat_3);
 
 	return 0;
 
