@@ -398,7 +398,7 @@ void send_mpip_enable(struct sk_buff *skb)
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, false);
-		send_mpip_msg(skb, protocol);
+		send_mpip_msg(skb);
 	}
 }
 
