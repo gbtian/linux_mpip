@@ -385,7 +385,6 @@ void send_mpip_enable(struct sk_buff *skb)
 		else
 			return;
 
-
 		add_mpip_enabled(iph->saddr, sport, false);
 		send_mpip_msg(skb);
 	}
