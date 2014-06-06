@@ -324,8 +324,12 @@ void send_mpip_hb(struct sk_buff *skb)
 	}
 }
 
-void send_mpip_enable(struct sk_buff *skb, __be16 port)
+void send_mpip_enable(struct sk_buff *skb)
 {
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
+	__be16 sport = 0;
+
 	if (!skb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
@@ -357,7 +361,32 @@ void send_mpip_enable(struct sk_buff *skb, __be16 port)
 	else
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		add_mpip_enabled(iph->saddr, port, false);
+
+		if(iph->protocol == IPPROTO_TCP)
+		{
+			tcph= tcp_hdr(skb);
+			if (!tcph)
+			{
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
+				return;
+			}
+			sport = tcph->source;
+		}
+		else if(iph->protocol == IPPROTO_UDP)
+		{
+			udph= udp_hdr(skb);
+			if (!udph)
+			{
+				mpip_log("%s, %d\n", __FILE__, __LINE__);
+				return;
+			}
+			sport = udph->source;
+		}
+		else
+			return;
+
+
+		add_mpip_enabled(iph->saddr, sport, false);
 		send_mpip_msg(skb);
 	}
 }
