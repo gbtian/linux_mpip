@@ -396,9 +396,9 @@ static int ip_rcv_finish(struct sk_buff *skb)
 //			send_mpip_hb(skb, iph->protocol);
 
 		if (!is_mpip_enabled(iph->saddr))
-			send_mpip_enable(skb, iph->protocol);
+			send_mpip_enable(skb);
 		else
-			send_mpip_hb(skb, iph->protocol);
+			send_mpip_hb(skb);
 
 
 		iph = ip_hdr(skb);
