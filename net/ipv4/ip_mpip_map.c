@@ -453,7 +453,10 @@ relookup_failed:
 bool send_mpip_msg(struct sk_buff *skb)
 {
 	struct iphdr *iph;
-	__be32 new_saddr=0, new_daddr=0, tmp_addr_1 = 0, tmp_addr_2 = 0;
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
+	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
+	__be16 tmp_port = 0;
 	struct net_device *new_dst_dev = NULL;
 	int err = 0;
 	struct sk_buff *nskb = NULL;
@@ -521,10 +524,44 @@ bool send_mpip_msg(struct sk_buff *skb)
 		return false;
 	}
 
-	tmp_addr_1 = iph->saddr;
-	tmp_addr_2 = iph->daddr;
-	iph->saddr = tmp_addr_2;
-	iph->daddr = tmp_addr_1;
+
+	tmp_addr = iph->saddr;
+	iph->saddr = iph->daddr;
+	iph->daddr = tmp_addr;
+
+	if(iph->protocol == IPPROTO_TCP)
+	{
+		tcph = tcp_hdr(skb); //this fixed the problem
+		if (!tcph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+
+		tmp_port = tcph->source;
+		tcph->source = tcph->dest;
+		tcph->dest = tmp_port;
+
+	}
+	else if(iph->protocol == IPPROTO_UDP)
+	{
+		udph = udp_hdr(skb); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+		tmp_port = udph->source;
+		udph->source = udph->dest;
+		udph->dest = tmp_port;
+	}
+	else
+	{
+		kfree_skb(nskb);
+		printk("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
+
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, true))

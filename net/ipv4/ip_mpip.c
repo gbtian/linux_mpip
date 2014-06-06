@@ -605,6 +605,38 @@ int process_mpip_cm(struct sk_buff *skb)
 		goto fail;
 	}
 
+	if(iph->protocol == IPPROTO_TCP)
+	{
+		tcph= tcp_hdr(skb);
+		if (!tcph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			goto fail;
+		}
+		osport = htons((unsigned short int) tcph->source);
+		odport = htons((unsigned short int) tcph->dest);
+		sport = tcph->source;
+		dport = tcph->dest;
+	}
+	else if(iph->protocol == IPPROTO_UDP)
+	{
+		udph= udp_hdr(skb);
+		if (!udph)
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			goto fail;
+		}
+		osport = htons((unsigned short int) udph->source);
+		odport = htons((unsigned short int) udph->dest);
+		sport = udph->source;
+		dport = udph->dest;
+	}
+
+	if (!is_mpip_enabled(iph->saddr, sport))
+		send_mpip_enable(skb, sport);
+	else
+		send_mpip_hb(skb);
+
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
@@ -640,32 +672,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 //	print_mpip_cm(&rcv_mpip_cm);
 
-	if(iph->protocol == IPPROTO_TCP)
-	{
-		tcph= tcp_hdr(skb);
-		if (!tcph)
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			goto fail;
-		}
-		osport = htons((unsigned short int) tcph->source);
-		odport = htons((unsigned short int) tcph->dest);
-		sport = tcph->source;
-		dport = tcph->dest;
-	}
-	else if(iph->protocol == IPPROTO_UDP)
-	{
-		udph= udp_hdr(skb);
-		if (!udph)
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			goto fail;
-		}
-		osport = htons((unsigned short int) udph->source);
-		odport = htons((unsigned short int) udph->dest);
-		sport = udph->source;
-		dport = udph->dest;
-	}
+
 
 	get_available_local_addr();
 
@@ -694,15 +701,6 @@ int process_mpip_cm(struct sk_buff *skb)
 	res = get_receiver_session_info(rcv_mpip_cm.node_id, session_id,
 							  &saddr, &sport, &daddr, &dport);
 
-
-
-	if (rcv_mpip_cm.changed != 2)
-	{
-		if (!is_mpip_enabled(iph->saddr, sport))
-			send_mpip_enable(skb, sport);
-		else
-			send_mpip_hb(skb);
-	}
 
 	if (res)
 	{
