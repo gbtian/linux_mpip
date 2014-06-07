@@ -397,8 +397,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	__s32 delay = 0;
 	__s16 checksum = 0;
 
-	unsigned int mss = 0;
-
 	bool is_new = true;
 
 	if (!skb)
@@ -485,9 +483,16 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
 
 
-    send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
-														old_saddr, sport,
-														old_daddr, dport, &is_new);
+    if (!heartbeat)
+    {
+		send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
+												old_saddr, sport,
+												old_daddr, dport, &is_new);
+    }
+    else
+    {
+    	send_mpip_cm.session_id = send_cm[3] = 0;
+    }
 
     if (!is_new || heartbeat)
     {
@@ -537,28 +542,17 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	skb_put(skb, MPIP_CM_LEN + 1);
 
-	if (sysctl_mpip_send)
+	if(protocol==IPPROTO_TCP)
 	{
-		if(protocol==IPPROTO_TCP)
-		{
+		if (new_dport != 0)
 			tcph->dest = new_dport;
-			tcph->check = 0;
-			tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
-											skb->len, protocol,
-											csum_partial((char *)tcph, skb->len, 0));
-			skb->ip_summed = CHECKSUM_UNNECESSARY;
-
-		}
-		else if(protocol==IPPROTO_UDP)
-		{
-			udph->dest = new_dport;
-			udph->check = 0;
-			udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
-										   skb->len, protocol,
-										   csum_partial((char *)udph, skb->len, 0));
-			skb->ip_summed = CHECKSUM_UNNECESSARY;
-		}
 	}
+	else if(protocol==IPPROTO_UDP)
+	{
+		if (new_dport != 0)
+			udph->dest = new_dport;
+	}
+
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	return true;
@@ -590,14 +584,14 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	printk("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	char *p = (char *) &(iph->saddr);
-	printk( "%d.%d.%d.%d: %s, %s, %d\n",
-		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
-
-	p = (char *) &(iph->daddr);
-	printk( "%d.%d.%d.%d: %s, %s, %d\n",
-		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+//	printk("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//	char *p = (char *) &(iph->saddr);
+//	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+//		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+//
+//	p = (char *) &(iph->daddr);
+//	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+//		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 
 	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 	{
@@ -683,7 +677,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	update_path_delay(rcv_mpip_cm.path_stat_id, rcv_mpip_cm.delay);
 	update_path_info();
 
-	if ((rcv_mpip_cm.session_id > 0) && (iph->protocol != IPPROTO_ICMP))
+	if (rcv_mpip_cm.session_id > 0)
 	{
 		session_id = get_receiver_session_id(static_node_id,
 											rcv_mpip_cm.node_id,
@@ -708,13 +702,13 @@ int process_mpip_cm(struct sk_buff *skb)
 			skb->dev = new_dst_dev;
 		}
 
-		p = (char *) &(iph->saddr);
-		printk( "%d.%d.%d.%d: %s, %s, %d\n",
-			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
-
-		p = (char *) &(iph->daddr);
-		printk( "%d.%d.%d.%d: %s, %s, %d\n",
-			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+//		p = (char *) &(iph->saddr);
+//		printk( "%d.%d.%d.%d: %s, %s, %d\n",
+//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+//
+//		p = (char *) &(iph->daddr);
+//		printk( "%d.%d.%d.%d: %s, %s, %d\n",
+//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 
 
 		if(iph->protocol==IPPROTO_TCP)
