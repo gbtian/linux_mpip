@@ -559,7 +559,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 
 	if(iph->protocol == IPPROTO_TCP)
 	{
-		tcph = tcp_hdr(skb); //this fixed the problem
+		tcph = tcp_hdr(nskb); //this fixed the problem
 		if (!tcph)
 		{
 			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -573,7 +573,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 	}
 	else if(iph->protocol == IPPROTO_UDP)
 	{
-		udph = udp_hdr(skb); //this fixed the problem
+		udph = udp_hdr(nskb); //this fixed the problem
 		if (!udph)
 		{
 			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
