@@ -414,7 +414,15 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
 	{
-		if (pskb_expand_head(skb, 0, MPIP_CM_LEN + 1, GFP_ATOMIC))
+		if (heartbeat)
+		{
+			if (pskb_expand_head(skb, 0, MPIP_CM_LEN + 1, GFP_ATOMIC))
+			{
+				mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+				return false;
+			}
+		}
+		else
 		{
 			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return false;
