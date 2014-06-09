@@ -140,21 +140,21 @@ int ip_local_out(struct sk_buff *skb)
 			}
 		}
 
-//		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
-//		{
-//			unsigned int mss = tcp_current_mss(skb->sk);
-//			const struct tcp_sock *tp = tcp_sk(skb->sk);
-//			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
-//		}
+		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+		{
+			unsigned int mss = tcp_current_mss(skb->sk);
+			const struct tcp_sock *tp = tcp_sk(skb->sk);
+			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
+		}
 	}
 	else
 	{
-//		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
-//		{
-//			unsigned int mss = tcp_current_mss(skb->sk);
-//			const struct tcp_sock *tp = tcp_sk(skb->sk);
-//			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
-//		}
+		if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+		{
+			unsigned int mss = tcp_current_mss(skb->sk);
+			const struct tcp_sock *tp = tcp_sk(skb->sk);
+			mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
+		}
 	}
 //
 //	struct rtable *rt = skb_rtable(skb);
