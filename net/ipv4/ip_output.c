@@ -451,6 +451,9 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	bool mpip_cm_added = false;
 
+	unsigned int mss = tcp_current_mss(skb->sk);
+	const struct tcp_sock *tp = tcp_sk(skb->sk);
+	mpip_log("mss = %d, msscache = %d, len = %d: %d\n", mss, tp->mss_cache, skb->len, __LINE__);
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.
