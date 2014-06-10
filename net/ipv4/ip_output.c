@@ -100,16 +100,16 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-	if ((iph->protocol == IPPROTO_TCP) && skb->sk)
-	{
-		unsigned int mss = tcp_current_mss(skb->sk);
-		const struct tcp_sock *tp = tcp_sk(skb->sk);
-		mpip_log("mss = %d, msscache = %d, len = %d, tail = %d\n", mss, tp->mss_cache, skb->len, skb_tailroom(skb));
-	}
-	else
-	{
-		mpip_log("len = %d, tail = %d\n", skb->len, skb_tailroom(skb));
-	}
+//	if ((iph->protocol == IPPROTO_TCP) && skb->sk)
+//	{
+//		unsigned int mss = tcp_current_mss(skb->sk);
+//		const struct tcp_sock *tp = tcp_sk(skb->sk);
+//		mpip_log("mss = %d, msscache = %d, len = %d, tail = %d\n", mss, tp->mss_cache, skb->len, skb_tailroom(skb));
+//	}
+//	else
+//	{
+//		mpip_log("len = %d, tail = %d\n", skb->len, skb_tailroom(skb));
+//	}
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
@@ -451,9 +451,9 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 
 	bool mpip_cm_added = false;
 
-	unsigned int mss = tcp_current_mss(skb->sk);
-	const struct tcp_sock *tp = tcp_sk(skb->sk);
-	mpip_log("mss = %d, msscache = %d, len = %d: %d\n", mss, tp->mss_cache, skb->len, __LINE__);
+//	unsigned int mss = tcp_current_mss(skb->sk);
+//	const struct tcp_sock *tp = tcp_sk(skb->sk);
+//	mpip_log("mss = %d, msscache = %d, len = %d: %d\n", mss, tp->mss_cache, skb->len, __LINE__);
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.

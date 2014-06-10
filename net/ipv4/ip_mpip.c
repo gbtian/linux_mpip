@@ -425,10 +425,22 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		skb->tail -= MPIP_CM_LEN + 10;
 		skb->len  -= MPIP_CM_LEN + 10;
 	}
-	else if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
+	else
 	{
-		mpip_log("%d, %s, %s, %d\n", skb_tailroom(skb), __FILE__, __FUNCTION__, __LINE__);
-		return false;
+		if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
+		{
+			mpip_log("%d, %s, %s, %d\n", skb_tailroom(skb), __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+		if (protocol == IPPROTO_TCP)
+		{
+			unsigned int mss = tcp_current_mss(skb->sk);
+			if (skb->len > mss)
+			{
+				mpip_log("%d, %d, %s, %d\n", skb->len, mss, __FILE__, __LINE__);
+				return false;
+			}
+		}
 	}
 
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -440,7 +452,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	}
 
 	//if TCP PACKET
-	if(protocol == IPPROTO_TCP)
+	if (protocol == IPPROTO_TCP)
 	{
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
