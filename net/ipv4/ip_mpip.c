@@ -671,12 +671,13 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
 
+	print_mpip_cm(&rcv_mpip_cm);
+
 	checksum = calc_checksum(rcv_cm);
 	if (checksum != (rcv_cm[16]<<8 | rcv_cm[15]))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		mpip_log("%d, %d, %d, %d\n", rcv_cm[15], rcv_cm[16], checksum, (rcv_cm[16]<<8 | rcv_cm[15]));
-		print_mpip_cm(&rcv_mpip_cm);
 		goto fail;
 	}
 

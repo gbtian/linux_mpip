@@ -363,12 +363,12 @@ void send_mpip_enable(struct sk_buff *skb)
 
 	struct mpip_enabled_table *item = find_mpip_enabled(iph->saddr, sport);
 
-	char *p = (char *) &(iph->saddr);
-	printk( "%d.%d.%d.%d\n",
-			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-	char *p2 = (char *) &(iph->daddr);
-	printk( "%d.%d.%d.%d\n",
-				(p2[0] & 255), (p2[1] & 255), (p2[2] & 255), (p2[3] & 255));
+//	char *p = (char *) &(iph->saddr);
+//	printk( "%d.%d.%d.%d\n",
+//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+//	char *p2 = (char *) &(iph->daddr);
+//	printk( "%d.%d.%d.%d\n",
+//				(p2[0] & 255), (p2[1] & 255), (p2[2] & 255), (p2[3] & 255));
 
 	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
 	if (item && item->mpip_enabled)
