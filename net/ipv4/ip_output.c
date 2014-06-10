@@ -104,11 +104,11 @@ int __ip_local_out(struct sk_buff *skb)
 	{
 		unsigned int mss = tcp_current_mss(skb->sk);
 		const struct tcp_sock *tp = tcp_sk(skb->sk);
-		mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
+		mpip_log("mss = %d, msscache = %d, len = %d, tail = %d\n", mss, tp->mss_cache, skb->len, skb_tailroom(skb));
 	}
 	else
 	{
-		mpip_log("len = %d\n", skb->len);
+		mpip_log("len = %d, tail = %d\n", skb->len, skb_tailroom(skb));
 	}
 
 	iph->tot_len = htons(skb->len);
