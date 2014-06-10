@@ -1366,6 +1366,37 @@ unsigned int tcp_current_mss(struct sock *sk)
 	return mss_now;
 }
 
+unsigned int tcp_original_mss(struct sock *sk)
+{
+	const struct tcp_sock *tp = tcp_sk(sk);
+	const struct dst_entry *dst = __sk_dst_get(sk);
+	u32 mss_now;
+	unsigned int header_len;
+	struct tcp_out_options opts;
+	struct tcp_md5sig_key *md5;
+
+	mss_now = tp->mss_cache;
+
+	if (dst) {
+		u32 mtu = dst_mtu(dst);
+		if (mtu != inet_csk(sk)->icsk_pmtu_cookie)
+			mss_now = tcp_sync_mss(sk, mtu);
+	}
+
+	header_len = tcp_established_options(sk, NULL, &opts, &md5) +
+		     sizeof(struct tcphdr);
+	/* The mss_cache is sized based on tp->tcp_header_len, which assumes
+	 * some common options. If this is an odd packet (because we have SACK
+	 * blocks etc) then our calculated header_len will be different, and
+	 * we have to adjust mss_now correspondingly */
+	if (header_len != tp->tcp_header_len) {
+		int delta = (int) header_len - tp->tcp_header_len;
+		mss_now -= delta;
+	}
+
+	return mss_now;
+}
+
 /* Congestion window validation. (RFC2861) */
 static void tcp_cwnd_validate(struct sock *sk)
 {

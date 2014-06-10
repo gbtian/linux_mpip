@@ -559,6 +559,8 @@ static inline void tcp_clear_xmit_timers(struct sock *sk)
 
 extern unsigned int tcp_sync_mss(struct sock *sk, u32 pmtu);
 extern unsigned int tcp_current_mss(struct sock *sk);
+extern unsigned int tcp_original_mss(struct sock *sk);
+
 
 /* Bound MSS / TSO packet size with the half of the window */
 static inline int tcp_bound_to_half_wnd(struct tcp_sock *tp, int pktsize)

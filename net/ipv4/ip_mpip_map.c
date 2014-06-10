@@ -606,7 +606,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 		{
 			iph->saddr = new_saddr;
 			iph->daddr = new_daddr;
-			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 		}
 	}
@@ -615,7 +615,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 		new_dst_dev = find_dev_by_addr(iph->saddr);
 		if (new_dst_dev)
 		{
-			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 		}
 	}
@@ -626,13 +626,13 @@ bool send_mpip_msg(struct sk_buff *skb)
 	skb_dst_set_noref(nskb, &rt->dst);
 	skb_dst(nskb)->dev = new_dst_dev;
 
-	char *p = (char *) &(iph->saddr);
-	printk( "%d.%d.%d.%d: %s, %s, %d\n",
-			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
-
-	p = (char *) &(iph->daddr);
-	printk( "%d.%d.%d.%d: %s, %s, %d\n",
-		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+//	char *p = (char *) &(iph->saddr);
+//	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+//
+//	p = (char *) &(iph->daddr);
+//	printk( "%d.%d.%d.%d: %s, %s, %d\n",
+//		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
 
 	err = __ip_local_out(nskb);
 	if (likely(err == 1))

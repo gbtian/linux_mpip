@@ -106,6 +106,10 @@ int __ip_local_out(struct sk_buff *skb)
 		const struct tcp_sock *tp = tcp_sk(skb->sk);
 		mpip_log("mss = %d, msscache = %d, len = %d\n", mss, tp->mss_cache, skb->len);
 	}
+	else
+	{
+		mpip_log("len = %d\n", skb->len);
+	}
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);

@@ -412,25 +412,26 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
-	if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
+	if (heartbeat)
 	{
-		if (heartbeat)
+		if (skb->len < 150)
 		{
-			if (skb->len < 150)
+			if (pskb_expand_head(skb, 0, MPIP_CM_LEN + 1, GFP_ATOMIC))
 			{
-				if (pskb_expand_head(skb, 0, MPIP_CM_LEN + 1, GFP_ATOMIC))
-				{
-					mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-					return false;
-				}
+				mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+				return false;
 			}
 		}
-		else
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
+		skb->tail -= MPIP_CM_LEN + 10;
+		skb->len  -= MPIP_CM_LEN + 10;
 	}
+	else if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
+	{
+		mpip_log("%d, %s, %s, %d\n", skb_tailroom(skb), __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
@@ -477,11 +478,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
-	if (heartbeat && (skb->len > 150))
-	{
-		skb->tail -= MPIP_CM_LEN + 10;
-		skb->len  -= MPIP_CM_LEN + 10;
-	}
 
 	send_cm = skb_tail_pointer(skb) + 1;
 
@@ -551,7 +547,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	if (heartbeat)
 	{
 		mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		print_mpip_cm(&send_mpip_cm);
+//		print_mpip_cm(&send_mpip_cm);
 	}
 
 	skb_put(skb, MPIP_CM_LEN + 1);
