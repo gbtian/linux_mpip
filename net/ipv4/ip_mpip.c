@@ -656,16 +656,6 @@ int process_mpip_cm(struct sk_buff *skb)
 		goto fail;
 	}
 
-	checksum = calc_checksum(rcv_cm);
-	if (checksum != (rcv_cm[16]<<8 | rcv_cm[15]))
-	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		mpip_log("%d, %d, %d, %d\n", rcv_cm[15], rcv_cm[16], checksum, (rcv_cm[16]<<8 | rcv_cm[15]));
-		goto fail;
-	}
-
-	skb->tail -= MPIP_CM_LEN + 1;
-	skb->len  -= MPIP_CM_LEN + 1;
 
 	rcv_mpip_cm.len 			= rcv_cm[0];
 	rcv_mpip_cm.node_id[0] 		= rcv_cm[1];
@@ -681,9 +671,19 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
 
-//	print_mpip_cm(&rcv_mpip_cm);
+	checksum = calc_checksum(rcv_cm);
+	if (checksum != (rcv_cm[16]<<8 | rcv_cm[15]))
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%d, %d, %d, %d\n", rcv_cm[15], rcv_cm[16], checksum, (rcv_cm[16]<<8 | rcv_cm[15]));
+		print_mpip_cm(&rcv_mpip_cm);
+		goto fail;
+	}
 
 
+
+	skb->tail -= MPIP_CM_LEN + 1;
+	skb->len  -= MPIP_CM_LEN + 1;
 
 	get_available_local_addr();
 
