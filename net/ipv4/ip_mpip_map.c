@@ -954,10 +954,10 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 {
 	struct socket_session_table *item = NULL;
 
-	if (!is_lan_addr(saddr) || !is_lan_addr(daddr))
-	{
-		return 0;
-	}
+//	if (!is_lan_addr(saddr) || !is_lan_addr(daddr))
+//	{
+//		return 0;
+//	}
 
 	if (!src_node_id || !dst_node_id)
 		return 0;
