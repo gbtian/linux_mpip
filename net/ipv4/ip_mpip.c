@@ -434,8 +434,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		}
 		if (protocol == IPPROTO_TCP)
 		{
-			unsigned int mss = tcp_current_mss(skb->sk);
-			if (skb->len > mss)
+			unsigned int mss = tcp_original_mss(skb->sk);
+			if ((mss - (skb->len - 32)) < (MPIP_CM_LEN + 1))
 			{
 				mpip_log("%d, %d, %s, %d\n", skb->len, mss, __FILE__, __LINE__);
 				return false;

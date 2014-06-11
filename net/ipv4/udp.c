@@ -832,12 +832,12 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	struct flowi4 *fl4;
 	__be16 dnsport = htons((unsigned short int) inet->inet_dport);
 
-//	if (sysctl_mpip_enabled && (dnsport != 53) &&
-//		is_mpip_enabled(inet->inet_daddr, inet->inet_dport))
-//	{
-//		len -= ((MPIP_CM_LEN + 1 + 3) & ~3);
-//
-//	}
+	if (sysctl_mpip_enabled && (dnsport != 53) &&
+		is_mpip_enabled(inet->inet_daddr, inet->inet_dport))
+	{
+		len -= ((MPIP_CM_LEN * 2 + 3) & ~3);
+
+	}
 
 	int ulen = len;
 	struct ipcm_cookie ipc;

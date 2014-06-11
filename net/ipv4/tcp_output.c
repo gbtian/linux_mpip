@@ -1339,15 +1339,15 @@ unsigned int tcp_current_mss(struct sock *sk)
 	struct tcp_md5sig_key *md5;
 
 	mss_now = tp->mss_cache;
-	mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
+//	mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
 
 	if (dst) {
 		u32 mtu = dst_mtu(dst);
-		mpip_log("%d, %s, %d\n", mtu, __FILE__, __LINE__);
+//		mpip_log("%d, %s, %d\n", mtu, __FILE__, __LINE__);
 		if (mtu != inet_csk(sk)->icsk_pmtu_cookie)
 		{
 			mss_now = tcp_sync_mss(sk, mtu);
-			mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
+//			mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
 		}
 	}
 
@@ -1360,14 +1360,14 @@ unsigned int tcp_current_mss(struct sock *sk)
 	if (header_len != tp->tcp_header_len) {
 		int delta = (int) header_len - tp->tcp_header_len;
 		mss_now -= delta;
-		mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
+//		mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
 	}
 
-//	if (sysctl_mpip_enabled &&
-//		is_mpip_enabled(inet_sk(sk)->inet_daddr, inet_sk(sk)->inet_dport))
-//	{
-//		mss_now -= ((MPIP_CM_LEN + 1 + 3) & ~3);
-//	}
+	if (sysctl_mpip_enabled &&
+		is_mpip_enabled(inet_sk(sk)->inet_daddr, inet_sk(sk)->inet_dport))
+	{
+		mss_now -= ((MPIP_CM_LEN * 2 + 3) & ~3);
+	}
 
 	return mss_now;
 }
