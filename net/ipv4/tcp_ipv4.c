@@ -1665,9 +1665,9 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 	newinet->inet_id = newtp->write_seq ^ jiffies;
 
 //	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//	print_addr(__FUNCTION__, newinet->inet_saddr);
-//	print_addr(__FUNCTION__, newinet->inet_rcv_saddr);
-//	print_addr(__FUNCTION__, newinet->inet_daddr);
+//	print_addr(newinet->inet_saddr);
+//	print_addr(newinet->inet_rcv_saddr);
+//	print_addr(newinet->inet_daddr);
 
 
 	if (!dst) {
@@ -2022,16 +2022,16 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	if (!sk)
 	{
 		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
-		print_addr(__FUNCTION__, iph->saddr);
-		print_addr(__FUNCTION__, iph->daddr);
+		print_addr( iph->saddr);
+		print_addr( iph->daddr);
 		printk("%d, %d, %s, %d\n", th->source, th->dest, __FILE__, __LINE__);
 		goto no_tcp_socket;
 	}
 	else
 	{
 		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
-		print_addr(__FUNCTION__, inet_sk(sk)->inet_saddr);
-		print_addr(__FUNCTION__, inet_sk(sk)->inet_daddr);
+		print_addr(inet_sk(sk)->inet_saddr);
+		print_addr(inet_sk(sk)->inet_daddr);
 	}
 	printk("%s, %d\n", __FILE__, __LINE__);
 process:
