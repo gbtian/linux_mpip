@@ -98,7 +98,7 @@ struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port)
 
 	list_for_each_entry(mpip_enabled, &me_head, list)
 	{
-		if ((addr == mpip_enabled->addr) || (port == mpip_enabled->port))
+		if ((addr == mpip_enabled->addr) && (port == mpip_enabled->port))
 		{
 			return mpip_enabled;
 		}
