@@ -310,9 +310,10 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 
 unsigned char get_path_id(unsigned char *node_id,
 		__be32 *saddr, __be32 *daddr, __be16 *dport,
-		__be32 origin_saddr, __be32 origin_daddr, __be16 origin_dport)
+		__be32 origin_saddr, __be32 origin_daddr, __be16 origin_dport,
+		unsigned char session_id)
 {
-	if (node_id == NULL)
+	if (!node_id || session_id <= 0)
 		return 0;
 
 	if (node_id[0] == node_id[1])
@@ -321,7 +322,8 @@ unsigned char get_path_id(unsigned char *node_id,
 	}
 
 	return find_fastest_path_id(node_id, saddr, daddr, dport,
-								origin_saddr, origin_daddr, origin_dport);
+								origin_saddr, origin_daddr,
+								origin_dport, session_id);
 }
 
 
@@ -519,7 +521,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     if (!is_new || heartbeat)
     {
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_dport,
-    							old_saddr, old_daddr, dport);
+    							old_saddr, old_daddr, dport, send_mpip_cm.session_id);
     }
 
     path_stat_id = get_path_stat_id(dst_node_id, &delay);
@@ -689,8 +691,8 @@ int process_mpip_cm(struct sk_buff *skb)
 	add_addr_notified(rcv_mpip_cm.node_id);
 	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.changed);
 
-	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport);
-	add_path_info(rcv_mpip_cm.node_id, iph->saddr, sport);
+	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id);
+	add_path_info(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id);
 	add_path_stat(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id);
 
 	update_path_stat_delay(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id, rcv_mpip_cm.timestamp);
