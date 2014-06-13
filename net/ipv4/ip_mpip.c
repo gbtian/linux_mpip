@@ -654,7 +654,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
