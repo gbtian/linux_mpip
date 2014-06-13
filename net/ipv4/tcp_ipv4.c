@@ -1983,7 +1983,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 		printk("%s, %d\n", __FILE__, __LINE__);
 		goto discard_it;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	th = tcp_hdr(skb);
 
 	if (th->doff < sizeof(struct tcphdr) / 4)
@@ -1996,7 +1996,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 		printk("%s, %d\n", __FILE__, __LINE__);
 		goto discard_it;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	/* An explanation is required here, I think.
 	 * Packet length and doff are validated by header prediction,
 	 * provided case of th->doff==0 is eliminated.
@@ -2006,7 +2006,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 		printk("%s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 
 	th = tcp_hdr(skb);
 	iph = ip_hdr(skb);
@@ -2017,7 +2017,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	TCP_SKB_CB(skb)->when	 = 0;
 	TCP_SKB_CB(skb)->ip_dsfield = ipv4_get_dsfield(iph);
 	TCP_SKB_CB(skb)->sacked	 = 0;
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	sk = __inet_lookup_skb(&tcp_hashinfo, skb, th->source, th->dest);
 	if (!sk)
 	{
@@ -2029,38 +2029,38 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	}
 	else
 	{
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
-		print_addr(inet_sk(sk)->inet_saddr);
-		print_addr(inet_sk(sk)->inet_daddr);
+//		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+//		print_addr(inet_sk(sk)->inet_saddr);
+//		print_addr(inet_sk(sk)->inet_daddr);
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 process:
 	if (sk->sk_state == TCP_TIME_WAIT)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 		goto do_time_wait;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (unlikely(iph->ttl < inet_sk(sk)->min_ttl))
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
 		NET_INC_STATS_BH(net, LINUX_MIB_TCPMINTTLDROP);
 		goto discard_and_relse;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
 		goto discard_and_relse;
 	}
 	nf_reset(skb);
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (sk_filter(sk, skb))
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 		goto discard_and_relse;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	sk_mark_napi_id(sk, skb);
 	skb->dev = NULL;
 
@@ -2068,7 +2068,7 @@ process:
 	ret = 0;
 	if (!sock_owned_by_user(sk))
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 #ifdef CONFIG_NET_DMA
 		struct tcp_sock *tp = tcp_sk(sk);
 		if (!tp->ucopy.dma_chan && tp->ucopy.pinned_list)
@@ -2080,15 +2080,15 @@ process:
 		{
 			if (!tcp_prequeue(sk, skb))
 			{
-				printk("%s, %d\n", __FILE__, __LINE__);
+//				printk("%s, %d\n", __FILE__, __LINE__);
 				ret = tcp_v4_do_rcv(sk, skb);
 			}
-			printk("%s, %d\n", __FILE__, __LINE__);
+//			printk("%s, %d\n", __FILE__, __LINE__);
 		}
 	} else if (unlikely(sk_add_backlog(sk, skb,
 					   sk->sk_rcvbuf + sk->sk_sndbuf)))
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+//		printk("%s, %d\n", __FILE__, __LINE__);
 		bh_unlock_sock(sk);
 		NET_INC_STATS_BH(net, LINUX_MIB_TCPBACKLOGDROP);
 		goto discard_and_relse;
@@ -2096,7 +2096,7 @@ process:
 	bh_unlock_sock(sk);
 
 	sock_put(sk);
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	return ret;
 
 no_tcp_socket:
