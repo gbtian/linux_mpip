@@ -168,7 +168,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 	struct working_ip_table *item = NULL;
 
 
-	if (!node_id || session_id <= 0)
+	if (!node_id)
 		return 0;
 
 	if (node_id[0] == node_id[1])
@@ -176,9 +176,12 @@ int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 		return 0;
 	}
 
-	if (find_working_ip(node_id, addr, port, session_id))
+	item = find_working_ip(node_id, addr, port);
+	if (item)
+	{
+		item->session_id = session_id;
 		return 0;
-
+	}
 
 	item = kzalloc(sizeof(struct working_ip_table),	GFP_ATOMIC);
 
@@ -194,23 +197,21 @@ int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 //	print_node_id(__FUNCTION__, node_id);
 //	print_addr(__FUNCTION__, addr);
 
-
 	return 1;
 }
 
-struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id)
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port)
 {
 	struct working_ip_table *working_ip;
 
-	if (!node_id || session_id <= 0)
+	if (!node_id)
 		return NULL;
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
 		if (is_equal_node_id(node_id, working_ip->node_id) &&
 				(addr == working_ip->addr) &&
-				(port == working_ip->port) &&
-				(session_id == working_ip->session_id))
+				(port == working_ip->port))
 		{
 			return working_ip;
 		}

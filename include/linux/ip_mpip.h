@@ -215,7 +215,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed);
 
 int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id);
 
-struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id);
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port);
 
 unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port);
 
