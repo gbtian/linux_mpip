@@ -1969,7 +1969,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	struct sock *sk;
 	int ret;
 	struct net *net = dev_net(skb->dev);
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (skb->pkt_type != PACKET_HOST)
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
@@ -1977,7 +1977,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	}
 	/* Count it even if it's bad */
 	TCP_INC_STATS_BH(net, TCP_MIB_INSEGS);
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (!pskb_may_pull(skb, sizeof(struct tcphdr)))
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
