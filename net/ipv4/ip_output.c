@@ -197,7 +197,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 
 	inet = inet_sk(sk);
 
-	if (false && sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled)
 	{
 		if (insert_mpip_cm(skb, saddr, daddr, &new_saddr, &new_daddr, IPPROTO_TCP, false))
 		{
@@ -460,7 +460,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	 */
 	rcu_read_lock();
 	inet_opt = rcu_dereference(inet->inet_opt);
-	if (false && sysctl_mpip_enabled)
+	if (sysctl_mpip_enabled)
 	{
 		if (insert_mpip_cm(skb, fl->u.ip4.saddr, fl->u.ip4.daddr,
 				&new_saddr, &new_daddr, IPPROTO_TCP, false))
