@@ -115,6 +115,7 @@ struct path_info_table
 	__s32     			max_queuing_delay;
 	unsigned char		count;
 	__u64				bw;  /* bandwidth */
+	__u64				pktcount;
 	struct list_head 	list;
 };
 

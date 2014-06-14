@@ -1275,6 +1275,7 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port, unsigned cha
 		item->max_queuing_delay = 0;
 		item->count = 0;
 		item->bw = 1000;
+		item->pktcount = 0;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
@@ -1366,6 +1367,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
 		*dport = f_path->dport;
+		f_path->pktcount += 1;
 	}
 	else
 	{
@@ -1375,6 +1377,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
 			*dport = f_path->dport;
+			f_path->pktcount += 1;
 			f_path_id = f_path->path_id;
 		}
 	}
@@ -1748,7 +1751,9 @@ asmlinkage long sys_mpip(void)
 
 		printk("%d  ", path_info->queuing_delay);
 
-		printk("%lu  \n", path_info->bw);
+		printk("%lu  ", path_info->bw);
+
+		printk("%lu  \n", path_info->pktcount);
 
 	}
 //
