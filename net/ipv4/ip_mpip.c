@@ -432,14 +432,18 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	}
 	else
 	{
+		unsigned int mss = tcp_original_mss(skb->sk);
+		unsigned int mss1 = tcp_current_mss(skb->sk);
+
 		if (skb_tailroom(skb) < MPIP_CM_LEN + 1)
 		{
-			mpip_log("%d, %s, %s, %d\n", skb_tailroom(skb), __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%d, %d, %d, %d, %s, %s, %d\n", skb_tailroom(skb),
+					skb->len, mss, mss1, __FILE__, __FUNCTION__, __LINE__);
 			return false;
 		}
 		if (protocol == IPPROTO_TCP)
 		{
-			unsigned int mss = tcp_original_mss(skb->sk);
+
 			if ((mss - (skb->len - 32)) < (MPIP_CM_LEN + 1))
 			{
 				mpip_log("%d, %d, %s, %d\n", skb->len, mss, __FILE__, __LINE__);
@@ -608,15 +612,6 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-//	printk("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-//	char *p = (char *) &(iph->saddr);
-//	printk( "%d.%d.%d.%d: %s, %s, %d\n",
-//		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
-//
-//	p = (char *) &(iph->daddr);
-//	printk( "%d.%d.%d.%d: %s, %s, %d\n",
-//		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
-
 	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 	{
 		printk("%d, %s, %s, %d\n", iph->protocol, __FILE__, __FUNCTION__, __LINE__);
@@ -672,7 +667,10 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.changed 		= rcv_cm[14];
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
-	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("receiving: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
+
 	print_mpip_cm(&rcv_mpip_cm);
 
 	checksum = calc_checksum(rcv_cm);
