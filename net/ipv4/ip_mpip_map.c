@@ -388,7 +388,6 @@ void send_mpip_enable(struct sk_buff *skb)
 	else
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-
 		add_mpip_enabled(iph->saddr, sport, false);
 		send_mpip_msg(skb);
 	}
@@ -1052,9 +1051,9 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	print_addr(daddr);
 	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
-	sid = get_sender_session(saddr, sport, daddr, dport);
-	if (sid > 0)
-		return sid;
+//	sid = get_sender_session(saddr, sport, daddr, dport);
+//	if (sid > 0)
+//		return sid;
 
 	if (path_id > 0)
 		return 0;
