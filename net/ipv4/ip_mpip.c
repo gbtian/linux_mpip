@@ -724,13 +724,9 @@ int process_mpip_cm(struct sk_buff *skb)
 			skb->dev = new_dst_dev;
 		}
 
-//		p = (char *) &(iph->saddr);
-//		printk( "%d.%d.%d.%d: %s, %s, %d\n",
-//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
-//
-//		p = (char *) &(iph->daddr);
-//		printk( "%d.%d.%d.%d: %s, %s, %d\n",
-//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255), __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("final receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
 
 
 		if(iph->protocol==IPPROTO_TCP)
