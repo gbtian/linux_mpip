@@ -440,8 +440,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 			mpip_log("%d, %d, %d, %d, %s, %s, %d\n", skb_tailroom(skb),
 					skb->len, mss, mss1, __FILE__, __FUNCTION__, __LINE__);
 
-			return false;
-
 			if ((mss - (skb->len - 32)) < (MPIP_CM_LEN + 1))
 			{
 				mpip_log("%d, %d, %s, %d\n", skb->len, mss, __FILE__, __LINE__);
@@ -563,7 +561,10 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[15] = checksum & 0xff;
 	send_cm[16] = (checksum>>8) & 0xff;
 
-	mpip_log("sending: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("sending: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(old_saddr);
+	print_addr(old_daddr);
+
 	print_mpip_cm(&send_mpip_cm);
 
 	skb_put(skb, MPIP_CM_LEN + 1);
@@ -579,7 +580,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 			udph->dest = new_dport;
 	}
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	return true;
 
@@ -665,7 +666,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.changed 		= rcv_cm[14];
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
-	mpip_log("receiving: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);
 
