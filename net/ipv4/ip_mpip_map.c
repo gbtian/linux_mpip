@@ -322,7 +322,7 @@ void send_mpip_hb(struct sk_buff *skb)
 //	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb))
 			earliest_fbjiffies = jiffies;
 	}
@@ -381,13 +381,13 @@ void send_mpip_enable(struct sk_buff *skb)
 	}
 	else if (item)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb))
 			item->sent_count += 1;
 	}
 	else
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 		add_mpip_enabled(iph->saddr, sport, false);
 		send_mpip_msg(skb);
@@ -599,7 +599,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, true))
 	{
 		kfree_skb(nskb);
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -1046,6 +1046,11 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	sid = find_receiver_session(dst_node_id, session_id);
 	if (sid > 0)
 		return sid;
+
+	printk("%s, %d\n", __FILE__, __LINE__);
+	print_addr(saddr);
+	print_addr(daddr);
+	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 	sid = get_sender_session(saddr, sport, daddr, dport);
 	if (sid > 0)

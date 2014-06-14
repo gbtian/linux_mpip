@@ -2132,7 +2132,7 @@ discard_and_relse:
 	goto discard_it;
 
 do_time_wait:
-	printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+//	printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
 		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 		inet_twsk_put(inet_twsk(sk));

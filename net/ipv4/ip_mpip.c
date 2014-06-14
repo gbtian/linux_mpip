@@ -279,13 +279,13 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 {
 
 	unsigned char session_id;
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	if (!src_node_id || !dst_node_id)
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
 		return 0;
 	}
-	printk("%s, %d\n", __FILE__, __LINE__);
+//	printk("%s, %d\n", __FILE__, __LINE__);
 	session_id = get_sender_session(saddr, sport, daddr, dport);
 
 	if (session_id == 0)
