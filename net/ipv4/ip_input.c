@@ -331,6 +331,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 	if (sysctl_ip_early_demux && !skb_dst(skb)) {
 		const struct net_protocol *ipprot;
 		int protocol = iph->protocol;
@@ -343,6 +345,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		}
 	}
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	/*
 	 *	Initialise the virtual path cache for the packet. It describes
 	 *	how the packet travels inside Linux networking.
@@ -361,6 +364,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		}
 	}
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 #ifdef CONFIG_IP_ROUTE_CLASSID
 	if (unlikely(skb_dst(skb)->tclassid)) {
 		struct ip_rt_acct *st = this_cpu_ptr(ip_rt_acct);
@@ -372,6 +377,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	}
 #endif
 
+
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	if (iph->ihl > 5 && ip_rcv_options(skb))
 		goto drop;
@@ -387,6 +394,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	if (sysctl_mpip_enabled)
 	{
 
+		mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 		if (process_mpip_cm(skb) == 2)
 			return NET_RX_SUCCESS;
 
@@ -399,8 +408,11 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
+		mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 	}
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 //	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
 //	{
@@ -426,11 +438,15 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	const struct iphdr *iph;
 	u32 len;
 
+	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 	/* When the interface is in promisc. mode, drop all the crap
 	 * that it receives, do not try to analyse it.
 	 */
 	if (skb->pkt_type == PACKET_OTHERHOST)
 		goto drop;
+
+	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 
 	IP_UPD_PO_STATS_BH(dev_net(dev), IPSTATS_MIB_IN, skb->len);
@@ -440,12 +456,17 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		goto out;
 	}
 
+	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+
 	if (!pskb_may_pull(skb, sizeof(struct iphdr)))
 		goto inhdr_error;
 
+	mpip_log("receiving: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	iph = ip_hdr(skb);
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	/*
 	 *	RFC1122: 3.2.1.2 MUST silently discard any IP frame that fails the checksum.
 	 *
@@ -467,15 +488,20 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 			IPSTATS_MIB_NOECTPKTS + (iph->tos & INET_ECN_MASK),
 			max_t(unsigned short, 1, skb_shinfo(skb)->gso_segs));
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (!pskb_may_pull(skb, iph->ihl*4))
 		goto inhdr_error;
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	iph = ip_hdr(skb);
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	if (unlikely(ip_fast_csum((u8 *)iph, iph->ihl)))
 		goto csum_error;
+
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	len = ntohs(iph->tot_len);
 	if (skb->len < len) {
@@ -483,6 +509,8 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		goto drop;
 	} else if (len < (iph->ihl*4))
 		goto inhdr_error;
+
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	/* Our transport medium may have padded the buffer out. Now we know it
 	 * is IP we can trim to the true length of the frame.
@@ -495,11 +523,15 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	skb->transport_header = skb->network_header + iph->ihl*4;
 
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
 	/* Remove any debris in the socket control block */
 	memset(IPCB(skb), 0, sizeof(struct inet_skb_parm));
 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
+
+	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,
 		       ip_rcv_finish);
