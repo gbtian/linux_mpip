@@ -573,11 +573,23 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	{
 		if (new_dport != 0)
 			tcph->dest = new_dport;
+
+		tcph->check = 0;
+		tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
+										skb->len, protocol,
+										csum_partial((char *)tcph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
 	}
 	else if(protocol==IPPROTO_UDP)
 	{
 		if (new_dport != 0)
 			udph->dest = new_dport;
+
+		udph->check = 0;
+		udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
+									   skb->len, protocol,
+									   csum_partial((char *)udph, skb->len, 0));
+		skb->ip_summed = CHECKSUM_UNNECESSARY;
 	}
 
 //	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
