@@ -585,6 +585,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		if (new_dport != 0)
 			udph->dest = new_dport;
 
+		udph->len += MPIP_CM_LEN + 1;
 		udph->check = 0;
 		udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 									   skb->len, protocol,

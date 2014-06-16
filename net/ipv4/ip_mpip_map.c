@@ -583,33 +583,30 @@ bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
 
 	skb = alloc_skb(234, GFP_ATOMIC );
 	if ( !skb ) {
-		printk( "alloc_skb fail./n" );
+		printk( "alloc_skb fail.\n" );
 		return false;
 	}
 
 	// 预先保留skb的协议首部长度大小
-	skb_reserve( skb, 234);
+	skb_reserve(skb, 234);
 
 	// skb->data 移动到udp首部
-	skb_push(skb, sizeof(*udph));
+	skb_push(skb, sizeof(struct udphdr));
 	skb_reset_transport_header(skb);
 	udph = udp_hdr(skb);
 	udph->source = htons(srcport);
 	udph->dest = htons(dstport);
-	udph->len = htons(sizeof(*udph));
+	udph->len = htons(sizeof(struct udphdr));
 	udph->check = 0;
 
 
 	// skb->data 移动到ip首部
-	skb_push(skb, sizeof(*iph));
+	skb_push(skb, sizeof(struct iphdr));
 	skb_reset_network_header(skb);
 	iph = ip_hdr(skb);
-
-	ip_len = eth_len = udp_len + sizeof(*iph);
 	iph->version = 4;
 	iph->ihl = 5;
 	iph->tos      = 0;
-//	put_unaligned(htons(ip_len), &(iph->tot_len));
 	iph->id       = 0;
 	iph->frag_off = 0;
 	iph->ttl      = 64;
