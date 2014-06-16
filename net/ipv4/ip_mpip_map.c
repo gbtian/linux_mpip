@@ -497,125 +497,131 @@ relookup_failed:
 }
 
 
-bool send_mpip_msg(struct sk_buff *skb, unsigned char flags)
+bool ip_route_out( struct sk_buff *skb, struct iphdr *iph )
 {
-	struct iphdr *iph, *niph;
+    int err = -1;
+    struct flowi4 fl = {};
+    struct rtable *rt = NULL;
+
+    fl.daddr = iph->daddr;
+    rt = ip_route_output_key(&init_net, &fl);
+    if (rt)
+    {
+		printk( "route output dev=%s/n", rt->dst.dev->name  );
+		skb_dst_set_noref(skb, &(rt->dst));
+
+		return true;
+    }
+    return false;
+
+}
+
+bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
+{
+	struct iphdr *iph, *iph_in;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
 	__be16 tmp_port = 0;
 	struct net_device *new_dst_dev = NULL;
 	int err = 0;
-	struct sk_buff *nskb = NULL;
-	struct sk_buff *mskb = NULL;
+	struct sk_buff *skb = NULL;
 	struct flowi4 fl4;
 	struct net *net;
 	struct rtable *rt;
-	__be16 sport, dport;
+	__be16 srcport, dstport;
 
-	if(!skb)
+    int total_len, eth_len, ip_len, udp_len, header_len;
+    struct ethhdr *eth;
+    u32 local_ip;
+
+
+	// 设置各个协议数据长度
+    udp_len = sizeof(*udph);
+    ip_len = eth_len = udp_len + sizeof(*iph);
+    total_len = eth_len + ETH_HLEN + NET_IP_ALIGN;
+    header_len = total_len;
+
+	if(!skb_in)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return false;
 	}
-	nskb = skb_copy(skb, GFP_ATOMIC);
 
-	if (nskb == NULL)
+	iph_in = ip_hdr(skb_in);
+	if (iph_in == NULL)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	iph = ip_hdr(nskb);
-	if (iph == NULL)
-	{
-		kfree_skb(nskb);
 		printk("%s, %d\n", __FILE__, __LINE__);
 		return false;
 	}
 
-	rt = skb_rtable(nskb);
-
-	if ((u8 *)iph < nskb->head ||
-	    (skb_network_header(nskb) + sizeof(*iph)) >
-	    skb_tail_pointer(nskb))
+	if(iph_in->protocol == IPPROTO_TCP)
 	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	/*
-	 *	No replies to physical multicast/broadcast
-	 */
-	if (nskb->pkt_type != PACKET_HOST)
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	/*
-	 *	Now check at the protocol level
-	 */
-	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST))
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	/*
-	 *	Only reply to fragment 0. We byte re-order the constant
-	 *	mask for efficiency.
-	 */
-	if (iph->frag_off & htons(IP_OFFSET))
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-
-	tmp_addr = iph->saddr;
-	iph->saddr = iph->daddr;
-	iph->daddr = tmp_addr;
-
-	if(iph->protocol == IPPROTO_TCP)
-	{
-		tcph = tcp_hdr(nskb); //this fixed the problem
+		tcph = tcp_hdr(skb_in); //this fixed the problem
 		if (!tcph)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return false;
 		}
 
-		tmp_port = tcph->source;
-		tcph->source = tcph->dest;
-		tcph->dest = tmp_port;
-
+		srcport = tcph->dest;
+		dstport = tcph->source;
 	}
-	else if(iph->protocol == IPPROTO_UDP)
+	else if(iph_in->protocol == IPPROTO_UDP)
 	{
-		udph = udp_hdr(nskb); //this fixed the problem
+		udph = udp_hdr(skb_in); //this fixed the problem
 		if (!udph)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			return false;
 		}
-		tmp_port = udph->source;
-		udph->source = udph->dest;
-		udph->dest = tmp_port;
+
+		srcport = udph->dest;
+		dstport = udph->source;
 	}
-	else
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
+
+
+	skb = alloc_skb(234, GFP_ATOMIC );
+	if ( !skb ) {
+		printk( "alloc_skb fail./n" );
 		return false;
 	}
 
+	// 预先保留skb的协议首部长度大小
+	skb_reserve( skb, 234);
+
+	// skb->data 移动到udp首部
+	skb_push(skb, sizeof(*udph));
+	skb_reset_transport_header(skb);
+	udph = udp_hdr(skb);
+	udph->source = htons(srcport);
+	udph->dest = htons(dstport);
+	udph->len = htons(sizeof(*udph));
+	udph->check = 0;
+
+
+	// skb->data 移动到ip首部
+	skb_push(skb, sizeof(*iph));
+	skb_reset_network_header(skb);
+	iph = ip_hdr(skb);
+
+	ip_len = eth_len = udp_len + sizeof(*iph);
+	iph->version = 4;
+	iph->ihl = 5;
+	iph->tos      = 0;
+//	put_unaligned(htons(ip_len), &(iph->tot_len));
+	iph->id       = 0;
+	iph->frag_off = 0;
+	iph->ttl      = 64;
+	iph->protocol = IPPROTO_UDP;
+	iph->check    = 0;
+	iph->saddr = iph_in->daddr;
+	iph->daddr = iph_in->saddr;
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
+	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
 	{
-		kfree_skb(nskb);
+		kfree_skb(skb);
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
@@ -631,115 +637,16 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned char flags)
 
 		}
 	}
-	else
+
+	skb->dev = find_dev_by_addr(iph->saddr);
+
+	if (ip_route_out(skb, iph))
 	{
-		new_dst_dev = find_dev_by_addr(iph->saddr);
-		if (new_dst_dev)
-		{
-//			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-		}
+		mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		err = __ip_local_out(skb);
+		if (likely(err == 1))
+			err = dst_output(skb);
 	}
-
-	net = dev_net(rt->dst.dev);
-	rt = mpip_msg_route_lookup(net, &fl4, nskb, iph);
-//	rt->dst.dev = new_dst_dev;
-	skb_dst_set_noref(nskb, &rt->dst);
-//	skb_dst(nskb)->dev = new_dst_dev;
-
-
-	mskb = alloc_skb(234, GFP_ATOMIC);
-
-	if(!mskb)
-	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	iph = ip_hdr(mskb);
-	if (iph == NULL)
-	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		kfree_skb(mskb);
-		return false;
-	}
-
-	if(iph->protocol == IPPROTO_TCP)
-	{
-		tcph = tcp_hdr(skb); //this fixed the problem
-		if (!tcph)
-		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			kfree_skb(skb);
-			return false;
-		}
-
-		sport = tcph->dest;
-		dport = tcph->source;
-	}
-	else if(iph->protocol == IPPROTO_UDP)
-	{
-		udph = udp_hdr(skb); //this fixed the problem
-		if (!udph)
-		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			kfree_skb(skb);
-			return false;
-		}
-
-		sport = udph->dest;
-		dport = udph->source;
-	}
-
-	skb_reserve(mskb, 234);
-
-	skb_push(mskb, sizeof(struct udphdr));
-	skb_reset_transport_header(mskb);
-	udph= udp_hdr(mskb);
-	if (!udph)
-	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		kfree_skb(mskb);
-		return false;
-	}
-
-	udph->source = sport;
-	udph->dest = dport;
-	udph->len = htons(sizeof(struct udphdr));
-	udph->check = 0;
-
-	skb_push(mskb, sizeof(struct iphdr));
-	skb_reset_network_header(mskb);
-
-	niph = ip_hdr(skb);
-	niph->version  = 4;
-	niph->ihl      = 5;
-	niph->tos      = 0;
-	niph->frag_off = 0;
-	niph->ttl      = 64;
-
-	niph->saddr    = iph->daddr;
-	niph->saddr    = iph->saddr;
-	niph->protocol = IPPROTO_UDP;
-
-
-	if (!insert_mpip_cm(skb, niph->saddr, niph->daddr, &new_saddr, &new_daddr, niph->protocol, flags))
-	{
-		kfree_skb(skb);
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-
-	if (new_saddr != 0)
-	{
-		niph->saddr = new_saddr;
-		niph->daddr = new_daddr;
-	}
-
-
-	err = __ip_local_out(nskb);
-	if (likely(err == 1))
-		err = dst_output(nskb);
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
@@ -1875,136 +1782,101 @@ asmlinkage long sys_reset_mpip(void)
 	return 0;
 }
 
-//bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
+//
+//void send_udp(struct net_device *odev, u16 local_port,
+//		u32 remote_ip, u16 remote_port, u8 *msg, int len)
 //{
-//	struct sk_buff *skb = NULL;
-//	struct sk_buff *nskb = NULL;
-//	struct iphdr *iph_in, *iph;
-//	struct tcphdr *tcph = NULL;
-//	struct udphdr *udph = NULL;
-//	__be16 sport, dport, tmp_port;
-//	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
-//	struct flowi4 fl4;
-//	struct net *net;
-//	struct rtable *rt;
-//	int err;
+//    struct sk_buff *skb;
+//    int total_len, eth_len, ip_len, udp_len, header_len;
+//    struct udphdr *udph;
+//    struct iphdr *iph;
+//    struct ethhdr *eth;
+//    u32 local_ip;
 //
-//
-//	rt = skb_rtable(skb_in);
-//
-//	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST))
-//	{
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//		return false;
+//    //local_ip = inet_select_addr(odev, remote_ip, RT_SCOPE_LINK);
+//    // 选择网络设备地址
+//    local_ip = inet_select_addr(odev, 0, RT_SCOPE_UNIVERSE);
+//	printk( "local ip is "NIPQUAD_FMT"/n", NIPQUAD( local_ip ) );
+//	local_ip = ntohl( local_ip );
+//	if ( !local_ip ) {
+//		return;
 //	}
 //
-//	skb = alloc_skb(234, GFP_ATOMIC);
+//	// 设置各个协议数据长度
+//    udp_len = len + sizeof(*udph);
+//    ip_len = eth_len = udp_len + sizeof(*iph);
+//    total_len = eth_len + ETH_HLEN + NET_IP_ALIGN;
+//    header_len = total_len - len;
 //
-//	if(!skb_in || !skb)
-//	{
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//		return false;
-//	}
+//	// 分配skb
+//    skb = alloc_skb(234, GFP_ATOMIC );
+//    if ( !skb ) {
+//    	printk( "alloc_skb fail./n" );
+//        return;
+//    }
 //
-//	iph_in = ip_hdr(skb_in);
-//	if (iph_in == NULL)
-//	{
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//		kfree_skb(skb);
-//		return false;
-//	}
+//	// 预先保留skb的协议首部长度大小
+//     skb_reserve( skb, 234);
 //
-//	if(iph_in->protocol == IPPROTO_TCP)
-//	{
-//		tcph = tcp_hdr(skb_in); //this fixed the problem
-//		if (!tcph)
-//		{
-//			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//			kfree_skb(skb);
-//			return false;
-//		}
+//	// skb->data 移动到udp首部
+//    skb_push(skb, sizeof(*udph));
+//    skb_reset_transport_header(skb);
+//    udph = udp_hdr(skb);
+//    udph->source = htons(local_port);
+//    udph->dest = htons(remote_port);
+//    udph->len = htons(sizeof(*udph));
+//    udph->check = 0;
+//    udph->check = csum_tcpudp_magic(htonl(local_ip),
+//            htonl(remote_ip),
+//            udp_len, IPPROTO_UDP,
+//            csum_partial(udph, udp_len, 0));
+//    if (udph->check == 0)
+//        udph->check = CSUM_MANGLED_0;
 //
-//		sport = tcph->dest;
-//		dport = tcph->source;
-//	}
-//	else if(iph_in->protocol == IPPROTO_UDP)
-//	{
-//		udph = udp_hdr(skb_in); //this fixed the problem
-//		if (!udph)
-//		{
-//			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//			kfree_skb(skb);
-//			return false;
-//		}
+//	// skb->data 移动到ip首部
+//    skb_push(skb, sizeof(*iph));
+//    skb_reset_network_header(skb);
+//    iph = ip_hdr(skb);
 //
-//		sport = udph->dest;
-//		dport = udph->source;
-//	}
+//    /* iph->version = 4; iph->ihl = 5; */
+//    put_unaligned(0x45, (unsigned char *)iph);
+//    iph->tos      = 0;
+//    put_unaligned(htons(ip_len), &(iph->tot_len));
+//    iph->id       = 0;
+//    iph->frag_off = 0;
+//    iph->ttl      = 64;
+//    iph->protocol = IPPROTO_UDP;
+//    iph->check    = 0;
+//    put_unaligned(htonl(local_ip), &(iph->saddr));
+//    put_unaligned(htonl(remote_ip), &(iph->daddr));
+//    iph->check    = ip_fast_csum((unsigned char *)iph, iph->ihl);
 //
-//	skb_reserve(skb, 234);
+//	/*
+//	// skb->data 移动到eth首部
+//     eth = (struct ethhdr *) skb_push(skb, ETH_HLEN);
+//    skb_reset_mac_header(skb);
+//    skb->protocol = eth->h_proto = htons(ETH_P_IP);
+//    memcpy(eth->h_source, dev_addr, ETH_ALEN);
+//    memcpy(eth->h_dest, remote_mac, ETH_ALEN);
 //
-//	skb_push(skb, sizeof(struct udphdr));
-//	skb_reset_transport_header(skb);
-//	udph= udp_hdr(skb);
-//	if (!udph)
-//	{
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//		kfree_skb(skb);
-//		return false;
-//	}
+//	*/
 //
-//	udph->source = sport;
-//	udph->dest = dport;
-//	udph->len = htons(sizeof(struct udphdr));
-//	udph->check = 0;
+//    skb->dev = odev;
 //
-//	skb_push(skb, sizeof(struct iphdr));
-//	skb_reset_network_header(skb);
+//    // 直接发送
+//    //dev_queue_xmit( skb );
 //
-//	iph = ip_hdr(skb);
-//	iph->version  = 4;
-//	iph->ihl      = 5;
-//	iph->tos      = 0;
-//	iph->frag_off = 0;
-//	iph->ttl      = 64;
+//    // 获取output rtable
+//    if ( ip_route_out( skb, iph ) != 0 ) {
+//        goto free_skb;
+//    }
 //
-//	iph->saddr    = iph_in->daddr;
-//	iph->saddr    = iph_in->saddr;
-//	iph->protocol = IPPROTO_UDP;
+//	// 通过系统决定发送
+//    ip_local_out(skb);
+//    return;
 //
-//
-//	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
-//	{
-//		kfree_skb(skb);
-//		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//		return false;
-//	}
-//
-//	if (new_saddr != 0)
-//	{
-//		iph->saddr = new_saddr;
-//		iph->daddr = new_daddr;
-//	}
-//
-//
-//
-//	net = dev_net(rt->dst.dev);
-//	rt = mpip_msg_route_lookup(net, &fl4, nskb, niph);
-//	if (!rt)
-//	{
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//	}
-//	else
-//	{
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//		skb_dst_set_noref(nskb, &rt->dst);
-//		err = __ip_local_out(nskb);
-//			if (likely(err == 1))
-//				err = dst_output(nskb);
-//	}
-//
-////	kfree_skb(nskb);
-//
-//	return true;
-//
+//free_skb:
+//    trace( "free skb./n" );
+//    kfree_skb(skb);
+//    return ;
 //}
