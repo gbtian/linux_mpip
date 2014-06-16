@@ -584,15 +584,15 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	{
 		if (new_dport != 0)
 			udph->dest = new_dport;
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", udph->len, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 
-		udph->len += MPIP_CM_LEN + 1;
+		udph->len = htons(ntohs(udph->len) + MPIP_CM_LEN + 1);
 		udph->check = 0;
 		udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 									   skb->len, protocol,
 									   csum_partial((char *)udph, skb->len, 0));
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", udph->len, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	return true;
