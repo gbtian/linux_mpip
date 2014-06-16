@@ -186,6 +186,8 @@ void print_mpip_cm(struct mpip_cm *cm);
 
 bool send_mpip_msg(struct sk_buff *skb, unsigned char flags);
 
+bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags);
+
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr,
 					unsigned int protocol, unsigned char flags);

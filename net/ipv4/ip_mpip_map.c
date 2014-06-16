@@ -323,7 +323,7 @@ void send_mpip_hb(struct sk_buff *skb)
 	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb, 2))
+		if (send_mpip_skb(skb, 2))
 			earliest_fbjiffies = jiffies;
 	}
 }
@@ -382,14 +382,14 @@ void send_mpip_enable(struct sk_buff *skb)
 	else if (item)
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb, 3))
+		if (send_mpip_skb(skb, 3))
 			item->sent_count += 1;
 	}
 	else
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, sport, false);
-		send_mpip_msg(skb, 3);
+		send_mpip_skb(skb, 3);
 	}
 }
 
@@ -406,7 +406,7 @@ void send_mpip_enabled(struct sk_buff *skb)
 	}
 
 	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	send_mpip_msg(skb, 4);
+	send_mpip_skb(skb, 4);
 }
 
 
@@ -1789,4 +1789,117 @@ asmlinkage long sys_reset_mpip(void)
 	reset_mpip();
 	printk("reset ended\n");
 	return 0;
+}
+
+bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
+{
+	struct sk_buff *skb = NULL;
+	struct iphdr *iph_in, *iph;
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
+	__be16 sport, dport;
+	struct flowi4 fl4;
+	struct net *net;
+	struct rtable *rt;
+	int err;
+
+	rt = skb_rtable(skb_in);
+
+	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST))
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
+
+	skb = alloc_skb(234, GFP_ATOMIC);
+
+	if(!skb_in || skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
+
+	iph_in = ip_hdr(skb_in);
+	if (iph_in == NULL)
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
+		kfree_skb(skb);
+		return false;
+	}
+
+	if(iph_in->protocol == IPPROTO_TCP)
+	{
+		tcph = tcp_hdr(skb_in); //this fixed the problem
+		if (!tcph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			kfree_skb(skb);
+			return false;
+		}
+
+		sport = tcph->dest;
+		dport = tcph->source;
+	}
+	else if(iph_in->protocol == IPPROTO_UDP)
+	{
+		udph = udp_hdr(skb_in); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			kfree_skb(skb);
+			return false;
+		}
+
+		sport = udph->dest;
+		dport = udph->source;
+	}
+
+	skb_reserve(skb, 234);
+
+	skb_push(skb, sizeof(struct udphdr));
+	skb_reset_transport_header(skb);
+	udph= udp_hdr(skb);
+	if (!udph)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		kfree_skb(skb);
+		return false;
+	}
+
+	udph->source = sport;
+	udph->dest = dport;
+	udph->len = htons(sizeof(struct udphdr));
+	udph->check = 0;
+
+	skb_push(skb, sizeof(struct iphdr));
+	skb_reset_network_header(skb);
+
+	iph = ip_hdr(skb);
+	iph->version  = 4;
+	iph->ihl      = 5;
+	iph->tos      = 0;
+	iph->frag_off = 0;
+	iph->ttl      = 64;
+
+	iph->saddr    = iph_in->daddr;
+	iph->saddr    = iph_in->saddr;
+	iph->protocol = IPPROTO_UDP;
+
+
+	net = dev_net(rt->dst.dev);
+	rt = mpip_msg_route_lookup(net, &fl4, skb, iph);
+	if (!rt)
+	{
+		printk("%s, %d\n", __FILE__, __LINE__);
+	}
+	else
+	{
+		skb_dst_set_noref(skb, &rt->dst);
+		err = __ip_local_out(skb);
+			if (likely(err == 1))
+				err = dst_output(skb);
+	}
+
+	return true;
+
 }
