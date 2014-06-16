@@ -1965,13 +1965,13 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 	else
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
-		skb_dst_set_noref(skb, &rt->dst);
-		err = __ip_local_out(skb);
+		skb_dst_set_noref(nskb, &rt->dst);
+		err = __ip_local_out(nskb);
 			if (likely(err == 1))
-				err = dst_output(skb);
+				err = dst_output(nskb);
 	}
 
-	kfree_skb(nskb);
+//	kfree_skb(nskb);
 
 	return true;
 
