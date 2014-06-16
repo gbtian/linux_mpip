@@ -641,9 +641,9 @@ bool send_mpip_msg(struct sk_buff *skb, unsigned char flags)
 
 	net = dev_net(rt->dst.dev);
 	rt = mpip_msg_route_lookup(net, &fl4, nskb, iph);
-	rt->dst.dev = new_dst_dev;
+//	rt->dst.dev = new_dst_dev;
 	skb_dst_set_noref(nskb, &rt->dst);
-	skb_dst(nskb)->dev = new_dst_dev;
+//	skb_dst(nskb)->dev = new_dst_dev;
 
 //	char *p = (char *) &(iph->saddr);
 //	printk( "%d.%d.%d.%d: %s, %s, %d\n",
