@@ -507,7 +507,7 @@ bool ip_route_out( struct sk_buff *skb, struct iphdr *iph )
     rt = ip_route_output_key(&init_net, &fl);
     if (rt)
     {
-		printk( "route output dev=%s/n", rt->dst.dev->name  );
+		printk( "route output dev=%s\n", rt->dst.dev->name  );
 		skb_dst_set_noref(skb, &(rt->dst));
 
 		return true;
@@ -606,6 +606,7 @@ bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
 	iph = ip_hdr(skb);
 	iph->version = 4;
 	iph->ihl = 5;
+	iph->tot_len = htons(skb->len);
 	iph->tos      = 0;
 	iph->id       = 0;
 	iph->frag_off = 0;
@@ -645,6 +646,12 @@ bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
 
 	if (ip_route_out(skb, iph))
 	{
+		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
+
+		iph = ip_hdr(skb);
+
 		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(iph->saddr);
 		print_addr(iph->daddr);
