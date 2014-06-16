@@ -128,9 +128,8 @@ int add_mpip_enabled(__be32 addr, __be16 port, bool enabled)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &me_head);
 
-//	mpip_log( "me:");
-//
-//	print_addr(__FUNCTION__, addr);
+	mpip_log( "me: %d, %d\n", port, enabled);
+	print_addr(addr);
 
 	return 1;
 }
