@@ -381,13 +381,13 @@ void send_mpip_enable(struct sk_buff *skb)
 	}
 	else if (item)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, 3))
 			item->sent_count += 1;
 	}
 	else
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, sport, false);
 		send_mpip_msg(skb, 3);
 	}
@@ -405,6 +405,7 @@ void send_mpip_enabled(struct sk_buff *skb)
 		return;
 	}
 
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	send_mpip_msg(skb, 4);
 }
 

@@ -290,10 +290,10 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 
 	if (session_id == 0)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		print_addr(saddr);
 		print_addr(daddr);
-		printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+		mpip_log("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 		*is_new = true;
 		if (src_node_id && dst_node_id)
