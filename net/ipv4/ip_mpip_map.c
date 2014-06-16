@@ -1815,9 +1815,9 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 
 	skb = alloc_skb(234, GFP_ATOMIC);
 
-	if(!skb_in || skb)
+	if(!skb_in || !skb)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		return false;
 	}
 
@@ -1834,7 +1834,7 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 		tcph = tcp_hdr(skb_in); //this fixed the problem
 		if (!tcph)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			kfree_skb(skb);
 			return false;
 		}
@@ -1847,7 +1847,7 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 		udph = udp_hdr(skb_in); //this fixed the problem
 		if (!udph)
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			kfree_skb(skb);
 			return false;
 		}
@@ -1863,7 +1863,7 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 	udph= udp_hdr(skb);
 	if (!udph)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		kfree_skb(skb);
 		return false;
 	}
@@ -1891,7 +1891,7 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
 	{
 		kfree_skb(skb);
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -1909,6 +1909,7 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 	}
 	else
 	{
+		printk("%s, %d\n", __FILE__, __LINE__);
 		skb_dst_set_noref(skb, &rt->dst);
 		err = __ip_local_out(skb);
 			if (likely(err == 1))
