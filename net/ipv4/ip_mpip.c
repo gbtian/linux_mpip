@@ -521,7 +521,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	send_mpip_cm.session_id = send_cm[3] = 0;
     }
 
-    if (!is_new || flags > 1)
+    if (!is_new || flags == 2)
     {
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_dport,
     							old_saddr, old_daddr, dport, send_mpip_cm.session_id);

@@ -1798,10 +1798,12 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	__be16 sport, dport;
+	__be32 new_saddr=0, new_daddr=0;
 	struct flowi4 fl4;
 	struct net *net;
 	struct rtable *rt;
 	int err;
+
 
 	rt = skb_rtable(skb_in);
 
@@ -1885,6 +1887,19 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 	iph->saddr    = iph_in->saddr;
 	iph->protocol = IPPROTO_UDP;
 
+
+	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
+	{
+		kfree_skb(skb);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	if (new_saddr != 0)
+	{
+		iph->saddr = new_saddr;
+		iph->daddr = new_daddr;
+	}
 
 	net = dev_net(rt->dst.dev);
 	rt = mpip_msg_route_lookup(net, &fl4, skb, iph);
