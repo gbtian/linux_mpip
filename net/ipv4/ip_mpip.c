@@ -448,7 +448,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		}
 	}
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
@@ -565,7 +565,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	print_addr(old_saddr);
 	print_addr(old_daddr);
 
-	print_mpip_cm(&send_mpip_cm);
+//	print_mpip_cm(&send_mpip_cm);
 
 	skb_put(skb, MPIP_CM_LEN + 1);
 
@@ -584,7 +584,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	{
 		if (new_dport != 0)
 			udph->dest = new_dport;
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 
 		udph->len = htons(ntohs(udph->len) + MPIP_CM_LEN + 1);
 		udph->check = 0;
@@ -592,7 +592,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 									   skb->len, protocol,
 									   csum_partial((char *)udph, skb->len, 0));
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	return true;
@@ -656,6 +656,10 @@ int process_mpip_cm(struct sk_buff *skb)
 		dport = udph->dest;
 	}
 
+	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
+
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
 	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 4))
@@ -678,9 +682,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	rcv_mpip_cm.flags 		= rcv_cm[14];
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
-	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
+
 
 	print_mpip_cm(&rcv_mpip_cm);
 
