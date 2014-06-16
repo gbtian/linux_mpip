@@ -405,7 +405,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 //			send_mpip_hb(skb, iph->protocol);
 
 		send_mpip_enable(skb);
-		send_mpip_hb(skb);
+		//send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
 		mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
