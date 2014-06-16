@@ -1920,10 +1920,8 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 
 	rt = skb_rtable(nskb);
 
-
-	tmp_addr = niph->saddr;
-	niph->saddr = niph->daddr;
-	niph->daddr = tmp_addr;
+	niph->saddr = iph->saddr;
+	niph->daddr = iph->daddr;
 
 	if(niph->protocol == IPPROTO_TCP)
 	{
@@ -1956,24 +1954,6 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 		kfree_skb(nskb);
 		printk("%s, %d\n", __FILE__, __LINE__);
 		return false;
-	}
-
-
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
-	{
-		kfree_skb(nskb);
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-
-	if (new_saddr != 0)
-	{
-		iph->saddr = new_saddr;
-		iph->daddr = new_daddr;
-
-		niph->saddr = new_saddr;
-		niph->daddr = new_daddr;
 	}
 
 	net = dev_net(rt->dst.dev);
