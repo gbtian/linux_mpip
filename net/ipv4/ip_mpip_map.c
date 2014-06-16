@@ -1794,11 +1794,12 @@ asmlinkage long sys_reset_mpip(void)
 bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 {
 	struct sk_buff *skb = NULL;
+	struct sk_buff *nskb = NULL;
 	struct iphdr *iph_in, *iph;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
-	__be16 sport, dport;
-	__be32 new_saddr=0, new_daddr=0;
+	__be16 sport, dport, tmp_port;
+	__be32 new_saddr=0, new_daddr=0, tmp_addr = 0;
 	struct flowi4 fl4;
 	struct net *net;
 	struct rtable *rt;
@@ -1901,8 +1902,82 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 		iph->daddr = new_daddr;
 	}
 
+	nskb = skb_copy(skb_in, GFP_ATOMIC);
+
+	if (nskb == NULL)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
+
+	struct iphdr *niph = ip_hdr(nskb);
+	if (niph == NULL)
+	{
+		kfree_skb(nskb);
+		printk("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
+
+	rt = skb_rtable(nskb);
+
+
+	tmp_addr = niph->saddr;
+	niph->saddr = niph->daddr;
+	niph->daddr = tmp_addr;
+
+	if(niph->protocol == IPPROTO_TCP)
+	{
+		tcph = tcp_hdr(nskb); //this fixed the problem
+		if (!tcph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+
+		tmp_port = tcph->source;
+		tcph->source = tcph->dest;
+		tcph->dest = tmp_port;
+
+	}
+	else if(niph->protocol == IPPROTO_UDP)
+	{
+		udph = udp_hdr(nskb); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+		tmp_port = udph->source;
+		udph->source = udph->dest;
+		udph->dest = tmp_port;
+	}
+	else
+	{
+		kfree_skb(nskb);
+		printk("%s, %d\n", __FILE__, __LINE__);
+		return false;
+	}
+
+
+	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
+	{
+		kfree_skb(nskb);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	if (new_saddr != 0)
+	{
+		iph->saddr = new_saddr;
+		iph->daddr = new_daddr;
+
+		niph->saddr = new_saddr;
+		niph->daddr = new_daddr;
+	}
+
 	net = dev_net(rt->dst.dev);
-	rt = mpip_msg_route_lookup(net, &fl4, skb, iph);
+	rt = mpip_msg_route_lookup(net, &fl4, nskb, niph);
 	if (!rt)
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
@@ -1915,6 +1990,8 @@ bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags)
 			if (likely(err == 1))
 				err = dst_output(skb);
 	}
+
+	kfree_skb(nskb);
 
 	return true;
 
