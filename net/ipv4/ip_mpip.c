@@ -30,7 +30,7 @@ static struct mpip_cm rcv_mpip_cm;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 50;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -561,7 +561,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[15] = checksum & 0xff;
 	send_cm[16] = (checksum>>8) & 0xff;
 
-	mpip_log("sending: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("sending: %d, %d, %d, %s, %s, %d\n", udph->len, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(old_saddr);
 	print_addr(old_daddr);
 
@@ -584,6 +584,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	{
 		if (new_dport != 0)
 			udph->dest = new_dport;
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", udph->len, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 
 		udph->len += MPIP_CM_LEN + 1;
 		udph->check = 0;
@@ -591,6 +592,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 									   skb->len, protocol,
 									   csum_partial((char *)udph, skb->len, 0));
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", udph->len, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	return true;

@@ -646,13 +646,14 @@ bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
 
 	if (ip_route_out(skb, iph))
 	{
-		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %s, %s, %d\n", iph->id, udph->len, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(iph->saddr);
 		print_addr(iph->daddr);
 
 		iph = ip_hdr(skb);
+		udph = udp_hdr(skb);
 
-		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %s, %s, %d\n", iph->id, udph->len, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(iph->saddr);
 		print_addr(iph->daddr);
 
