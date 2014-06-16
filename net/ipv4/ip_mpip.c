@@ -247,7 +247,7 @@ void print_mpip_cm(struct mpip_cm *cm)
 	mpip_log("path_stat_id = %d\n",  cm->path_stat_id);
 	mpip_log("delay = %d\n",   cm->delay);
 	mpip_log("timestamp = %d\n",   cm->timestamp);
-	mpip_log("changed = %d\n",   cm->changed);
+	mpip_log("flags = %d\n",   cm->flags);
 	mpip_log("checksum = %d\n",   cm->checksum);
 }
 EXPORT_SYMBOL(print_mpip_cm);
@@ -386,7 +386,7 @@ __s16 calc_checksum(unsigned char *cm)
 }
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
-		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol, bool heartbeat)
+		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol, unsigned char flags)
 {
 	int  i;
     struct timespec tv;
@@ -417,7 +417,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
-	if (heartbeat)
+	if (flags > 1)
 	{
 		if (skb->len < 150)
 		{
@@ -489,7 +489,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	}
 
-	if (!is_mpip_enabled(old_daddr, dport) && !heartbeat)
+	if (!is_mpip_enabled(old_daddr, dport) && (flags < 2))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
@@ -510,7 +510,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
 
 
-    if (!heartbeat)
+    if (flags < 2)
     {
 		send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
 												old_saddr, sport,
@@ -521,7 +521,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	send_mpip_cm.session_id = send_cm[3] = 0;
     }
 
-    if (!is_new || heartbeat)
+    if (!is_new || flags > 1)
     {
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_dport,
     							old_saddr, old_daddr, dport, send_mpip_cm.session_id);
@@ -548,12 +548,12 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[13] = (delay>>24) & 0xff;
 
 	if (get_addr_notified(dst_node_id))
-		send_mpip_cm.changed = send_cm[14] = 0;
+		send_mpip_cm.flags = send_cm[14] = 0;
 	else
-		send_mpip_cm.changed = send_cm[14] = 1;
+		send_mpip_cm.flags = send_cm[14] = 1;
 
-	if (heartbeat)
-		send_mpip_cm.changed = send_cm[14] = 2;
+	if (flags > 1)
+		send_mpip_cm.flags = send_cm[14] = flags;
 
 	checksum = calc_checksum(send_cm);
 
@@ -592,10 +592,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
 	}
 
-//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-
 	return true;
-
 }
 EXPORT_SYMBOL(insert_mpip_cm);
 
@@ -658,7 +655,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
-	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 2))
+	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 4))
 	{
 //		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		goto fail;
@@ -675,7 +672,7 @@ int process_mpip_cm(struct sk_buff *skb)
 				   	   	    	rcv_cm[7]<<8 | rcv_cm[6]);
 	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24 | rcv_cm[12]<<16 |
 				   	   	    	rcv_cm[11]<<8 | rcv_cm[10]);
-	rcv_mpip_cm.changed 		= rcv_cm[14];
+	rcv_mpip_cm.flags 		= rcv_cm[14];
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
 
 	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
@@ -701,7 +698,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	add_mpip_enabled(iph->saddr, sport, true);
 	add_addr_notified(rcv_mpip_cm.node_id);
-	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.changed);
+	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.flags);
 
 	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id);
 	add_path_info(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id);
@@ -775,7 +772,10 @@ int process_mpip_cm(struct sk_buff *skb)
 	}
 
 
-	if (rcv_mpip_cm.changed == 2)
+	if (rcv_mpip_cm.flags == 3)
+		send_mpip_enabled(skb);
+
+	if (rcv_mpip_cm.flags > 1)
 		return 2;
 
 	return 1;

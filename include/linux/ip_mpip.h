@@ -66,7 +66,7 @@ struct mpip_cm
 	unsigned char	path_stat_id;
 	__s32			timestamp;
 	__s32			delay;
-	unsigned char	changed;
+	unsigned char	flags;
 	__s16			checksum;
 };
 
@@ -184,11 +184,11 @@ struct net_device *find_dev_by_addr(__be32 addr);
 
 void print_mpip_cm(struct mpip_cm *cm);
 
-bool send_mpip_msg(struct sk_buff *skb);
+bool send_mpip_msg(struct sk_buff *skb, unsigned char flags);
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr,
-					unsigned int protocol, bool heartbeat);
+					unsigned int protocol, unsigned char flags);
 
 int process_mpip_cm(struct sk_buff *skb);
 
@@ -197,6 +197,8 @@ bool check_bad_addr(__be32 saddr, __be32 daddr);
 void send_mpip_hb(struct sk_buff *skb);
 
 void send_mpip_enable(struct sk_buff *skb);
+
+void send_mpip_enabled(struct sk_buff *skb);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port);
 
@@ -212,7 +214,7 @@ struct addr_notified_table *find_addr_notified(unsigned char *node_id);
 
 int add_addr_notified(unsigned char *node_id);
 
-void process_addr_notified_event(unsigned char *node_id, unsigned char changed);
+void process_addr_notified_event(unsigned char *node_id, unsigned char flags);
 
 int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id);
 

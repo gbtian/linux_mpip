@@ -323,7 +323,7 @@ void send_mpip_hb(struct sk_buff *skb)
 	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb))
+		if (send_mpip_msg(skb, 2))
 			earliest_fbjiffies = jiffies;
 	}
 }
@@ -382,15 +382,30 @@ void send_mpip_enable(struct sk_buff *skb)
 	else if (item)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb))
+		if (send_mpip_msg(skb, 3))
 			item->sent_count += 1;
 	}
 	else
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(iph->saddr, sport, false);
-		send_mpip_msg(skb);
+		send_mpip_msg(skb, 3);
 	}
+}
+
+void send_mpip_enabled(struct sk_buff *skb)
+{
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
+	__be16 sport = 0;
+
+	if (!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return;
+	}
+
+	send_mpip_msg(skb, 4);
 }
 
 
@@ -481,7 +496,7 @@ relookup_failed:
 }
 
 
-bool send_mpip_msg(struct sk_buff *skb)
+bool send_mpip_msg(struct sk_buff *skb, unsigned char flags)
 {
 	struct iphdr *iph;
 	struct tcphdr *tcph = NULL;
@@ -595,7 +610,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, true))
+	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
 	{
 		kfree_skb(nskb);
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -646,7 +661,7 @@ bool send_mpip_msg(struct sk_buff *skb)
 	return true;
 }
 
-void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
+void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
 {
 //	struct working_ip_table *working_ip;
 //	struct working_ip_table *tmp_ip;
@@ -657,7 +672,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char changed)
 	struct path_stat_table *path_stat;
 	struct path_stat_table *tmp_stat;
 
-	if (!node_id || changed == 0 || changed == 2)
+	if (!node_id || flags != 1)
 		return;
 
 	if (node_id[0] == node_id[1])
