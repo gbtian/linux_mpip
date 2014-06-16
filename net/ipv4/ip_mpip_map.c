@@ -631,10 +631,16 @@ bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
+			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
+
 			iph->saddr = new_saddr;
 			iph->daddr = new_daddr;
-//			printk("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
+			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
 		}
 	}
 
@@ -642,7 +648,10 @@ bool send_mpip_msg(struct sk_buff *skb_in, unsigned char flags)
 
 	if (ip_route_out(skb, iph))
 	{
-		mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
+
 		err = __ip_local_out(skb);
 		if (likely(err == 1))
 			err = dst_output(skb);
