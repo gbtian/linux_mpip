@@ -111,9 +111,9 @@ int __ip_local_out(struct sk_buff *skb)
 //		mpip_log("len = %d, tail = %d\n", skb->len, skb_tailroom(skb));
 //	}
 
-//	mpip_log("final sending: %d, %d, %s, %s, %d\n", iph->id, skb->len, __FILE__, __FUNCTION__, __LINE__);
-//	print_addr(iph->saddr);
-//	print_addr(iph->daddr);
+	mpip_log("final sending: %d, %d, %d, %s, %s, %d\n", iph->id, tcp_hdr(skb)->source,  tcp_hdr(skb)->dest, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
