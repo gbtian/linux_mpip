@@ -125,33 +125,44 @@ int __ip_local_out(struct sk_buff *skb)
 int ip_local_out(struct sk_buff *skb)
 {
 	__be32 new_saddr = 0, new_daddr = 0;
+	__be16 sport = 0, dport = 0;
 	struct net_device *new_dst_dev = NULL;
 	int err;
 	struct iphdr *iph = ip_hdr(skb);
 
-	if (false && sysctl_mpip_enabled && (iph->protocol == IPPROTO_UDP))
+	if (sysctl_mpip_enabled)
 	{
-		if (insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, 0))
+		if (get_skb_port(skb, &sport, &dport))
 		{
-			iph = ip_hdr(skb);
-
-			if (new_saddr != 0)
+			if (is_mpip_enabled(iph->daddr, dport))
 			{
-				new_dst_dev = find_dev_by_addr(new_saddr);
-				if (new_dst_dev)
+				if (insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, 0))
 				{
-					skb_dst(skb)->dev = new_dst_dev;
-					iph->saddr = new_saddr;
-					iph->daddr = new_daddr;
+					if ((new_saddr != 0) && (new_daddr != 0))
+					{
+						if ((iph->saddr != new_saddr) || (iph->daddr != new_daddr))
+						{
+							new_dst_dev = find_dev_by_addr(new_saddr);
+							if (new_dst_dev)
+							{
+								if (ip_route_out(skb, new_daddr))
+								{
+									iph->saddr = new_saddr;
+									iph->daddr = new_daddr;
+									skb->dev = new_dst_dev;
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					mpip_log("Error Insert CM: %s, %s, %d\n",  __FILE__, __FUNCTION__, __LINE__);
 				}
 			}
 			else
 			{
-				new_dst_dev = find_dev_by_addr(iph->saddr);
-				if (new_dst_dev)
-				{
-					skb_dst(skb)->dev = new_dst_dev;
-				}
+				send_mpip_enable(skb, true, false);
 			}
 		}
 	}
@@ -194,53 +205,10 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	struct inet_sock *inet;
 	struct rtable *rt;
 	struct iphdr *iph;
-	__be32 new_saddr=0, new_daddr=0;
-	struct net_device *new_dst_dev = NULL;
-
-	bool mpip_cm_added = false;
 
 	inet = inet_sk(sk);
 
-	if (false && sysctl_mpip_enabled)
-	{
-		if (insert_mpip_cm(skb, saddr, daddr, &new_saddr, &new_daddr, IPPROTO_TCP, 0))
-		{
-			if ((new_saddr != 0) && (new_daddr != 0))
-			{
-				new_dst_dev = find_dev_by_addr(new_saddr);
-				if (new_dst_dev)
-					mpip_cm_added = true;
-			}
-			else
-				mpip_cm_added = true;
-		}
-		else
-		{
-		}
-	}
-
 	rt = skb_rtable(skb);
-
-	if (sysctl_mpip_enabled && mpip_cm_added)
-	{
-		if (new_saddr != 0)
-		{
-			if (new_dst_dev)
-			{
-				rt->dst.dev = new_dst_dev;
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-		else
-		{
-			new_dst_dev = find_dev_by_addr(saddr);
-			if (new_dst_dev)
-			{
-				rt->dst.dev = new_dst_dev;
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-	}
 
 	skb_push(skb, sizeof(struct iphdr) + (opt ? opt->opt.optlen : 0));
 	skb_reset_network_header(skb);
@@ -256,17 +224,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	//iph->frag_off = 0;
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
-
-	if (sysctl_mpip_enabled && (new_saddr != 0) && (new_daddr != 0) && mpip_cm_added)
-	{
-		iph->daddr    = new_daddr;
-		iph->saddr    = new_saddr;
-	}
-	else
-	{
-		iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
-		iph->saddr    = saddr;
-	}
+	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
+	iph->saddr    = saddr;
 
 	iph->protocol = sk->sk_protocol;
 	ip_select_ident(skb, &rt->dst, sk);
@@ -449,49 +408,12 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	struct rtable *rt;
 	struct iphdr *iph;
 	int res;
-	__be32 old_saddr = 0, old_daddr = 0;
-	__be32 new_saddr = 0, new_daddr = 0;
-	struct net_device *new_dst_dev = NULL;
-
-	bool mpip_cm_added = false;
-
-//	unsigned int mss = tcp_current_mss(skb->sk);
-//	const struct tcp_sock *tp = tcp_sk(skb->sk);
-//	mpip_log("mss = %d, msscache = %d, len = %d: %d\n", mss, tp->mss_cache, skb->len, __LINE__);
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.
 	 */
 	rcu_read_lock();
 	inet_opt = rcu_dereference(inet->inet_opt);
-	if (false && sysctl_mpip_enabled)
-	{
-		if (insert_mpip_cm(skb, fl->u.ip4.saddr, fl->u.ip4.daddr,
-				&new_saddr, &new_daddr, IPPROTO_TCP, 0))
-		{
-			if ((new_saddr != 0) && (new_daddr != 0))
-			{
-				new_dst_dev =  find_dev_by_addr(new_saddr);
-				if (new_dst_dev)
-				{
-					old_saddr = fl->u.ip4.saddr;
-					old_daddr = fl->u.ip4.daddr;
-					mpip_cm_added = true;
-				}
-			}
-			else
-			{
-				old_saddr = fl->u.ip4.saddr;
-				old_daddr = fl->u.ip4.daddr;
-				mpip_cm_added = true;
-			}
-
-		}
-		else
-		{
-			mpip_log("Error compose: %s, %d\n", __FILE__, __LINE__);
-		}
-	}
 
 	fl4 = &fl->u.ip4;
 
@@ -516,30 +438,14 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 		 * keep trying until route appears or the connection times
 		 * itself out.
 		 */
+		rt = ip_route_output_ports(sock_net(sk), fl4, sk,
+					   daddr, inet->inet_saddr,
+					   inet->inet_dport,
+					   inet->inet_sport,
+					   sk->sk_protocol,
+					   RT_CONN_FLAGS(sk),
+					   sk->sk_bound_dev_if);
 
-		if (sysctl_mpip_enabled && mpip_cm_added && (new_saddr != 0) && (new_daddr != 0) && new_dst_dev)
-		{
-			rt = ip_route_output_ports(sock_net(sk), fl4, sk,
-								   new_daddr, new_saddr,
-								   inet->inet_dport,
-								   inet->inet_sport,
-								   sk->sk_protocol,
-								   RT_CONN_FLAGS(sk),
-								   sk->sk_bound_dev_if);
-
-			fl4->saddr = old_saddr;
-			fl4->daddr = old_daddr;
-		}
-		else
-		{
-			rt = ip_route_output_ports(sock_net(sk), fl4, sk,
-						   daddr, inet->inet_saddr,
-						   inet->inet_dport,
-						   inet->inet_sport,
-						   sk->sk_protocol,
-						   RT_CONN_FLAGS(sk),
-						   sk->sk_bound_dev_if);
-		}
 		if (IS_ERR(rt))
 		{
 			goto no_route;
@@ -548,28 +454,6 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	}
 
 	skb_dst_set_noref(skb, &rt->dst);
-
-
-	if (sysctl_mpip_enabled && mpip_cm_added)
-	{
-		if (new_saddr != 0)
-		{
-			if (new_dst_dev)
-			{
-				rt->dst.dev = new_dst_dev;
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-		else
-		{
-			new_dst_dev = find_dev_by_addr(fl4->saddr);
-			if (new_dst_dev)
-			{
-				rt->dst.dev = new_dst_dev;
-				skb_dst(skb)->dev = new_dst_dev;
-			}
-		}
-	}
 
 packet_routed:
 	if (inet_opt && inet_opt->opt.is_strictroute && rt->rt_uses_gateway)
@@ -589,16 +473,7 @@ packet_routed:
 
 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
 	iph->protocol = sk->sk_protocol;
-
-	if (sysctl_mpip_enabled && mpip_cm_added && new_saddr > 0 && new_daddr > 0)
-	{
-		iph->saddr = new_saddr;
-		iph->daddr = new_daddr;
-	}
-	else
-	{
-		ip_copy_addrs(iph, fl4);
-	}
+	ip_copy_addrs(iph, fl4);
 
 	/* Transport layer set skb->h.foo itself. */
 	if (inet_opt && inet_opt->opt.optlen)

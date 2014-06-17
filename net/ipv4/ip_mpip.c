@@ -385,6 +385,58 @@ __s16 calc_checksum(unsigned char *cm)
 	return checksum;
 }
 
+bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport)
+{
+	struct tcphdr *tcph = NULL;
+	struct udphdr *udph = NULL;
+
+	if (!skb)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	if((skb->protocol != IPPROTO_TCP) && (skb->protocol != IPPROTO_UDP))
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	//if TCP PACKET
+	if (skb->protocol == IPPROTO_TCP)
+	{
+		tcph = tcp_hdr(skb); //this fixed the problem
+		if (!tcph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+
+		*sport = tcph->source; //sport now has the source port
+		*dport = tcph->dest;   //dport now has the dest port
+
+	}
+	else if(skb->protocol == IPPROTO_UDP)
+	{
+		udph = udp_hdr(skb); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+
+		*sport = udph->source; //sport now has the source port
+		*dport = udph->dest;   //dport now has the dest port
+	}
+	else
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	return true;
+}
+
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol, unsigned char flags)
 {
@@ -394,8 +446,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 	unsigned char *dst_node_id = NULL;
-	__be16 sport = 0, dport = 0;
-	__be16 osport = 0, odport = 0, new_dport = 0;
+	__be16 sport = 0, dport = 0, new_dport = 0;
 	unsigned char path_id = 0;
 	unsigned char path_stat_id = 0;
 	unsigned char *send_cm = NULL;
@@ -456,55 +507,11 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
-	//if TCP PACKET
-	if (protocol == IPPROTO_TCP)
-	{
-		tcph = tcp_hdr(skb); //this fixed the problem
-		if (!tcph)
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
-		osport = htons((unsigned short int) tcph->source); //sport now has the source port
-		odport = htons((unsigned short int) tcph->dest);   //dport now has the dest port
-		sport = tcph->source; //sport now has the source port
-		dport = tcph->dest;   //dport now has the dest port
-
-	}
-	else if(protocol == IPPROTO_UDP)
-	{
-		udph = udp_hdr(skb); //this fixed the problem
-		if (!udph)
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
-		osport = htons((unsigned short int) udph->source); //sport now has the source port
-		odport = htons((unsigned short int) udph->dest);   //dport now has the dest port
-		sport = udph->source; //sport now has the source port
-		dport = udph->dest;   //dport now has the dest port
-	}
-	else
-	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	}
-
-	if (!is_mpip_enabled(old_daddr, dport) && (flags < 2))
+	if (!get_skb_port(skb, &sport, &dport))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
-
-
-	send_cm = skb_tail_pointer(skb) + 1;
-
-	dst_node_id = find_node_id_in_working_ip(old_daddr, dport);
-
-	get_node_id();
-	get_available_local_addr();
-
-	send_mpip_cm.len = send_cm[0] = MPIP_CM_LEN;
-
 
     for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];

@@ -404,7 +404,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 //		else if (!is_local_addr(iph->saddr))
 //			send_mpip_hb(skb, iph->protocol);
 
-		send_mpip_enable(skb);
+		send_mpip_enable(skb, false, true);
 		//send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
