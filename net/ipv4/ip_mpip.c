@@ -565,7 +565,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //	print_addr(old_saddr);
 //	print_addr(old_daddr);
 
-//	print_mpip_cm(&send_mpip_cm);
+	mpip_log("sending: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	print_mpip_cm(&send_mpip_cm);
 
 	skb_put(skb, MPIP_CM_LEN + 1);
 
