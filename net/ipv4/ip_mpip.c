@@ -387,6 +387,7 @@ __s16 calc_checksum(unsigned char *cm)
 
 bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport)
 {
+	struct iph *iph = NULL;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
@@ -396,14 +397,16 @@ bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport)
 		return false;
 	}
 
-	if((skb->protocol != IPPROTO_TCP) && (skb->protocol != IPPROTO_UDP))
+	iph = ip_hdr(skb);
+
+	if((iph->protocol != IPPROTO_TCP) && (iph->protocol != IPPROTO_UDP))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	//if TCP PACKET
-	if (skb->protocol == IPPROTO_TCP)
+	if (iph->protocol == IPPROTO_TCP)
 	{
 		tcph = tcp_hdr(skb); //this fixed the problem
 		if (!tcph)
@@ -416,7 +419,7 @@ bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport)
 		*dport = tcph->dest;   //dport now has the dest port
 
 	}
-	else if(skb->protocol == IPPROTO_UDP)
+	else if(iph->protocol == IPPROTO_UDP)
 	{
 		udph = udp_hdr(skb); //this fixed the problem
 		if (!udph)
