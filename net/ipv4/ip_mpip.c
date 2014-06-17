@@ -581,32 +581,38 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //	print_addr(old_saddr);
 //	print_addr(old_daddr);
 
-	mpip_log("sending: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	print_mpip_cm(&send_mpip_cm);
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	skb_put(skb, MPIP_CM_LEN + 1);
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if(protocol==IPPROTO_TCP)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		tcph = tcp_hdr(skb); //this fixed the problem
+		if (!tcph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
+
 		if (new_dport != 0)
 			tcph->dest = new_dport;
-
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 		tcph->check = 0;
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 										skb->len, protocol,
 										csum_partial((char *)tcph, skb->len, 0));
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
 	}
 	else if(protocol==IPPROTO_UDP)
 	{
+		udph = udp_hdr(skb); //this fixed the problem
+		if (!udph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return false;
+		}
 		if (new_dport != 0)
 			udph->dest = new_dport;
-//		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 
 		udph->len = htons(ntohs(udph->len) + MPIP_CM_LEN + 1);
 		udph->check = 0;
@@ -614,7 +620,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 									   skb->len, protocol,
 									   csum_partial((char *)udph, skb->len, 0));
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
-//		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 	}
 
 	return true;
