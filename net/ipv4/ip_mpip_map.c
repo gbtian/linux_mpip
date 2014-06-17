@@ -377,13 +377,13 @@ void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
 	}
 	else if (item)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, sender, reverse, 3))
 			item->sent_count += 1;
 	}
 	else
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(addr, port, false);
 		send_mpip_msg(skb, sender, reverse, 3);
 	}
@@ -530,7 +530,7 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 
 	if (reverse)
 	{
-		reverse_addr_and_port(skb);
+		reverse_addr_and_port(nskb);
 	}
 
 	iph = ip_hdr(nskb);

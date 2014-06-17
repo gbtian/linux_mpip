@@ -457,13 +457,11 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	__s16 checksum = 0;
 
 	bool is_new = true;
-
 	if (!skb)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
-
 
 	if((protocol != IPPROTO_TCP) && (protocol != IPPROTO_UDP))
 	{
@@ -502,8 +500,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		}
 	}
 
-//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-
 	if (!check_bad_addr(old_saddr, old_daddr))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -516,10 +512,20 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
+	send_cm = skb_tail_pointer(skb) + 1;
+
+	dst_node_id = find_node_id_in_working_ip(old_daddr, dport);
+
+	get_node_id();
+	get_available_local_addr();
+
+	send_mpip_cm.len = send_cm[0] = MPIP_CM_LEN;
+
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
     for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
 
-
+    mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
     if (flags < 2)
     {
 		send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
