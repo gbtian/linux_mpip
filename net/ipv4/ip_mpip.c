@@ -471,16 +471,18 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (flags > 1)
 	{
-//		if (skb->len < 150)
-//		{
-//			if (pskb_expand_head(skb, 0, MPIP_CM_LEN + 1, GFP_ATOMIC))
-//			{
-//				mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//				return false;
-//			}
-//		}
-//		skb->tail -= MPIP_CM_LEN + 10;
-//		skb->len  -= MPIP_CM_LEN + 10;
+		if (skb->len < 150)
+		{
+			mpip_log("%d, %d, %s, %s, %d\n", skb_tailroom(skb),
+								skb->len, __FILE__, __FUNCTION__, __LINE__);
+			if (pskb_expand_head(skb, 0, MPIP_CM_LEN + 1, GFP_ATOMIC))
+			{
+				mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+				return false;
+			}
+		}
+		skb->tail -= MPIP_CM_LEN + 10;
+		skb->len  -= MPIP_CM_LEN + 10;
 	}
 	else
 	{
