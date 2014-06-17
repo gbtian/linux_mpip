@@ -548,18 +548,24 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
-			if (ip_route_out(nskb, new_daddr))
-			{
-				iph->saddr = new_saddr;
-				iph->daddr = new_daddr;
-				skb->dev = find_dev_by_addr(iph->saddr);
-			}
+			iph->saddr = new_saddr;
+			iph->daddr = new_daddr;
 		}
 	}
 
-	err = __ip_local_out(nskb);
-	if (likely(err == 1))
-		err = dst_output(nskb);
+	if (ip_route_out(nskb, iph->daddr))
+	{
+		skb->dev = find_dev_by_addr(iph->saddr);
+		err = __ip_local_out(nskb);
+		if (likely(err == 1))
+			err = dst_output(nskb);
+	}
+	else
+	{
+		kfree_skb(nskb);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
