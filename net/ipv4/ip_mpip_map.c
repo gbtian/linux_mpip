@@ -709,36 +709,40 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 		return false;
 	}
 
+	mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
 		if (new_dst_dev)
 		{
-			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-			if (ip_route_out(skb, new_daddr))
-			{
-				iph->saddr = new_saddr;
-				iph->daddr = new_daddr;
-				skb->dev = find_dev_by_addr(iph->saddr);
-			}
-			else
-			{
-				kfree_skb(skb);
-				mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-				return false;
-			}
+			iph->saddr = new_saddr;
+			iph->daddr = new_daddr;
 
-			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
+			mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(ip_hdr(skb)->saddr);
+			print_addr(ip_hdr(skb)->daddr);
 		}
 	}
 
-	err = __ip_local_out(skb);
-	if (likely(err == 1))
-		err = dst_output(skb);
+	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(ip_hdr(skb)->saddr);
+	print_addr(ip_hdr(skb)->daddr);
+
+	if (ip_route_out(skb, new_daddr))
+	{
+		skb->dev = find_dev_by_addr(iph->saddr);
+		err = __ip_local_out(skb);
+		if (likely(err == 1))
+			err = dst_output(skb);
+	}
+	else
+	{
+		kfree_skb(skb);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
