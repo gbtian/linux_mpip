@@ -387,7 +387,7 @@ __s16 calc_checksum(unsigned char *cm)
 
 bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport)
 {
-	struct iph *iph = NULL;
+	struct iphdr *iph = NULL;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
 
