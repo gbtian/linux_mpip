@@ -109,6 +109,7 @@ int __ip_local_out(struct sk_buff *skb)
 
 int ip_local_out(struct sk_buff *skb)
 {
+	struct sk_buff *myskb = NULL;
 	__be32 new_saddr = 0, new_daddr = 0;
 	__be16 sport = 0, dport = 0;
 	struct net_device *new_dst_dev = NULL;
@@ -117,6 +118,8 @@ int ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
+		myskb = skb_copy(skb, GFP_ATOMIC);
+
 		if (get_skb_port(skb, &sport, &dport))
 		{
 			if (sysctl_mpip_send && is_mpip_enabled(iph->daddr, dport))
@@ -153,8 +156,12 @@ int ip_local_out(struct sk_buff *skb)
 	if (likely(err == 1))
 		err = dst_output(skb);
 
-	send_mpip_enable(skb, true, false);
-	send_mpip_enabled(skb, true, false);
+	if (sysctl_mpip_enabled && myskb)
+	{
+		send_mpip_enable(myskb, true, false);
+		send_mpip_enabled(myskb, true, false);
+		kfree_skb(myskb);
+	}
 
 	return err;
 }
