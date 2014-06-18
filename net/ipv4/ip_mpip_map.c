@@ -605,12 +605,12 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 	 *	Only reply to fragment 0. We byte re-order the constant
 	 *	mask for efficiency.
 	 */
-	if (iph->frag_off & htons(IP_OFFSET))
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
+//	if (iph->frag_off & htons(IP_OFFSET))
+//	{
+//		kfree_skb(nskb);
+//		printk("%s, %d\n", __FILE__, __LINE__);
+//		return false;
+//	}
 
 	if (reverse)
 	{

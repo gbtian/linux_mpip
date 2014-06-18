@@ -403,11 +403,11 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		if (process_mpip_cm(skb) == 2)
 			return NET_RX_SUCCESS;
 
-		if (iph->protocol == IPPROTO_UDP)
-		{
-			mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			send_mpip_enable(skb, false, true);
-		}
+//		if (iph->protocol == IPPROTO_UDP)
+//		{
+//			mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//			send_mpip_enable(skb, false, true);
+//		}
 		//send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
