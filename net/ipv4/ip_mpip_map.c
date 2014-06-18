@@ -19,6 +19,10 @@ static LIST_HEAD(ss_head);
 static LIST_HEAD(la_head);
 static LIST_HEAD(ps_head);
 
+int global_stat_1;
+int global_stat_2;
+int global_stat_3;
+
 bool is_equal_node_id(unsigned char *node_id_1, unsigned char *node_id_2)
 {
 	int i;
