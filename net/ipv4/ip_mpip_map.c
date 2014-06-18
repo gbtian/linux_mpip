@@ -1031,8 +1031,8 @@ bool ip_route_out( struct sk_buff *skb, __be32 daddr)
 
 bool send_mpip_msg(struct sk_buff *skb_in, bool sender, bool reverse, unsigned char flags)
 {
-	return new_and_send(skb_in, reverse, flags);
-	//return copy_and_send(skb_in, reverse, flags);
+	//return new_and_send(skb_in, reverse, flags);
+	return copy_and_send(skb_in, reverse, flags);
 }
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
