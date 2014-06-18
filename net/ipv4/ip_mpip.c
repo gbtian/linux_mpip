@@ -708,9 +708,7 @@ int process_mpip_cm(struct sk_buff *skb)
 		dport = udph->dest;
 	}
 
-	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
+
 
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
@@ -777,16 +775,20 @@ int process_mpip_cm(struct sk_buff *skb)
 							  &saddr, &sport, &daddr, &dport);
 
 
+	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
+
 	if (res)
 	{
 		iph->saddr = daddr;
 		iph->daddr = saddr;
 
-		new_dst_dev = find_dev_by_addr(saddr);
-		if (new_dst_dev)
-		{
-			skb->dev = new_dst_dev;
-		}
+//		new_dst_dev = find_dev_by_addr(saddr);
+//		if (new_dst_dev)
+//		{
+//			skb->dev = new_dst_dev;
+//		}
 
 		mpip_log("final receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(iph->saddr);

@@ -1664,12 +1664,6 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 		inet_csk(newsk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
 	newinet->inet_id = newtp->write_seq ^ jiffies;
 
-//	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//	print_addr(newinet->inet_saddr);
-//	print_addr(newinet->inet_rcv_saddr);
-//	print_addr(newinet->inet_daddr);
-
-
 	if (!dst) {
 		dst = inet_csk_route_child_sock(sk, newsk, req);
 		if (!dst)
@@ -1678,8 +1672,6 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 		/* syncookie case : see end of cookie_v4_check() */
 	}
 	sk_setup_caps(newsk, dst);
-//	mpip_log("sync: %d, %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	print_addr(dst->dev->ip_ptr->ifa_list->ifa_address);
 
 	tcp_mtup_init(newsk);
 	tcp_sync_mss(newsk, dst_mtu(dst));
