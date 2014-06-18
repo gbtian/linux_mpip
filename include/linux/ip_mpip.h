@@ -70,6 +70,15 @@ struct mpip_cm
 	__s16			checksum;
 };
 
+struct mpip_query_table
+{
+	__be32				saddr; /* source ip address*/
+	__be32				daddr; /* destination ip address*/
+	__be16				sport; /* source port*/
+	__be16				dport; /* destination port*/
+	struct list_head 	list;
+};
+
 struct mpip_enabled_table
 {
 	__be32				addr; /* receiver' ip seen by sender */
@@ -204,7 +213,9 @@ void send_mpip_hb(struct sk_buff *skb);
 
 void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse);
 
-void send_mpip_enabled(struct sk_buff *skb);
+void send_mpip_enabled(struct sk_buff *skb, bool sender, bool reverse);
+
+int add_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port);
 

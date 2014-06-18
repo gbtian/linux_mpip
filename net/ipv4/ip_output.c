@@ -145,10 +145,6 @@ int ip_local_out(struct sk_buff *skb)
 					mpip_log("Error Insert CM: %s, %s, %d\n",  __FILE__, __FUNCTION__, __LINE__);
 				}
 			}
-			else
-			{
-				send_mpip_enable(skb, true, false);
-			}
 		}
 	}
 
@@ -156,6 +152,9 @@ int ip_local_out(struct sk_buff *skb)
 	err = __ip_local_out(skb);
 	if (likely(err == 1))
 		err = dst_output(skb);
+
+	send_mpip_enable(skb, true, false);
+	send_mpip_enabled(skb, true, false);
 
 	return err;
 }

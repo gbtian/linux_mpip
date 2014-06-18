@@ -749,6 +749,13 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	get_available_local_addr();
 
+	if (rcv_mpip_cm.flags == 3)
+	{
+		if (iph->protocol == IPPROTO_TCP)
+			add_mpip_query(iph->daddr, iph->saddr, dport, sport);
+		else
+			send_mpip_enabled(skb, false, true);
+	}
 	add_mpip_enabled(iph->saddr, sport, true);
 	add_addr_notified(rcv_mpip_cm.node_id);
 	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.flags);
@@ -828,9 +835,6 @@ int process_mpip_cm(struct sk_buff *skb)
 		ip_send_check(iph);
 	}
 
-
-	if (rcv_mpip_cm.flags == 3)
-		send_mpip_enabled(skb);
 
 	if (rcv_mpip_cm.flags > 1)
 		return 2;

@@ -10,6 +10,7 @@ static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
 static unsigned long earliest_fbjiffies = 0;
 
+static LIST_HEAD(mq_head);
 static LIST_HEAD(me_head);
 static LIST_HEAD(an_head);
 static LIST_HEAD(wi_head);
@@ -85,6 +86,65 @@ char *in_ntoa(unsigned long in)
 		(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 	return(buff);
+}
+
+struct mpip_query_table *find_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport)
+{
+	struct mpip_query_table *mpip_query;
+
+	list_for_each_entry(mpip_query, &mq_head, list)
+	{
+		if ((saddr == mpip_query->saddr) && (daddr == mpip_query->daddr) &&
+			(sport == mpip_query->sport) && (dport == mpip_query->dport))
+		{
+			return mpip_query;
+		}
+	}
+
+	return NULL;
+}
+int delete_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport)
+{
+	struct mpip_query_table *mpip_query;
+	struct mpip_query_table *tmp_query;
+	list_for_each_entry_safe(mpip_query, tmp_query, &mq_head, list)
+	{
+		if ((saddr == mpip_query->saddr) && (daddr == mpip_query->daddr) &&
+			(sport == mpip_query->sport) && (dport == mpip_query->dport))
+		{
+			mpip_log("%s, %d\n", __FILE__, __LINE__);
+			list_del(&(mpip_query->list));
+			kfree(mpip_query);
+
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+int add_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport)
+{
+	struct mpip_query_table *item = find_mpip_query(saddr, daddr, sport, dport);
+
+	if (item)
+	{
+		return 0;
+	}
+
+	item = kzalloc(sizeof(struct mpip_query_table),	GFP_ATOMIC);
+	item->saddr = saddr;
+	item->daddr = daddr;
+	item->sport = sport;
+	item->dport = dport;
+	INIT_LIST_HEAD(&(item->list));
+	list_add(&(item->list), &mq_head);
+
+	mpip_log( "mq: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(saddr);
+	print_addr(saddr);
+
+	return 1;
 }
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port)
@@ -387,16 +447,39 @@ void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
 	}
 }
 
-void send_mpip_enabled(struct sk_buff *skb)
+void send_mpip_enabled(struct sk_buff *skb, bool sender, bool reverse)
 {
+	struct iphdr *iph = NULL;
+	struct tcphdr *tcph = NULL;
 	if (!skb)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return;
 	}
 
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	send_mpip_msg(skb, false, true, 4);
+	iph = ip_hdr(skb);
+	if(iph->protocol == IPPROTO_TCP)
+	{
+		tcph= tcp_hdr(skb);
+		if (!tcph)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			return;
+		}
+
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		if (find_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest))
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			send_mpip_msg(skb, sender, reverse, 4);
+			delete_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest);
+		}
+	}
+	else if (iph->protocol == IPPROTO_UDP)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		send_mpip_msg(skb, sender, reverse, 4);
+	}
 }
 
 static void reverse_addr_and_port(struct sk_buff *skb)
