@@ -746,8 +746,6 @@ int process_mpip_cm(struct sk_buff *skb)
 		goto fail;
 	}
 
-
-
 	skb->tail -= MPIP_CM_LEN + 1;
 	skb->len  -= MPIP_CM_LEN + 1;
 

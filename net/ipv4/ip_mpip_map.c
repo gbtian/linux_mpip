@@ -648,6 +648,10 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 			dstport = udph->dest;
 		}
 	}
+	else
+	{
+		return false;
+	}
 
 
 	skb = alloc_skb(234, GFP_ATOMIC );
@@ -659,14 +663,20 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 	// 预先保留skb的协议首部长度大小
 	skb_reserve(skb, 234);
 
+	skb_orphan(skb);
+
 	if(iph_in->protocol == IPPROTO_TCP)
 	{
 		skb_push(skb, sizeof(struct tcphdr));
 		skb_reset_transport_header(skb);
 		tcph = tcp_hdr(skb);
+
+		tcph->seq = 0;
+		tcph->ack_seq	= 0;
 		tcph->source = srcport;
 		tcph->dest = dstport;
 		tcph->check = 0;
+		tcph->urg_ptr = 0;
 	}
 	else if(iph_in->protocol == IPPROTO_UDP)
 	{
