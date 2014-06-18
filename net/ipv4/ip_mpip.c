@@ -343,30 +343,29 @@ unsigned char get_path_stat_id(unsigned char *dest_node_id,  __s32 *delay)
 	return find_earliest_path_stat_id(dest_node_id,  delay);
 }
 
-bool check_bad_addr(__be32 saddr, __be32 daddr)
+bool check_bad_addr(__be32 addr)
 {
-	__be32 addr = convert_addr(127, 0, 0, 1);
-	if ((addr == saddr) || (addr == daddr))
+	__be32 myaddr = convert_addr(127, 0, 0, 1);
+	if (myaddr == addr)
 		return false;
 
-	addr = convert_addr(127, 0, 1, 1);
-	if ((addr == saddr) || (addr == daddr))
+	myaddr = convert_addr(127, 0, 1, 1);
+	if (myaddr == addr)
 		return false;
 
-	addr = convert_addr(192, 168, 1, 1);
-	if ((addr == saddr) || (addr == daddr))
+	myaddr = convert_addr(192, 168, 1, 1);
+	if (myaddr == addr)
 		return false;
 
-	addr = convert_addr(192, 168, 2, 1);
-	if ((addr == saddr) || (addr == daddr))
+	myaddr = convert_addr(192, 168, 2, 1);
+	if (myaddr == addr)
 		return false;
 
-	addr = convert_addr(224, 0, 0, 251);
-	if ((addr == saddr) || (addr == daddr))
+	myaddr = convert_addr(224, 0, 0, 251);
+	if (myaddr == addr)
 		return false;
 
-	if (((saddr & 0xff) == 255) || ((saddr>>8 & 0xff) == 255) || ((saddr>>16 & 0xff) == 255) || ((saddr>>24 & 0xff) == 255) ||
-		((daddr & 0xff) == 255) || ((daddr>>8 & 0xff) == 255) || ((daddr>>16 & 0xff) == 255) || ((daddr>>24 & 0xff) == 255))
+	if (((addr & 0xff) == 255) || ((addr>>8 & 0xff) == 255) || ((addr>>16 & 0xff) == 255) || ((addr>>24 & 0xff) == 255))
 		return false;
 
 	return true;
@@ -507,7 +506,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	print_addr(ip_hdr(skb)->saddr);
 	print_addr(ip_hdr(skb)->daddr);
 
-	if (!check_bad_addr(old_saddr, old_daddr))
+	if (!check_bad_addr(old_saddr) || !check_bad_addr(old_daddr))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;

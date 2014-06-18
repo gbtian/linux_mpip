@@ -393,26 +393,14 @@ static int ip_rcv_finish(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
-
-//		mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
 		if (process_mpip_cm(skb) == 2)
 			return NET_RX_SUCCESS;
-
-//		if (!is_mpip_enabled(iph->saddr) && !is_local_addr(iph->saddr))
-//			send_mpip_enable(skb, iph->protocol);
-//		else if (!is_local_addr(iph->saddr))
-//			send_mpip_hb(skb, iph->protocol);
 
 		send_mpip_enable(skb, false, true);
 		//send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
-//		mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
 	}
-
-//	mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 //	if (sysctl_mpip_enabled && sysctl_mpip_send && iph->protocol == IPPROTO_TCP)
 //	{

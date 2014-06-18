@@ -100,21 +100,6 @@ int __ip_local_out(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 
-//	if (sysctl_mpip_enabled && (iph->protocol == IPPROTO_TCP) && skb->sk)
-//	{
-//		unsigned int mss = tcp_current_mss(skb->sk);
-//		const struct tcp_sock *tp = tcp_sk(skb->sk);
-//		mpip_log("mss = %d, msscache = %d, len = %d, tail = %d\n", mss, tp->mss_cache, skb->len, skb_tailroom(skb));
-//	}
-//	else
-//	{
-//		mpip_log("len = %d, tail = %d\n", skb->len, skb_tailroom(skb));
-//	}
-
-	mpip_log("final sending: %d, %d, %d, %s, %s, %d\n", iph->id, tcp_hdr(skb)->source,  tcp_hdr(skb)->dest, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-
 	iph->tot_len = htons(skb->len);
 	ip_send_check(iph);
 
@@ -134,7 +119,7 @@ int ip_local_out(struct sk_buff *skb)
 	{
 		if (get_skb_port(skb, &sport, &dport))
 		{
-			if (false && is_mpip_enabled(iph->daddr, dport))
+			if (is_mpip_enabled(iph->daddr, dport))
 			{
 				if (insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, 0))
 				{
@@ -166,16 +151,6 @@ int ip_local_out(struct sk_buff *skb)
 			}
 		}
 	}
-
-//
-//	struct rtable *rt = skb_rtable(skb);
-//	mpip_log("sending: %s, %s, %d, %d, %d, %d, %d, %d, %d\n",rt->dst.dev->name, skb_dst(skb)->dev->name,
-//			rt->rt_flags, rt->rt_genid, rt->rt_iif, rt->rt_is_input, rt->rt_pmtu,
-//			rt->rt_type, rt->rt_uses_gateway);
-//
-//	char *p = (char *) &(rt->rt_gateway);
-//	mpip_log( "%d.%d.%d.%d\n",
-//			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 
 	err = __ip_local_out(skb);

@@ -198,7 +198,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 int process_mpip_cm(struct sk_buff *skb);
 
-bool check_bad_addr(__be32 saddr, __be32 daddr);
+bool check_bad_addr(__be32 addr);
 
 void send_mpip_hb(struct sk_buff *skb);
 

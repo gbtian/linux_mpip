@@ -368,6 +368,9 @@ void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
 	else
 		return;
 
+	if (is_local_addr(addr) || !check_bad_addr(addr))
+		return;
+
 	item = find_mpip_enabled(addr, port);
 
 	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
