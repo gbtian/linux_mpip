@@ -770,11 +770,6 @@ int inet_sendmsg(struct kiocb *iocb, struct socket *sock, struct msghdr *msg,
 {
 	struct sock *sk = sock->sk;
 
-	if (sysctl_mpip_enabled)
-	{
-		++global_stat_3;
-	}
-
 	sock_rps_record_flow(sk);
 
 	/* We may need to bind the socket. */
