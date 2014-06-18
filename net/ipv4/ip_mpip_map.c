@@ -736,7 +736,7 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 	print_addr(ip_hdr(skb)->saddr);
 	print_addr(ip_hdr(skb)->daddr);
 
-	if (ip_route_out(skb, new_daddr))
+	if (ip_route_out(skb, ip_hdr(skb)->daddr))
 	{
 		skb->dev = find_dev_by_addr(iph->saddr);
 		err = __ip_local_out(skb);
