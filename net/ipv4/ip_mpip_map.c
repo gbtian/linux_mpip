@@ -619,7 +619,7 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 
 	iph = ip_hdr(nskb);
 
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%d, %d, %s, %s, %d\n", iph->id, ip_hdr(skb), __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
 	{
 		kfree_skb(nskb);

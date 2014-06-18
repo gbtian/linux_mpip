@@ -386,13 +386,28 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		IP_UPD_PO_STATS_BH(dev_net(rt->dst.dev), IPSTATS_MIB_INBCAST,
 				skb->len);
 
+
 	if (sysctl_mpip_enabled)
 	{
+		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
+		{
+			__be16 sport = 0, dport = 0;
+			if (get_skb_port(skb, &sport, &dport))
+			{
+				mpip_log("\nreceiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+				print_addr(iph->saddr);
+				print_addr(iph->daddr);
+			}
+		}
+
 		if (process_mpip_cm(skb) == 2)
 			return NET_RX_SUCCESS;
 
 		if (iph->protocol == IPPROTO_UDP)
+		{
+			mpip_log("receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			send_mpip_enable(skb, false, true);
+		}
 		//send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
@@ -409,7 +424,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	return dst_input(skb);
 
 drop:
-//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("Drop: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
@@ -495,17 +510,6 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
-
-	if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
-	{
-		__be16 sport = 0, dport = 0;
-		if (get_skb_port(skb, &sport, &dport))
-		{
-			mpip_log("\nreceiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-		}
-	}
 
 	return NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,
 		       ip_rcv_finish);

@@ -583,13 +583,13 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if ((*new_saddr) > 0)
 	{
-		mpip_log("\nsending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(*new_saddr);
 		print_addr(*new_daddr);
 	}
 	else
 	{
-		mpip_log("\nsending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(ip_hdr(skb)->saddr);
 		print_addr(ip_hdr(skb)->daddr);
 	}
@@ -745,7 +745,12 @@ int process_mpip_cm(struct sk_buff *skb)
 		if (iph->protocol == IPPROTO_TCP)
 			add_mpip_query(iph->daddr, iph->saddr, dport, sport);
 		else
+		{
+			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
 			send_mpip_enabled(skb, false, true);
+		}
 	}
 	add_mpip_enabled(iph->saddr, sport, true);
 	add_addr_notified(rcv_mpip_cm.node_id);
