@@ -523,8 +523,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	send_mpip_cm.len = send_cm[0] = MPIP_CM_LEN;
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-    for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
+	for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
 
     if (flags < 2)
@@ -582,10 +581,18 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //	print_addr(old_saddr);
 //	print_addr(old_daddr);
 
-	mpip_log("\nsending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
-
+	if ((*new_saddr) > 0)
+	{
+		mpip_log("\nsending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(*new_saddr);
+		print_addr(*new_daddr);
+	}
+	else
+	{
+		mpip_log("\nsending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(ip_hdr(skb)->saddr);
+		print_addr(ip_hdr(skb)->daddr);
+	}
 	print_mpip_cm(&send_mpip_cm);
 	skb_put(skb, MPIP_CM_LEN + 1);
 
