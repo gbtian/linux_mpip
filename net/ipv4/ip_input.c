@@ -501,7 +501,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		__be16 sport = 0, dport = 0;
 		if (get_skb_port(skb, &sport, &dport))
 		{
-			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("\nreceiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 			print_addr(iph->saddr);
 			print_addr(iph->daddr);
 		}

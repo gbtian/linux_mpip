@@ -582,7 +582,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //	print_addr(old_saddr);
 //	print_addr(old_daddr);
 
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("\nsending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(ip_hdr(skb)->saddr);
 	print_addr(ip_hdr(skb)->daddr);
 
@@ -724,6 +724,10 @@ int process_mpip_cm(struct sk_buff *skb)
 		goto fail;
 	}
 
+//	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(iph->saddr);
+//	print_addr(iph->daddr);
+
 	skb->tail -= MPIP_CM_LEN + 1;
 	skb->len  -= MPIP_CM_LEN + 1;
 
@@ -762,9 +766,6 @@ int process_mpip_cm(struct sk_buff *skb)
 							  &saddr, &sport, &daddr, &dport);
 
 
-	mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
 
 	if (res)
 	{
@@ -777,9 +778,9 @@ int process_mpip_cm(struct sk_buff *skb)
 //			skb->dev = new_dst_dev;
 //		}
 
-		mpip_log("final receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-		print_addr(iph->saddr);
-		print_addr(iph->daddr);
+//		mpip_log("final receiving: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//		print_addr(iph->saddr);
+//		print_addr(iph->daddr);
 
 
 		if(iph->protocol==IPPROTO_TCP)
