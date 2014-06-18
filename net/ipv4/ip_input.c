@@ -496,10 +496,10 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 	/* Must drop socket now because of tproxy. */
 	skb_orphan(skb);
 
-	if (!check_bad_addr(iph->saddr) || !check_bad_addr(iph->daddr))
+	if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
 	{
 		__be16 sport = 0, dport = 0;
-		if (!get_skb_port(skb, &sport, &dport))
+		if (get_skb_port(skb, &sport, &dport))
 		{
 			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 			print_addr(iph->saddr);

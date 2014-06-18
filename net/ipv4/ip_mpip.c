@@ -502,10 +502,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		}
 	}
 
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
-
 	if (!check_bad_addr(old_saddr) || !check_bad_addr(old_daddr))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -517,10 +513,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
-
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
 
 	send_cm = skb_tail_pointer(skb) + 1;
 
@@ -597,9 +589,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	print_mpip_cm(&send_mpip_cm);
 	skb_put(skb, MPIP_CM_LEN + 1);
 
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
 
 	if(protocol==IPPROTO_TCP)
 	{
@@ -613,10 +602,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		if (new_dport != 0)
 			tcph->dest = new_dport;
 
-		mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-		print_addr(ip_hdr(skb)->saddr);
-		print_addr(ip_hdr(skb)->daddr);
-
 		tcph->check = 0;
 		tcph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 										skb->len, protocol,
@@ -624,9 +609,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
 
-		mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-		print_addr(ip_hdr(skb)->saddr);
-		print_addr(ip_hdr(skb)->daddr);
 	}
 	else if(protocol==IPPROTO_UDP)
 	{
@@ -731,8 +713,6 @@ int process_mpip_cm(struct sk_buff *skb)
 				   	   	    	rcv_cm[11]<<8 | rcv_cm[10]);
 	rcv_mpip_cm.flags 		= rcv_cm[14];
 	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
-
-
 
 	print_mpip_cm(&rcv_mpip_cm);
 
