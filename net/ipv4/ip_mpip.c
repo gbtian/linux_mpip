@@ -583,13 +583,13 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if ((*new_saddr) > 0)
 	{
-		mpip_log("\nsending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("\nsending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(*new_saddr);
 		print_addr(*new_daddr);
 	}
 	else
 	{
-		mpip_log("\nsending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("\nsending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(ip_hdr(skb)->saddr);
 		print_addr(ip_hdr(skb)->daddr);
 	}
