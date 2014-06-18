@@ -471,7 +471,6 @@ void send_mpip_enabled(struct sk_buff *skb, bool sender, bool reverse)
 			return;
 		}
 
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (find_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest))
 		{
 			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -2023,6 +2022,7 @@ static void reset_mpip(void)
 asmlinkage long sys_mpip(void)
 {
 	struct mpip_enabled_table *mpip_enbaled;
+	struct mpip_query_table *mpip_query;
 	struct addr_notified_table *addr_notified;
 	struct working_ip_table *working_ip;
 	struct path_info_table *path_info;
@@ -2043,6 +2043,23 @@ asmlinkage long sys_mpip(void)
 		printk("%d  ", mpip_enbaled->sent_count);
 
 		printk("%d\n", mpip_enbaled->mpip_enabled);
+	}
+
+
+	printk("******************mq*************\n");
+	list_for_each_entry(mpip_query, &mq_head, list)
+	{
+		p = (char *) &(mpip_query->saddr);
+		printk( "%d.%d.%d.%d  ",
+				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		p = (char *) &(mpip_query->saddr);
+				printk( "%d.%d.%d.%d  ",
+						(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+		printk("%d  ", mpip_query->sport);
+
+		printk("%d\n", mpip_query->dport);
 	}
 
 	printk("******************an*************\n");
@@ -2149,9 +2166,6 @@ asmlinkage long sys_mpip(void)
 		printk("%llu  \n", path_info->pktcount);
 
 	}
-//
-//	printk("******************global stat*************\n");
-//	printk("%d  %d  %d\n", global_stat_1, global_stat_2, global_stat_3);
 
 	return 0;
 
@@ -2163,102 +2177,3 @@ asmlinkage long sys_reset_mpip(void)
 	printk("reset ended\n");
 	return 0;
 }
-
-//
-//void send_udp(struct net_device *odev, u16 local_port,
-//		u32 remote_ip, u16 remote_port, u8 *msg, int len)
-//{
-//    struct sk_buff *skb;
-//    int total_len, eth_len, ip_len, udp_len, header_len;
-//    struct udphdr *udph;
-//    struct iphdr *iph;
-//    struct ethhdr *eth;
-//    u32 local_ip;
-//
-//    //local_ip = inet_select_addr(odev, remote_ip, RT_SCOPE_LINK);
-//    // 选择网络设备地址
-//    local_ip = inet_select_addr(odev, 0, RT_SCOPE_UNIVERSE);
-//	printk( "local ip is "NIPQUAD_FMT"/n", NIPQUAD( local_ip ) );
-//	local_ip = ntohl( local_ip );
-//	if ( !local_ip ) {
-//		return;
-//	}
-//
-//	// 设置各个协议数据长度
-//    udp_len = len + sizeof(*udph);
-//    ip_len = eth_len = udp_len + sizeof(*iph);
-//    total_len = eth_len + ETH_HLEN + NET_IP_ALIGN;
-//    header_len = total_len - len;
-//
-//	// 分配skb
-//    skb = alloc_skb(234, GFP_ATOMIC );
-//    if ( !skb ) {
-//    	printk( "alloc_skb fail./n" );
-//        return;
-//    }
-//
-//	// 预先保留skb的协议首部长度大小
-//     skb_reserve( skb, 234);
-//
-//	// skb->data 移动到udp首部
-//    skb_push(skb, sizeof(*udph));
-//    skb_reset_transport_header(skb);
-//    udph = udp_hdr(skb);
-//    udph->source = htons(local_port);
-//    udph->dest = htons(remote_port);
-//    udph->len = htons(sizeof(*udph));
-//    udph->check = 0;
-//    udph->check = csum_tcpudp_magic(htonl(local_ip),
-//            htonl(remote_ip),
-//            udp_len, IPPROTO_UDP,
-//            csum_partial(udph, udp_len, 0));
-//    if (udph->check == 0)
-//        udph->check = CSUM_MANGLED_0;
-//
-//	// skb->data 移动到ip首部
-//    skb_push(skb, sizeof(*iph));
-//    skb_reset_network_header(skb);
-//    iph = ip_hdr(skb);
-//
-//    /* iph->version = 4; iph->ihl = 5; */
-//    put_unaligned(0x45, (unsigned char *)iph);
-//    iph->tos      = 0;
-//    put_unaligned(htons(ip_len), &(iph->tot_len));
-//    iph->id       = 0;
-//    iph->frag_off = 0;
-//    iph->ttl      = 64;
-//    iph->protocol = IPPROTO_UDP;
-//    iph->check    = 0;
-//    put_unaligned(htonl(local_ip), &(iph->saddr));
-//    put_unaligned(htonl(remote_ip), &(iph->daddr));
-//    iph->check    = ip_fast_csum((unsigned char *)iph, iph->ihl);
-//
-//	/*
-//	// skb->data 移动到eth首部
-//     eth = (struct ethhdr *) skb_push(skb, ETH_HLEN);
-//    skb_reset_mac_header(skb);
-//    skb->protocol = eth->h_proto = htons(ETH_P_IP);
-//    memcpy(eth->h_source, dev_addr, ETH_ALEN);
-//    memcpy(eth->h_dest, remote_mac, ETH_ALEN);
-//
-//	*/
-//
-//    skb->dev = odev;
-//
-//    // 直接发送
-//    //dev_queue_xmit( skb );
-//
-//    // 获取output rtable
-//    if ( ip_route_out( skb, iph ) != 0 ) {
-//        goto free_skb;
-//    }
-//
-//	// 通过系统决定发送
-//    ip_local_out(skb);
-//    return;
-//
-//free_skb:
-//    trace( "free skb./n" );
-//    kfree_skb(skb);
-//    return ;
-//}
