@@ -1363,11 +1363,11 @@ unsigned int tcp_current_mss(struct sock *sk)
 //		mpip_log("%d, %s, %d\n", mss_now, __FILE__, __LINE__);
 	}
 
-//	if (sysctl_mpip_enabled &&
-//		is_mpip_enabled(inet_sk(sk)->inet_daddr, inet_sk(sk)->inet_dport))
-//	{
-//		mss_now -= ((MPIP_CM_LEN * 2 + 3) & ~3);
-//	}
+	if (sysctl_mpip_send && sysctl_mpip_enabled &&
+		is_mpip_enabled(inet_sk(sk)->inet_daddr, inet_sk(sk)->inet_dport))
+	{
+		mss_now -= ((MPIP_CM_LEN * 2 + 3) & ~3);
+	}
 
 	return mss_now;
 }
