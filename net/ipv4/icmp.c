@@ -641,7 +641,6 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info)
 	}
 	if (!icmpv4_xrlim_allow(net, rt, &fl4, type, code))
 	{
-		printk("%s, %d\n", __FILE__,  __LINE__);
 		goto ende;
 	}
 	/* RFC says return as much as we can without exceeding 576 bytes. */
