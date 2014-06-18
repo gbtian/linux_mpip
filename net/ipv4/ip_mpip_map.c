@@ -1379,12 +1379,12 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
-//	print_addr(__FUNCTION__, saddr);
-//	print_addr(__FUNCTION__, daddr);
-//	mpip_log( "ss: %d,%d,%d\n", item->session_id,
-//			sport, dport);
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
+	print_addr(saddr);
+	print_addr(daddr);
+	mpip_log( "ss: %d,%d,%d\n", item->session_id,
+			sport, dport);
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
 
 	return 1;
 }

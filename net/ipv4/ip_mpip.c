@@ -300,6 +300,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 		{
 			add_sender_session(src_node_id, dst_node_id, saddr, sport, daddr, dport);
 			session_id = get_sender_session(saddr, sport, daddr, dport);
+			add_path_info(dst_node_id, daddr, dport, session_id);
 		}
 	}
 	else
@@ -538,6 +539,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     {
     	send_mpip_cm.session_id = send_cm[3] = 0;
     }
+
 
     if (!is_new || flags == 2)
     {

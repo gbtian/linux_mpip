@@ -160,6 +160,8 @@ int ip_local_out(struct sk_buff *skb)
 	if (sysctl_mpip_enabled && myskb)
 	{
 		mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
 		send_mpip_enable(myskb, true, false);
 		send_mpip_enabled(myskb, true, false);
 		kfree_skb(myskb);
