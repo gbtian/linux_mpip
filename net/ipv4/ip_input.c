@@ -396,7 +396,8 @@ static int ip_rcv_finish(struct sk_buff *skb)
 		if (process_mpip_cm(skb) == 2)
 			return NET_RX_SUCCESS;
 
-		send_mpip_enable(skb, false, true);
+		if (iph->protocol == IPPROTO_UDP)
+			send_mpip_enable(skb, false, true);
 		//send_mpip_hb(skb);
 
 		iph = ip_hdr(skb);
