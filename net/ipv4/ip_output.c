@@ -133,11 +133,15 @@ int ip_local_out(struct sk_buff *skb)
 							new_dst_dev = find_dev_by_addr(new_saddr);
 							if (new_dst_dev)
 							{
-								if (ip_route_out(skb, new_daddr))
+								if (ip_route_out(skb, new_saddr, new_daddr))
 								{
 									iph->saddr = new_saddr;
 									iph->daddr = new_daddr;
 									skb->dev = new_dst_dev;
+
+									mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+									print_addr(iph->saddr);
+									print_addr(iph->daddr);
 								}
 							}
 						}
@@ -159,7 +163,7 @@ int ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && myskb)
 	{
-		mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(iph->saddr);
 		print_addr(iph->daddr);
 		send_mpip_enable(myskb, true, false);

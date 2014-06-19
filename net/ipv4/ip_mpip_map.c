@@ -637,7 +637,7 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 		}
 	}
 
-	if (ip_route_out(nskb, iph->daddr))
+	if (ip_route_out(nskb, iph->saddr, iph->daddr))
 	{
 		skb->dev = find_dev_by_addr(iph->saddr);
 		err = __ip_local_out(nskb);
@@ -805,10 +805,11 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
+	iph = ip_hdr(skb);
 
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
+	mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 	if (new_saddr != 0)
 	{
 		new_dst_dev = find_dev_by_addr(new_saddr);
@@ -817,17 +818,17 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 			iph->saddr = new_saddr;
 			iph->daddr = new_daddr;
 
-			mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(ip_hdr(skb)->saddr);
-			print_addr(ip_hdr(skb)->daddr);
+			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
 		}
 	}
 
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
+	mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+	print_addr(iph->saddr);
+	print_addr(iph->daddr);
 
-	if (ip_route_out(skb, ip_hdr(skb)->daddr))
+	if (ip_route_out(skb, iph->saddr, iph->daddr))
 	{
 		skb->dev = find_dev_by_addr(iph->saddr);
 		err = __ip_local_out(skb);
@@ -982,7 +983,7 @@ static bool new_udp_and_send(struct sk_buff *skb_in, bool reverse, unsigned char
 			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			print_addr(iph->saddr);
 			print_addr(iph->daddr);
-			if (ip_route_out(skb, new_daddr))
+			if (ip_route_out(skb, new_saddr, new_daddr))
 			{
 				iph->saddr = new_saddr;
 				iph->daddr = new_daddr;
@@ -1010,11 +1011,12 @@ static bool new_udp_and_send(struct sk_buff *skb_in, bool reverse, unsigned char
 	return true;
 }
 
-bool ip_route_out( struct sk_buff *skb, __be32 daddr)
+bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr)
 {
     struct flowi4 fl = {};
     struct rtable *rt = NULL;
 
+    fl.saddr = saddr;
     fl.daddr = daddr;
     rt = ip_route_output_key(&init_net, &fl);
     if (rt)
