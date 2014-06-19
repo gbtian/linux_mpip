@@ -137,6 +137,7 @@ int ip_local_out(struct sk_buff *skb)
 								{
 									iph->saddr = new_saddr;
 									iph->daddr = new_daddr;
+									skb_dst(skb)->dev = new_dst_dev;
 									skb->dev = new_dst_dev;
 
 									mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);

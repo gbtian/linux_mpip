@@ -639,6 +639,7 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 
 	if (ip_route_out(nskb, iph->saddr, iph->daddr))
 	{
+		skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
 		skb->dev = find_dev_by_addr(iph->saddr);
 		err = __ip_local_out(nskb);
 		if (likely(err == 1))
@@ -830,6 +831,7 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 
 	if (ip_route_out(skb, iph->saddr, iph->daddr))
 	{
+		skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
 		skb->dev = find_dev_by_addr(iph->saddr);
 		err = __ip_local_out(skb);
 		if (likely(err == 1))
@@ -987,6 +989,7 @@ static bool new_udp_and_send(struct sk_buff *skb_in, bool reverse, unsigned char
 			{
 				iph->saddr = new_saddr;
 				iph->daddr = new_daddr;
+				skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
 				skb->dev = find_dev_by_addr(iph->saddr);
 			}
 			else
