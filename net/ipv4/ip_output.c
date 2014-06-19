@@ -168,7 +168,10 @@ int ip_local_out(struct sk_buff *skb)
 		print_addr(iph->saddr);
 		print_addr(iph->daddr);
 		send_mpip_enable(myskb, true, false);
-		send_mpip_enabled(myskb, true, false);
+
+		if (iph->protocol == IPPROTO_TCP)
+			send_mpip_enabled(myskb, true, false);
+
 		kfree_skb(myskb);
 	}
 
