@@ -128,22 +128,19 @@ int ip_local_out(struct sk_buff *skb)
 				{
 					if ((new_saddr != 0) && (new_daddr != 0))
 					{
-						if ((iph->saddr != new_saddr) || (iph->daddr != new_daddr))
+						new_dst_dev = find_dev_by_addr(new_saddr);
+						if (new_dst_dev)
 						{
-							new_dst_dev = find_dev_by_addr(new_saddr);
-							if (new_dst_dev)
+							if (ip_route_out(skb, new_saddr, new_daddr))
 							{
-								if (ip_route_out(skb, new_saddr, new_daddr))
-								{
-									iph->saddr = new_saddr;
-									iph->daddr = new_daddr;
-									skb_dst(skb)->dev = new_dst_dev;
-									skb->dev = new_dst_dev;
+								iph->saddr = new_saddr;
+								iph->daddr = new_daddr;
+								skb_dst(skb)->dev = new_dst_dev;
+								skb->dev = new_dst_dev;
 
-									mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-									print_addr(iph->saddr);
-									print_addr(iph->daddr);
-								}
+								mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+								print_addr(iph->saddr);
+								print_addr(iph->daddr);
 							}
 						}
 					}
