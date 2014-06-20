@@ -744,19 +744,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	get_available_local_addr();
 
-	if (rcv_mpip_cm.flags == 3)
-	{
-		if (iph->protocol == IPPROTO_TCP)
-			add_mpip_query(iph->daddr, iph->saddr, dport, sport);
-		else
-		{
-			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-			send_mpip_enabled(skb, false, true);
-			send_mpip_hb(skb);
-		}
-	}
+
 	add_mpip_enabled(iph->saddr, sport, true);
 	add_addr_notified(rcv_mpip_cm.node_id);
 	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.flags);
@@ -779,12 +767,26 @@ int process_mpip_cm(struct sk_buff *skb)
 											rcv_mpip_cm.path_id);
 	}
 
-	res = get_receiver_session_info(rcv_mpip_cm.node_id, session_id,
-							  &saddr, &sport, &daddr, &dport);
+	if (rcv_mpip_cm.flags == 3)
+	{
+		if (iph->protocol == IPPROTO_TCP)
+			add_mpip_query(iph->daddr, iph->saddr, dport, sport);
+		else
+		{
+			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
+			send_mpip_enabled(skb, false, true);
+		}
+	}
 
+	if (iph->protocol == IPPROTO_UDP)
+	{
+		send_mpip_hb(skb);
+	}
 
-
-	if (res)
+	if (get_receiver_session_info(rcv_mpip_cm.node_id, session_id,
+			  &saddr, &sport, &daddr, &dport))
 	{
 		iph->saddr = daddr;
 		iph->daddr = saddr;
