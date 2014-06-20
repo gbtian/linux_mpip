@@ -1114,6 +1114,7 @@ int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 de
 		midtime = (tv.tv_sec % 86400) * MSEC_PER_SEC * 100  + 100 * tv.tv_nsec / NSEC_PER_MSEC;
 
 		path_stat->delay = midtime - delay;
+		path_stat->feedbacked = false;
 	}
 
 
@@ -1244,7 +1245,7 @@ int update_path_info(void)
 	{
 		__s32 diff = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
-		if (path_info->queuing_delay == 0)
+		if (path_info->delay == 0)
 			path_info->bw = path_info->bw / 5;
 		else
 		{
@@ -1313,6 +1314,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 	item->path_id = path_id;
 	item->delay = 0;
+	item->feedbacked = false;
 	item->fbjiffies = jiffies;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
@@ -1814,7 +1816,7 @@ unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *del
 			continue;
 		}
 
-		if (path_stat->fbjiffies <= e_fbtime)
+		if (!path_stat->feedbacked && path_stat->fbjiffies <= e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
 			e_path_stat = path_stat;
@@ -1825,6 +1827,7 @@ unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *del
 	if (e_path_stat_id > 0)
 	{
 		e_path_stat->fbjiffies = jiffies;
+		e_path_stat->feedbacked = true;
 		earliest_fbjiffies = jiffies;
 
 		*delay = e_path_stat->delay;
