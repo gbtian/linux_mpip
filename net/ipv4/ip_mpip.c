@@ -754,6 +754,7 @@ int process_mpip_cm(struct sk_buff *skb)
 			print_addr(iph->saddr);
 			print_addr(iph->daddr);
 			send_mpip_enabled(skb, false, true);
+			send_mpip_hb(skb);
 		}
 	}
 	add_mpip_enabled(iph->saddr, sport, true);
