@@ -1128,6 +1128,11 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 	{
 		if (path_info->path_id == path_id)
 		{
+			if (path_info->delay == 0)
+			{
+				path_info->bw = 1000;
+			}
+
 			if (path_info->count == 0)
 			{
 				path_info->delay = delay;
@@ -1239,7 +1244,12 @@ int update_path_info(void)
 	{
 		__s32 diff = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
-		path_info->bw += max_queuing_delay / (diff + 1);
+		if (path_info->queuing_delay == 0)
+			path_info->bw = path_info->bw / 5;
+		else
+		{
+			path_info->bw += max_queuing_delay / (diff + 1);
+		}
 
 		if (path_info->bw > max_bw)
 			max_bw = path_info->bw;
@@ -1254,7 +1264,7 @@ int update_path_info(void)
 		{
 			path_info->bw /= times;
 			if (path_info->bw <= 0)
-				path_info->bw = 10;
+				path_info->bw = 0;
 		}
 	}
 
@@ -1734,7 +1744,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			path_done = false;
 	}
 
-	if ((totalbw > 0) || !path_done)
+	//if ((totalbw > 0) || !path_done)
+	if (totalbw > 0)
 	{
 		random = get_random_int() % totalbw;
 		random = (random > 0) ? random : -random;
