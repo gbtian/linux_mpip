@@ -377,10 +377,10 @@ void send_mpip_hb(struct sk_buff *skb)
 		return;
 	}
 
-//	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	if (((jiffies - earliest_fbjiffies) / (HZ / 100)) >= sysctl_mpip_hb)
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, false, true, 2))
 			earliest_fbjiffies = jiffies;
 	}
@@ -1024,7 +1024,7 @@ bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr)
     rt = ip_route_output_key(&init_net, &fl);
     if (rt)
     {
-		printk( "route output dev=%s\n", rt->dst.dev->name  );
+		mpip_log( "route output dev=%s\n", rt->dst.dev->name  );
 		skb_dst_set_noref(skb, &(rt->dst));
 
 		return true;

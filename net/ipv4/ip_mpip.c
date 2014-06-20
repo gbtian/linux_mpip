@@ -36,7 +36,7 @@ int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
 int sysctl_mpip_bw_3 __read_mostly = 30;
 int sysctl_mpip_bw_4 __read_mostly = 30;
-int sysctl_mpip_hb __read_mostly = 100;
+int sysctl_mpip_hb __read_mostly = 1000;
 int sysctl_mpip_tcp_buf_count __read_mostly = 10;
 int max_pkt_len = 65500;
 
