@@ -122,7 +122,7 @@ int ip_local_out(struct sk_buff *skb)
 
 		if (get_skb_port(skb, &sport, &dport))
 		{
-			if (sysctl_mpip_send && is_mpip_enabled(iph->daddr, dport))
+			if (is_mpip_enabled(iph->daddr, dport))
 			{
 				if (insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, 0))
 				{
@@ -135,8 +135,11 @@ int ip_local_out(struct sk_buff *skb)
 							{
 								iph->saddr = new_saddr;
 								iph->daddr = new_daddr;
-								skb_dst(skb)->dev = new_dst_dev;
-								skb->dev = new_dst_dev;
+								if (sysctl_mpip_send)
+								{
+									skb_dst(skb)->dev = new_dst_dev;
+									skb->dev = new_dst_dev;
+								}
 
 								mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 								print_addr(iph->saddr);
