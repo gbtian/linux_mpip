@@ -219,7 +219,8 @@ bool is_local_addr(__be32 addr)
 	return false;
 }
 
-int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id)
+int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port,
+					unsigned char session_id, unsigned int protocol)
 {
 	/* todo: need sanity checks, leave it for now */
 	/* todo: need locks */
@@ -234,7 +235,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 		return 0;
 	}
 
-	item = find_working_ip(node_id, addr, port);
+	item = find_working_ip(node_id, addr, port, protocol);
 	if (item)
 	{
 		item->session_id = session_id;
@@ -247,6 +248,7 @@ int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 	item->addr = addr;
 	item->port = port;
 	item->session_id = session_id;
+	item->protocol = protocol;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &wi_head);
 
@@ -258,7 +260,8 @@ int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 	return 1;
 }
 
-struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port)
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr,
+		__be16 port, unsigned int protocol)
 {
 	struct working_ip_table *working_ip;
 
@@ -269,7 +272,8 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __
 	{
 		if (is_equal_node_id(node_id, working_ip->node_id) &&
 				(addr == working_ip->addr) &&
-				(port == working_ip->port))
+				(port == working_ip->port) &&
+				(protocol == working_ip->protocol))
 		{
 			return working_ip;
 		}
@@ -278,13 +282,15 @@ struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __
 	return NULL;
 }
 
-unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port)
+unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port,
+											unsigned int protocol)
 {
 	struct working_ip_table *working_ip;
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
-		if ((addr == working_ip->addr) && (port == working_ip->port))
+		if ((addr == working_ip->addr) && (port == working_ip->port) &&
+			(protocol == working_ip->protocol))
 		{
 			return working_ip->node_id;
 		}
@@ -1627,7 +1633,8 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport)
 }
 
 
-bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id)
+bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
+					unsigned char session_id, unsigned int protocol)
 {
 	struct path_info_table *path_info;
 
@@ -1639,7 +1646,8 @@ bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 		if (is_equal_node_id(path_info->node_id, node_id) &&
 		   (path_info->daddr == addr) &&
 		   (path_info->dport == port) &&
-		   (path_info->session_id == session_id))
+		   (path_info->session_id == session_id) &&
+		   (path_info->protocol == protocol))
 		{
 			return true;
 		}
@@ -1648,7 +1656,8 @@ bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port, unsigned ch
 }
 
 
-int add_path_info(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id)
+int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
+					unsigned char session_id, unsigned int protocol)
 {
 	struct local_addr_table *local_addr;
 	struct path_info_table *item = NULL;
@@ -1663,7 +1672,7 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port, unsigned cha
 		return 0;
 	}
 
-	if (is_dest_added(node_id, addr, port, session_id))
+	if (is_dest_added(node_id, addr, port, session_id, protocol))
 		return 0;
 
 
@@ -1677,6 +1686,7 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port, unsigned cha
 		item->saddr = local_addr->addr;
 		item->daddr = addr;
 		item->dport = port;
+		item->protocol = protocol;
 		item->session_id = session_id;
 		item->min_delay = 0;
 		item->delay = 0;
@@ -1702,7 +1712,8 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port, unsigned cha
 unsigned char find_fastest_path_id(unsigned char *node_id,
 			   __be32 *saddr, __be32 *daddr, __be16 *dport,
 			   __be32 origin_saddr, __be32 origin_daddr,
-			   __be16 origin_dport, unsigned char session_id)
+			   __be16 origin_dport, unsigned char session_id,
+			   unsigned int protocol)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -1724,7 +1735,8 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	list_for_each_entry(path, &pi_head, list)
 	{
 		if (!is_equal_node_id(path->node_id, node_id) ||
-			path->session_id != session_id)
+			path->session_id != session_id ||
+			path->protocol != protocol)
 		{
 			continue;
 		}
@@ -1930,7 +1942,8 @@ void update_addr_change(void)
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
 //		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		add_path_info(working_ip->node_id, working_ip->addr, working_ip->port, working_ip->session_id);
+		add_path_info(working_ip->node_id, working_ip->addr, working_ip->port,
+				working_ip->session_id, working_ip->protocol);
 	}
 
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
@@ -2102,7 +2115,9 @@ asmlinkage long sys_mpip(void)
 
 		printk("%d  ", working_ip->port);
 
-		printk("%d\n", working_ip->session_id);
+		printk("%d  ", working_ip->session_id);
+
+		printk("%d\n", working_ip->protocol);
 	}
 
 	printk("******************ss*************\n");
@@ -2169,6 +2184,8 @@ asmlinkage long sys_mpip(void)
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
 		printk("%d  ", path_info->dport);
+
+		printk("%d  ", path_info->protocol);
 
 		printk("%d  ", path_info->session_id);
 

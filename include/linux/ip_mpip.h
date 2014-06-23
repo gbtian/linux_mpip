@@ -102,6 +102,7 @@ struct working_ip_table
 	unsigned char		node_id[MPIP_CM_NODE_ID_LEN]; /*receiver's node id. */
 	__be32				addr; /* receiver' ip seen by sender */
 	__be16				port;
+	unsigned int 		protocol;
 	unsigned char		session_id;
 	struct list_head 	list;
 };
@@ -118,6 +119,7 @@ struct path_info_table
 	__be32				saddr; /* source ip address*/
 	__be32				daddr; /* destination ip address*/
 	__be16				dport; /* destination port*/
+	unsigned int 		protocol;
 	__s32 				min_delay;
 	__s32     			delay;
 	__s32     			queuing_delay;
@@ -234,11 +236,14 @@ int add_addr_notified(unsigned char *node_id);
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char flags);
 
-int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id);
+int add_working_ip(unsigned char *node_id, __be32 addr, __be16 port,
+		unsigned char session_id, unsigned int protocol);
 
-struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr, __be16 port);
+struct working_ip_table *find_working_ip(unsigned char *node_id, __be32 addr,
+		__be16 port, unsigned int protocol);
 
-unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port);
+unsigned char * find_node_id_in_working_ip(__be32 addr, __be16 port,
+		unsigned int protocol);
 
 struct path_stat_table *find_path_stat(unsigned char *node_id, unsigned char path_id);
 
@@ -269,14 +274,17 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 
 struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport);
 
-bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id);
+bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
+					unsigned char session_id, unsigned int protocol);
 
-int add_path_info(unsigned char *node_id, __be32 addr, __be16 port, unsigned char session_id);
+int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
+					unsigned char session_id, unsigned int protocol);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 								   __be32 *saddr, __be32 *daddr, __be16 *dport,
 								   __be32 origin_saddr, __be32 origin_daddr,
-								   __be16 origin_port, unsigned char session_id);
+								   __be16 origin_port, unsigned char session_id,
+								   unsigned int protocol);
 
 unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay);
 

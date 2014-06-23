@@ -275,7 +275,9 @@ unsigned char *get_node_id(void)
 
 unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 					__be32 saddr, __be16 sport,
-					__be32 daddr, __be16 dport, bool *is_new)
+					__be32 daddr, __be16 dport,
+					unsigned int protocol,
+					bool *is_new)
 {
 
 	unsigned char session_id;
@@ -300,7 +302,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 		{
 			add_sender_session(src_node_id, dst_node_id, saddr, sport, daddr, dport);
 			session_id = get_sender_session(saddr, sport, daddr, dport);
-			add_path_info(dst_node_id, daddr, dport, session_id);
+			add_path_info(dst_node_id, daddr, dport, session_id, protocol);
 		}
 	}
 	else
@@ -314,8 +316,9 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 
 unsigned char get_path_id(unsigned char *node_id,
 		__be32 *saddr, __be32 *daddr, __be16 *dport,
-		__be32 origin_saddr, __be32 origin_daddr, __be16 origin_dport,
-		unsigned char session_id)
+		__be32 origin_saddr, __be32 origin_daddr,
+		__be16 origin_dport, unsigned char session_id,
+		unsigned int protocol)
 {
 	if (!node_id || session_id <= 0)
 		return 0;
@@ -327,7 +330,8 @@ unsigned char get_path_id(unsigned char *node_id,
 
 	return find_fastest_path_id(node_id, saddr, daddr, dport,
 								origin_saddr, origin_daddr,
-								origin_dport, session_id);
+								origin_dport, session_id,
+								protocol);
 }
 
 
@@ -519,7 +523,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	send_cm = skb_tail_pointer(skb) + 1;
 
-	dst_node_id = find_node_id_in_working_ip(old_daddr, dport);
+	dst_node_id = find_node_id_in_working_ip(old_daddr, dport, protocol);
 
 	get_node_id();
 	get_available_local_addr();
@@ -533,7 +537,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     {
 		send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
 												old_saddr, sport,
-												old_daddr, dport, &is_new);
+												old_daddr, dport, protocol, &is_new);
     }
     else
     {
@@ -544,7 +548,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     if (!is_new || flags == 2)
     {
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_dport,
-    							old_saddr, old_daddr, dport, send_mpip_cm.session_id);
+    							old_saddr, old_daddr, dport,
+    							send_mpip_cm.session_id, protocol);
     }
 
     path_stat_id = get_path_stat_id(dst_node_id, &delay);
@@ -749,8 +754,8 @@ int process_mpip_cm(struct sk_buff *skb)
 	add_addr_notified(rcv_mpip_cm.node_id);
 	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.flags);
 
-	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id);
-	add_path_info(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id);
+	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id, iph->protocol);
+	add_path_info(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id, iph->protocol);
 	add_path_stat(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id);
 
 	update_path_stat_delay(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id, rcv_mpip_cm.timestamp);
