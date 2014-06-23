@@ -383,7 +383,6 @@ void send_mpip_hb(struct sk_buff *skb)
 		return;
 	}
 
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
