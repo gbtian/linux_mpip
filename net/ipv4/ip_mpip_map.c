@@ -375,7 +375,7 @@ int add_addr_notified(unsigned char *node_id)
 	return 1;
 }
 
-void send_mpip_hb(struct sk_buff *skb)
+void send_mpip_hb(struct sk_buff *skb, unsigned char session_id)
 {
 	if (!skb)
 	{
@@ -386,7 +386,7 @@ void send_mpip_hb(struct sk_buff *skb)
 	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
 	{
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb, false, true, 2))
+		if (send_mpip_msg(skb, false, true, 2, session_id))
 			earliest_fbjiffies = jiffies;
 	}
 }
@@ -548,7 +548,8 @@ static void reverse_addr_and_port(struct sk_buff *skb)
 		return;
 	}
 }
-static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags)
+static bool copy_and_send(struct sk_buff *skb, bool reverse,
+		unsigned char flags, unsigned char session_id)
 {
 	struct iphdr *iph;
 	__be32 new_saddr=0, new_daddr=0;
@@ -625,7 +626,8 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse, unsigned char flags
 	iph = ip_hdr(nskb);
 
 	mpip_log("%d, %d, %s, %s, %d\n", iph->id, ip_hdr(skb), __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
+	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
+			iph->protocol, flags, session_id))
 	{
 		kfree_skb(nskb);
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1042,10 +1044,11 @@ bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr)
 
 }
 
-bool send_mpip_msg(struct sk_buff *skb_in, bool sender, bool reverse, unsigned char flags)
+bool send_mpip_msg(struct sk_buff *skb_in, bool sender, bool reverse,
+		unsigned char flags, unsigned char session_id)
 {
 	//return new_and_send(skb_in, reverse, flags);
-	return copy_and_send(skb_in, reverse, flags);
+	return copy_and_send(skb_in, reverse, flags, session_id);
 }
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
