@@ -336,7 +336,7 @@ bool get_addr_notified(unsigned char *node_id)
 		else
 			addr_notified->count = 0;
 
-//		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
+		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
 		return notified;
 	}
 
@@ -1928,34 +1928,29 @@ void update_addr_change(void)
 	struct path_stat_table *path_stat;
 	struct path_stat_table *tmp_stat;
 
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	struct addr_notified_table *addr_notified;
 	list_for_each_entry(addr_notified, &an_head, list)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		addr_notified->notified = false;
 	}
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	list_for_each_entry_safe(local_addr, tmp_addr, &la_head, list)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		list_del(&(local_addr->list));
 		kfree(local_addr);
 	}
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+
 	get_available_local_addr();
 
 	list_for_each_entry_safe(path_info, tmp_info, &pi_head, list)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		list_del(&(path_info->list));
 		kfree(path_info);
 	}
 
 	list_for_each_entry(working_ip, &wi_head, list)
 	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		add_path_info(working_ip->node_id, working_ip->addr, working_ip->port,
 				working_ip->session_id, working_ip->protocol);
 	}
@@ -1965,6 +1960,7 @@ void update_addr_change(void)
 			list_del(&(path_stat->list));
 			kfree(path_stat);
 	}
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 struct net_device *find_dev_by_addr(__be32 addr)

@@ -165,14 +165,16 @@ int ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled && myskb)
 	{
-		mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-		print_addr(iph->saddr);
-		print_addr(iph->daddr);
-		send_mpip_enable(myskb, true, false);
+		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
+		{
+			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
+			send_mpip_enable(myskb, true, false);
 
-		if (iph->protocol == IPPROTO_TCP)
-			send_mpip_enabled(myskb, true, false);
-
+			if (iph->protocol == IPPROTO_TCP)
+				send_mpip_enabled(myskb, true, false);
+		}
 		kfree_skb(myskb);
 	}
 

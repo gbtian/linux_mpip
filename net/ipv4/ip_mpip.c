@@ -141,7 +141,10 @@ static int mpip_inetaddr_event(struct notifier_block *this,
 	if (dev && dev->ip_ptr && dev->ip_ptr->ifa_list)
 	{
 		if (sysctl_mpip_enabled)
+		{
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			update_addr_change();
+		}
 	}
 
 	return NOTIFY_DONE;
