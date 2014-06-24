@@ -163,6 +163,7 @@ struct path_stat_table
 	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
 	__s32     			delay;
 	bool				feedbacked;
+	__u64				pktcount;
 	unsigned long 		fbjiffies; /* last feedback time of this path's stat */
 	struct list_head 	list;
 };

@@ -1129,6 +1129,7 @@ int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 de
 
 		path_stat->delay = midtime - delay;
 		path_stat->feedbacked = false;
+		path_stat->pktcount += 1;
 	}
 
 
@@ -1330,6 +1331,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 	item->delay = 0;
 	item->feedbacked = false;
 	item->fbjiffies = jiffies;
+	item->pktcount = 0;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ps_head);
 
