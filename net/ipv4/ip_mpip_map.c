@@ -2161,8 +2161,12 @@ asmlinkage long sys_mpip(void)
 				path_stat->node_id[0], path_stat->node_id[1]);
 
 		printk("%d  ", path_stat->path_id);
+
 		printk("%d  ", path_stat->delay);
-		printk("%lu\n", path_stat->fbjiffies);
+
+		printk("%lu  ", path_stat->fbjiffies);
+
+		printk("%llu\n", path_stat->pktcount);
 	}
 
 
