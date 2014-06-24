@@ -445,14 +445,14 @@ void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
 	else if (item)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb, sender, reverse, 3))
+		if (send_mpip_msg(skb, sender, reverse, 3, 0))
 			item->sent_count += 1;
 	}
 	else
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		add_mpip_enabled(addr, port, false);
-		send_mpip_msg(skb, sender, reverse, 3);
+		send_mpip_msg(skb, sender, reverse, 3, 0);
 	}
 }
 
@@ -479,14 +479,14 @@ void send_mpip_enabled(struct sk_buff *skb, bool sender, bool reverse)
 		if (find_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest))
 		{
 			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			send_mpip_msg(skb, sender, reverse, 4);
+			send_mpip_msg(skb, sender, reverse, 4, 0);
 			delete_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest);
 		}
 	}
 	else if (iph->protocol == IPPROTO_UDP)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		send_mpip_msg(skb, sender, reverse, 4);
+		send_mpip_msg(skb, sender, reverse, 4, 0);
 	}
 }
 
@@ -811,7 +811,8 @@ static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char fla
 	print_addr(ip_hdr(skb)->saddr);
 	print_addr(ip_hdr(skb)->daddr);
 
-	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
+	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
+			iph->protocol, flags, 0))
 	{
 		kfree_skb(skb);
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -981,7 +982,8 @@ static bool new_udp_and_send(struct sk_buff *skb_in, bool reverse, unsigned char
 	}
 
 	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, flags))
+	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
+			iph->protocol, flags, 0))
 	{
 		kfree_skb(skb);
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);

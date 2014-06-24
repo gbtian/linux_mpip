@@ -124,7 +124,8 @@ int ip_local_out(struct sk_buff *skb)
 		{
 			if (is_mpip_enabled(iph->daddr, dport))
 			{
-				if (insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr, iph->protocol, 0))
+				if (insert_mpip_cm(skb, iph->saddr, iph->daddr,
+						&new_saddr, &new_daddr, iph->protocol, 0, 0))
 				{
 					if ((new_saddr != 0) && (new_daddr != 0))
 					{

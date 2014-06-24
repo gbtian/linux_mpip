@@ -198,7 +198,8 @@ void print_mpip_cm(struct mpip_cm *cm);
 
 bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr);
 
-bool send_mpip_msg(struct sk_buff *skb, bool sender, bool reverse, unsigned char flags);
+bool send_mpip_msg(struct sk_buff *skb, bool sender, bool reverse,
+		unsigned char flags, unsigned char session_id);
 
 bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags);
 
@@ -206,13 +207,14 @@ bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport);
 
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 					__be32 *new_saddr, __be32 *new_daddr,
-					unsigned int protocol, unsigned char flags);
+					unsigned int protocol, unsigned char flags,
+					unsigned char session_id);
 
 int process_mpip_cm(struct sk_buff *skb);
 
 bool check_bad_addr(__be32 addr);
 
-void send_mpip_hb(struct sk_buff *skb);
+void send_mpip_hb(struct sk_buff *skb, unsigned char session_id);
 
 void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse);
 
