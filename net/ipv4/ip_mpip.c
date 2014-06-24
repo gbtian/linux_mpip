@@ -533,7 +533,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
 
-    if (flags < 3)
+    if (flags < 2)
     {
 		send_mpip_cm.session_id = send_cm[3] = get_session_id(static_node_id, dst_node_id,
 												old_saddr, sport,
