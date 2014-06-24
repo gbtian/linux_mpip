@@ -1465,9 +1465,9 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	print_addr(daddr);
 	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
-//	sid = get_sender_session(saddr, sport, daddr, dport);
-//	if (sid > 0)
-//		return sid;
+	sid = get_sender_session(saddr, sport, daddr, dport);
+	if (sid > 0)
+		return sid;
 
 	if (path_id > 0)
 		return 0;
