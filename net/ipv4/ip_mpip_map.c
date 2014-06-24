@@ -1153,8 +1153,11 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 			{
 				path_info->delay = delay;
 			}
+			else
+			{
+				path_info->delay = (99 * path_info->delay + delay) / 100;
+			}
 
-			path_info->delay = (99 * path_info->delay + delay) / 100;
 			if (path_info->count < 10)
 			{
 				path_info->min_delay = path_info->delay;
@@ -1838,7 +1841,8 @@ unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *del
 			continue;
 		}
 
-		if (!path_stat->feedbacked && path_stat->fbjiffies <= e_fbtime)
+		//if (!path_stat->feedbacked && path_stat->fbjiffies <= e_fbtime)
+		if (path_stat->fbjiffies <= e_fbtime)
 		{
 			e_path_stat_id = path_stat->path_id;
 			e_path_stat = path_stat;
