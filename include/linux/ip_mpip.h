@@ -118,6 +118,7 @@ struct path_info_table
 	unsigned char		session_id;
 	__be32				saddr; /* source ip address*/
 	__be32				daddr; /* destination ip address*/
+	__be16				sport; /* source port*/
 	__be16				dport; /* destination port*/
 	unsigned int 		protocol;
 	__s32 				min_delay;
@@ -127,6 +128,11 @@ struct path_info_table
 	unsigned char		count;
 	__u64				bw;  /* bandwidth */
 	__u64				pktcount;
+	unsigned char		status;/* For tcp additional path:
+	 	 	 	 	 	 	 	0: ready for use
+	 	 	 	 	 	 	 	1: syn sent
+	 	 	 	 	 	 	 	2: synack sent
+	 	 	 	 	 	 	 	3: ack sent*/
 	struct list_head 	list;
 };
 
@@ -202,6 +208,13 @@ bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr);
 bool send_mpip_msg(struct sk_buff *skb, bool sender, bool reverse,
 		unsigned char flags, unsigned char session_id);
 
+bool check_path_info_status(struct sk_buff *skb,
+		unsigned char *node_id, unsigned char session_id);
+
+bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport,	bool syn, bool ack,
+		unsigned char session_id);
+
 bool send_mpip_skb(struct sk_buff *skb_in, unsigned char flags);
 
 bool get_skb_port(struct sk_buff *skb, __be16 *sport, __be16 *dport);
@@ -222,6 +235,10 @@ void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse);
 void send_mpip_enabled(struct sk_buff *skb, bool sender, bool reverse);
 
 int add_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport);
+
+int delete_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport);
+
+struct mpip_query_table *find_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport);
 
 struct mpip_enabled_table *find_mpip_enabled(__be32 addr, __be16 port);
 
@@ -256,14 +273,11 @@ int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 de
 
 int update_path_delay(unsigned char path_id, __s32 delay);
 
+bool ready_path_info(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport,
+					unsigned char session_id);
+
 int update_path_info(void);
 
-unsigned char find_receiver_socket_by_session(unsigned char *node_id,
-								   	   	   	  unsigned char session_id);
-
-unsigned char find_receiver_socket_by_socket(unsigned char *node_id,
-											 __be32 saddr, __be16 sport,
-											 __be32 daddr, __be16 dport);
 
 unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
@@ -275,19 +289,20 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
 						__be32 *daddr, __be16 *dport);
 
-struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport);
+struct path_info_table *find_path_info(__be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport, unsigned char session_id);
 
 bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
 					unsigned char session_id, unsigned int protocol);
 
-int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
-					unsigned char session_id, unsigned int protocol);
+int add_path_info(unsigned char *node_id, __be32 daddr, __be16 dport,
+		__be16 sport, unsigned char session_id, unsigned int protocol);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
-								   __be32 *saddr, __be32 *daddr, __be16 *dport,
-								   __be32 origin_saddr, __be32 origin_daddr,
-								   __be16 origin_port, unsigned char session_id,
-								   unsigned int protocol);
+			   __be32 *saddr, __be32 *daddr,  __be16 *sport, __be16 *dport,
+			   __be32 origin_saddr, __be32 origin_daddr, __be16 origin_sport,
+			   __be16 origin_dport, unsigned char session_id,
+			   unsigned int protocol);
 
 unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay);
 

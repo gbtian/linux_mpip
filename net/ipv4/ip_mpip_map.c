@@ -10,6 +10,7 @@ static unsigned char static_session_id = 1;
 static unsigned char static_path_id = 1;
 static unsigned long earliest_fbjiffies = 0;
 
+
 static LIST_HEAD(mq_head);
 static LIST_HEAD(me_head);
 static LIST_HEAD(an_head);
@@ -375,684 +376,6 @@ int add_addr_notified(unsigned char *node_id)
 	return 1;
 }
 
-void send_mpip_hb(struct sk_buff *skb, unsigned char session_id)
-{
-	if (!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-
-	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
-	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb, false, true, 2, session_id))
-			earliest_fbjiffies = jiffies;
-	}
-}
-
-void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
-{
-	struct iphdr *iph = NULL;
-	struct tcphdr *tcph = NULL;
-	struct udphdr *udph = NULL;
-	__be32 addr = 0;
-	__be16 port = 0;
-	struct mpip_enabled_table *item = NULL;
-
-	if (!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-
-	iph = ip_hdr(skb);
-	addr = sender ? iph->daddr : iph->saddr;
-
-	if(iph->protocol == IPPROTO_TCP)
-	{
-		tcph= tcp_hdr(skb);
-		if (!tcph)
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			return;
-		}
-		port = sender ? tcph->dest : tcph->source;
-	}
-	else if(iph->protocol == IPPROTO_UDP)
-	{
-		udph= udp_hdr(skb);
-		if (!udph)
-		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
-			return;
-		}
-		port = sender ? udph->dest : udph->source;
-	}
-	else
-		return;
-
-	if (is_local_addr(addr) || !check_bad_addr(addr))
-		return;
-
-	item = find_mpip_enabled(addr, port);
-
-	//if (item && ((item->sent_count > 3) || (item->mpip_enabled)))
-	if (item && item->mpip_enabled)
-	{
-		return;
-	}
-	else if (item)
-	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		if (send_mpip_msg(skb, sender, reverse, 3, 0))
-			item->sent_count += 1;
-	}
-	else
-	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		add_mpip_enabled(addr, port, false);
-		send_mpip_msg(skb, sender, reverse, 3, 0);
-	}
-}
-
-void send_mpip_enabled(struct sk_buff *skb, bool sender, bool reverse)
-{
-	struct iphdr *iph = NULL;
-	struct tcphdr *tcph = NULL;
-	if (!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-
-	iph = ip_hdr(skb);
-	if(iph->protocol == IPPROTO_TCP)
-	{
-		tcph= tcp_hdr(skb);
-		if (!tcph)
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return;
-		}
-
-		if (find_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest))
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			send_mpip_msg(skb, sender, reverse, 4, 0);
-			delete_mpip_query(iph->saddr, iph->daddr, tcph->source, tcph->dest);
-		}
-	}
-	else if (iph->protocol == IPPROTO_UDP)
-	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		send_mpip_msg(skb, sender, reverse, 4, 0);
-	}
-}
-
-static void reverse_addr_and_port(struct sk_buff *skb)
-{
-	struct iphdr *iph;
-	struct tcphdr *tcph = NULL;
-	struct udphdr *udph = NULL;
-	__be32 tmp_addr = 0;
-	__be16 tmp_port = 0;
-
-	if (!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-
-
-	iph = ip_hdr(skb);
-	if (iph == NULL)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-
-	tmp_addr = iph->saddr;
-	iph->saddr = iph->daddr;
-	iph->daddr = tmp_addr;
-
-	if(iph->protocol == IPPROTO_TCP)
-	{
-		tcph = tcp_hdr(skb); //this fixed the problem
-		if (!tcph)
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return;
-		}
-
-		tmp_port = tcph->source;
-		tcph->source = tcph->dest;
-		tcph->dest = tmp_port;
-
-	}
-	else if(iph->protocol == IPPROTO_UDP)
-	{
-		udph = udp_hdr(skb); //this fixed the problem
-		if (!udph)
-		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return;
-		}
-		tmp_port = udph->source;
-		udph->source = udph->dest;
-		udph->dest = tmp_port;
-	}
-	else
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return;
-	}
-}
-static bool copy_and_send(struct sk_buff *skb, bool reverse,
-		unsigned char flags, unsigned char session_id)
-{
-	struct iphdr *iph;
-	__be32 new_saddr=0, new_daddr=0;
-	struct net_device *new_dst_dev = NULL;
-	int err = 0;
-	struct sk_buff *nskb = NULL;
-	struct rtable *rt;
-
-	if(!skb)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	nskb = skb_copy(skb, GFP_ATOMIC);
-
-	if (nskb == NULL)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	iph = ip_hdr(nskb);
-	if (iph == NULL)
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	rt = skb_rtable(nskb);
-
-	if ((u8 *)iph < nskb->head ||
-	    (skb_network_header(nskb) + sizeof(*iph)) >
-	    skb_tail_pointer(nskb))
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	/*
-	 *	No replies to physical multicast/broadcast
-	 */
-	if (nskb->pkt_type != PACKET_HOST)
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	/*
-	 *	Now check at the protocol level
-	 */
-	if (rt->rt_flags & (RTCF_BROADCAST | RTCF_MULTICAST))
-	{
-		kfree_skb(nskb);
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-	/*
-	 *	Only reply to fragment 0. We byte re-order the constant
-	 *	mask for efficiency.
-	 */
-//	if (iph->frag_off & htons(IP_OFFSET))
-//	{
-//		kfree_skb(nskb);
-//		printk("%s, %d\n", __FILE__, __LINE__);
-//		return false;
-//	}
-
-	if (reverse)
-	{
-		reverse_addr_and_port(nskb);
-	}
-
-	iph = ip_hdr(nskb);
-
-	mpip_log("%d, %d, %s, %s, %d\n", iph->id, ip_hdr(skb), __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
-			iph->protocol, flags, session_id))
-	{
-		kfree_skb(nskb);
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-
-	if (new_saddr != 0)
-	{
-		new_dst_dev = find_dev_by_addr(new_saddr);
-		if (new_dst_dev)
-		{
-			iph->saddr = new_saddr;
-			iph->daddr = new_daddr;
-		}
-	}
-
-	if (ip_route_out(nskb, iph->saddr, iph->daddr))
-	{
-		if (sysctl_mpip_send)
-		{
-			skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
-			skb->dev = find_dev_by_addr(iph->saddr);
-		}
-
-		err = __ip_local_out(nskb);
-		if (likely(err == 1))
-			err = dst_output(nskb);
-	}
-	else
-	{
-		kfree_skb(nskb);
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-	return true;
-}
-
-
-static bool new_and_send(struct sk_buff *skb_in, bool reverse, unsigned char flags)
-{
-	struct iphdr *iph, *iph_in;
-	struct tcphdr *tcph = NULL;
-	struct udphdr *udph = NULL;
-	__be32 new_saddr=0, new_daddr=0;
-	struct net_device *new_dst_dev = NULL;
-	int err = 0;
-	struct sk_buff *skb = NULL;
-	__be16 srcport, dstport;
-
-    int total_len, eth_len, ip_len, udp_len, header_len;
-
-
-	// 设置各个协议数据长度
-    udp_len = sizeof(*udph);
-    ip_len = eth_len = udp_len + sizeof(*iph);
-    total_len = eth_len + ETH_HLEN + NET_IP_ALIGN;
-    header_len = total_len;
-
-	if(!skb_in)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	iph_in = ip_hdr(skb_in);
-	if (iph_in == NULL)
-	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	if(iph_in->protocol == IPPROTO_TCP)
-	{
-		tcph = tcp_hdr(skb_in); //this fixed the problem
-		if (!tcph)
-		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
-		if (reverse)
-		{
-			srcport = tcph->dest;
-			dstport = tcph->source;
-		}
-		else
-		{
-			srcport = tcph->source;
-			dstport = tcph->dest;
-		}
-	}
-	else if(iph_in->protocol == IPPROTO_UDP)
-	{
-		udph = udp_hdr(skb_in); //this fixed the problem
-		if (!udph)
-		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
-
-		if (reverse)
-		{
-			srcport = udph->dest;
-			dstport = udph->source;
-		}
-		else
-		{
-			srcport = udph->source;
-			dstport = udph->dest;
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-
-	skb = alloc_skb(234, GFP_ATOMIC );
-	if ( !skb ) {
-		printk( "alloc_skb fail.\n" );
-		return false;
-	}
-
-	// 预先保留skb的协议首部长度大小
-	skb_reserve(skb, 234);
-
-	skb_orphan(skb);
-
-	if(iph_in->protocol == IPPROTO_TCP)
-	{
-		skb_push(skb, sizeof(struct tcphdr));
-		skb_reset_transport_header(skb);
-		tcph = tcp_hdr(skb);
-
-		tcph->seq = 0;
-		tcph->ack_seq	= 0;
-		tcph->source = srcport;
-		tcph->dest = dstport;
-		tcph->check = 0;
-		tcph->urg_ptr = 0;
-	}
-	else if(iph_in->protocol == IPPROTO_UDP)
-	{
-		skb_push(skb, sizeof(struct udphdr));
-		skb_reset_transport_header(skb);
-		udph = udp_hdr(skb);
-		udph->source = srcport;
-		udph->dest = dstport;
-		udph->len = htons(sizeof(struct udphdr));
-		udph->check = 0;
-	}
-
-	// skb->data 移动到ip首部
-	skb_push(skb, sizeof(struct iphdr));
-	skb_reset_network_header(skb);
-	iph = ip_hdr(skb);
-	iph->version = 4;
-	iph->ihl = 5;
-	iph->tot_len = htons(skb->len);
-	iph->tos      = 0;
-	iph->id       = 0;
-	iph->frag_off = 0;
-	iph->ttl      = 64;
-	iph->protocol = iph_in->protocol;
-	iph->check    = 0;
-
-	if (reverse)
-	{
-		iph->saddr = iph_in->daddr;
-		iph->daddr = iph_in->saddr;
-	}
-	else
-	{
-		iph->saddr = iph_in->saddr;
-		iph->daddr = iph_in->daddr;
-	}
-
-	mpip_log("sending: %d, %s, %s, %d\n", ip_hdr(skb)->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(ip_hdr(skb)->saddr);
-	print_addr(ip_hdr(skb)->daddr);
-
-	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
-			iph->protocol, flags, 0))
-	{
-		kfree_skb(skb);
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-	iph = ip_hdr(skb);
-
-	mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-	if (new_saddr != 0)
-	{
-		new_dst_dev = find_dev_by_addr(new_saddr);
-		if (new_dst_dev)
-		{
-			iph->saddr = new_saddr;
-			iph->daddr = new_daddr;
-
-			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-		}
-	}
-
-	mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
-
-	if (ip_route_out(skb, iph->saddr, iph->daddr))
-	{
-		skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
-		skb->dev = find_dev_by_addr(iph->saddr);
-		err = __ip_local_out(skb);
-		if (likely(err == 1))
-			err = dst_output(skb);
-	}
-	else
-	{
-		kfree_skb(skb);
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-	return true;
-}
-
-
-
-static bool new_udp_and_send(struct sk_buff *skb_in, bool reverse, unsigned char flags)
-{
-	struct iphdr *iph, *iph_in;
-	struct tcphdr *tcph = NULL;
-	struct udphdr *udph = NULL;
-	__be32 new_saddr=0, new_daddr=0;
-	struct net_device *new_dst_dev = NULL;
-	int err = 0;
-	struct sk_buff *skb = NULL;
-	__be16 srcport, dstport;
-
-    int total_len, eth_len, ip_len, udp_len, header_len;
-
-
-	// 设置各个协议数据长度
-    udp_len = sizeof(*udph);
-    ip_len = eth_len = udp_len + sizeof(*iph);
-    total_len = eth_len + ETH_HLEN + NET_IP_ALIGN;
-    header_len = total_len;
-
-	if(!skb_in)
-	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	iph_in = ip_hdr(skb_in);
-	if (iph_in == NULL)
-	{
-		printk("%s, %d\n", __FILE__, __LINE__);
-		return false;
-	}
-
-	if(iph_in->protocol == IPPROTO_TCP)
-	{
-		tcph = tcp_hdr(skb_in); //this fixed the problem
-		if (!tcph)
-		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
-		if (reverse)
-		{
-			srcport = tcph->dest;
-			dstport = tcph->source;
-		}
-		else
-		{
-			srcport = tcph->source;
-			dstport = tcph->dest;
-		}
-	}
-	else if(iph_in->protocol == IPPROTO_UDP)
-	{
-		udph = udp_hdr(skb_in); //this fixed the problem
-		if (!udph)
-		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			return false;
-		}
-
-		if (reverse)
-		{
-			srcport = udph->dest;
-			dstport = udph->source;
-		}
-		else
-		{
-			srcport = udph->source;
-			dstport = udph->dest;
-		}
-	}
-
-
-	skb = alloc_skb(234, GFP_ATOMIC );
-	if ( !skb ) {
-		printk( "alloc_skb fail.\n" );
-		return false;
-	}
-
-	// 预先保留skb的协议首部长度大小
-	skb_reserve(skb, 234);
-
-	// skb->data 移动到udp首部
-	skb_push(skb, sizeof(struct udphdr));
-	skb_reset_transport_header(skb);
-	udph = udp_hdr(skb);
-	udph->source = srcport;
-	udph->dest = dstport;
-	udph->len = htons(sizeof(struct udphdr));
-	udph->check = 0;
-
-
-	// skb->data 移动到ip首部
-	skb_push(skb, sizeof(struct iphdr));
-	skb_reset_network_header(skb);
-	iph = ip_hdr(skb);
-	iph->version = 4;
-	iph->ihl = 5;
-	iph->tot_len = htons(skb->len);
-	iph->tos      = 0;
-	iph->id       = 0;
-	iph->frag_off = 0;
-	iph->ttl      = 64;
-	iph->protocol = IPPROTO_UDP;
-	iph->check    = 0;
-
-	if (reverse)
-	{
-		iph->saddr = iph_in->daddr;
-		iph->daddr = iph_in->saddr;
-	}
-	else
-	{
-		iph->saddr = iph_in->saddr;
-		iph->daddr = iph_in->daddr;
-	}
-
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
-			iph->protocol, flags, 0))
-	{
-		kfree_skb(skb);
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		return false;
-	}
-
-	if (new_saddr != 0)
-	{
-		new_dst_dev = find_dev_by_addr(new_saddr);
-		if (new_dst_dev)
-		{
-			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-			if (ip_route_out(skb, new_saddr, new_daddr))
-			{
-				iph->saddr = new_saddr;
-				iph->daddr = new_daddr;
-				skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
-				skb->dev = find_dev_by_addr(iph->saddr);
-			}
-			else
-			{
-				kfree_skb(skb);
-				mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-				return false;
-			}
-
-			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
-		}
-	}
-
-	err = __ip_local_out(skb);
-	if (likely(err == 1))
-		err = dst_output(skb);
-
-	mpip_log("%d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-	return true;
-}
-
-bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr)
-{
-    struct flowi4 fl = {};
-    struct rtable *rt = NULL;
-
-    fl.saddr = saddr;
-    fl.daddr = daddr;
-    rt = ip_route_output_key(&init_net, &fl);
-    if (rt)
-    {
-		mpip_log( "route output dev=%s\n", rt->dst.dev->name  );
-		skb_dst_set_noref(skb, &(rt->dst));
-
-		return true;
-    }
-    return false;
-
-}
-
-bool send_mpip_msg(struct sk_buff *skb_in, bool sender, bool reverse,
-		unsigned char flags, unsigned char session_id)
-{
-	//return new_and_send(skb_in, reverse, flags);
-	return copy_and_send(skb_in, reverse, flags, session_id);
-}
-
 void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
 {
 //	struct working_ip_table *working_ip;
@@ -1135,7 +458,6 @@ int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 de
 
 	return 1;
 }
-
 
 int update_path_delay(unsigned char path_id, __s32 delay)
 {
@@ -1288,6 +610,27 @@ int update_path_info(void)
 	}
 
 	return 1;
+}
+
+bool check_path_info_status(struct sk_buff *skb,
+		unsigned char *node_id, unsigned char session_id)
+{
+	struct path_info_table *path_info;
+
+	if (!node_id || (session_id <= 0))
+		return false;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if (is_equal_node_id(node_id, path_info->node_id) &&
+		    (session_id == path_info->session_id) &&
+		    (path_info->status != 0))
+		{
+			send_mpip_syn(skb, path_info->saddr, path_info->daddr,
+					path_info->sport, path_info->dport,	true, false,
+					session_id);
+		}
+	}
 }
 
 
@@ -1629,7 +972,8 @@ fail:
 	return 0;
 }
 
-struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport)
+struct path_info_table *find_path_info(__be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport, unsigned char session_id)
 {
 	struct path_info_table *path_info;
 
@@ -1637,7 +981,9 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport)
 	{
 		if ((path_info->saddr == saddr) &&
 			(path_info->daddr == daddr) &&
-			(path_info->dport == dport))
+			(path_info->sport == sport) &&
+			(path_info->dport == dport) &&
+			(path_info->session_id == session_id))
 		{
 			return path_info;
 		}
@@ -1645,6 +991,21 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr, __be16 dport)
 	return NULL;
 }
 
+
+bool ready_path_info(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport,
+					unsigned char session_id)
+{
+	struct path_info_table *path_info = find_path_info(saddr, daddr,
+			sport, dport, session_id);
+
+	if (path_info)
+	{
+		path_info->status = 0;
+		return true;
+	}
+
+	return false;
+}
 
 bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
 					unsigned char session_id, unsigned int protocol)
@@ -1669,8 +1030,27 @@ bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
 }
 
 
-int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
-					unsigned char session_id, unsigned int protocol)
+bool is_original_path(unsigned char *node_id, __be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport,	unsigned char session_id)
+{
+	__be32 osaddr = 0, odaddr = 0;
+	__be16 osport = 0, odport = 0;
+
+	if (get_receiver_session_info(node_id, session_id,
+			  &osaddr, &osport, &odaddr, &odport))
+	{
+		if ((saddr == osaddr) && (daddr == odaddr) &&
+			(sport == osport) && (dport == odport))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int add_path_info(unsigned char *node_id, __be32 daddr, __be16 sport,
+		__be16 dport, unsigned char session_id, unsigned int protocol)
 {
 	struct local_addr_table *local_addr;
 	struct path_info_table *item = NULL;
@@ -1685,7 +1065,7 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
 		return 0;
 	}
 
-	if (is_dest_added(node_id, addr, port, session_id, protocol))
+	if (is_dest_added(node_id, daddr, dport, session_id, protocol))
 		return 0;
 
 
@@ -1697,8 +1077,9 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
 		memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
 		item->fbjiffies = jiffies;
 		item->saddr = local_addr->addr;
-		item->daddr = addr;
-		item->dport = port;
+		item->sport = sport;
+		item->daddr = daddr;
+		item->dport = dport;
 		item->protocol = protocol;
 		item->session_id = session_id;
 		item->min_delay = 0;
@@ -1709,6 +1090,17 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
 		item->bw = 1000;
 		item->pktcount = 0;
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
+
+		if (is_original_path(node_id, item->saddr, item->daddr,
+				item->sport, item->dport, session_id))
+		{
+			item->status = 0;
+		}
+		else
+		{
+			item->status = 1;
+		}
+
 		INIT_LIST_HEAD(&(item->list));
 		list_add(&(item->list), &pi_head);
 
@@ -1723,8 +1115,8 @@ int add_path_info(unsigned char *node_id, __be32 addr, __be16 port,
 
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
-			   __be32 *saddr, __be32 *daddr, __be16 *dport,
-			   __be32 origin_saddr, __be32 origin_daddr,
+			   __be32 *saddr, __be32 *daddr,  __be16 *sport, __be16 *dport,
+			   __be32 origin_saddr, __be32 origin_daddr, __be16 origin_sport,
 			   __be16 origin_dport, unsigned char session_id,
 			   unsigned int protocol)
 {
@@ -1749,6 +1141,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	{
 		if (!is_equal_node_id(path->node_id, node_id) ||
 			path->session_id != session_id ||
+			path->status != 0 ||
 			path->protocol != protocol)
 		{
 			continue;
@@ -1801,16 +1194,18 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	{
 		*saddr = f_path->saddr;
 		*daddr = f_path->daddr;
+		*sport = f_path->sport;
 		*dport = f_path->dport;
 		f_path->pktcount += 1;
 	}
 	else
 	{
-		f_path = find_path_info(origin_saddr, origin_daddr, origin_dport);
+		f_path = find_path_info(origin_saddr, origin_daddr, origin_sport, origin_dport, session_id);
 		if (f_path)
 		{
 			*saddr = f_path->saddr;
 			*daddr = f_path->daddr;
+			*sport = f_path->sport;
 			*dport = f_path->dport;
 			f_path->pktcount += 1;
 			f_path_id = f_path->path_id;
@@ -1820,6 +1215,22 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	return f_path_id;
 }
 
+
+void send_mpip_hb(struct sk_buff *skb, unsigned char session_id)
+{
+	if (!skb)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return;
+	}
+
+	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
+	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		if (send_mpip_msg(skb, false, true, 2, session_id))
+			earliest_fbjiffies = jiffies;
+	}
+}
 
 unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay)
 {
@@ -1949,11 +1360,11 @@ void update_addr_change(void)
 		kfree(path_info);
 	}
 
-	list_for_each_entry(working_ip, &wi_head, list)
-	{
-		add_path_info(working_ip->node_id, working_ip->addr, working_ip->port,
-				working_ip->session_id, working_ip->protocol);
-	}
+//	list_for_each_entry(working_ip, &wi_head, list)
+//	{
+//		add_path_info(working_ip->node_id, working_ip->addr, working_ip->port,
+//				working_ip->session_id, working_ip->protocol);
+//	}
 
 	list_for_each_entry_safe(path_stat, tmp_stat, &ps_head, list)
 	{
