@@ -378,6 +378,10 @@ int add_addr_notified(unsigned char *node_id)
 
 void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
 {
+
+	reset_mpip();
+	return;
+
 //	struct working_ip_table *working_ip;
 //	struct working_ip_table *tmp_ip;
 
@@ -1331,6 +1335,9 @@ void get_available_local_addr(void)
 
 void update_addr_change(void)
 {
+	reset_mpip();
+	return;
+
 	struct local_addr_table *local_addr;
 	struct local_addr_table *tmp_addr;
 	struct working_ip_table *working_ip;
@@ -1396,7 +1403,7 @@ struct net_device *find_dev_by_addr(__be32 addr)
 }
 
 
-static void reset_mpip(void)
+void reset_mpip(void)
 {
 	struct mpip_enabled_table *mpip_enabled;
 	struct mpip_enabled_table *tmp_enabled;
