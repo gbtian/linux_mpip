@@ -1192,7 +1192,7 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		return false;
 	}
 
-	/*
+
 	skb = skb_copy(skb_in, GFP_ATOMIC);
 
 	if (skb == NULL)
@@ -1238,40 +1238,12 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 
 	iph->saddr = saddr;
 	iph->daddr = daddr;
+	iph->protocol = IPPROTO_TCP;
 
 	tcph = tcp_hdr(skb);
 
 	tcph->source = sport;
 	tcph->dest = dport;
-
-	if (syn)
-	{
-		tcph->syn = 1;
-		TCP_SKB_CB(skb)->tcp_flags |= TCPHDR_SYN;
-	}
-	if (ack)
-	{
-		tcph->ack = 1;
-		TCP_SKB_CB(skb)->tcp_flags |= TCPHDR_ACK;
-	}
-
-*/
-
-
-	skb = alloc_skb(234, GFP_ATOMIC );
-	if ( !skb ) {
-		printk( "alloc_skb fail.\n" );
-		return false;
-	}
-
-	// 预先保留skb的协议首部长度大小
-	skb_reserve(skb, 234);
-
-	skb_orphan(skb);
-
-	skb_push(skb, sizeof(struct tcphdr));
-	skb_reset_transport_header(skb);
-	tcph = tcp_hdr(skb);
 
 	if (syn)
 	{
@@ -1306,22 +1278,6 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	tcph->dest = dport;
 	tcph->check = 0;
 	tcph->urg_ptr = 0;
-
-	skb_push(skb, sizeof(struct iphdr));
-	skb_reset_network_header(skb);
-	iph = ip_hdr(skb);
-	iph->version = 4;
-	iph->ihl = 5;
-	iph->tot_len = htons(skb->len);
-	iph->tos      = 0;
-	iph->id       = 0;
-	iph->frag_off = 0;
-	iph->ttl      = 64;
-	iph->protocol = IPPROTO_TCP;
-	iph->check    = 0;
-
-	iph->saddr = saddr;
-	iph->daddr = daddr;
 
 
 	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, NULL, NULL,
@@ -1614,6 +1570,24 @@ int process_mpip_cm(struct sk_buff *skb)
 		odport = htons((unsigned short int) tcph->dest);
 		sport = tcph->source;
 		dport = tcph->dest;
+
+
+		if (is_syn_pkt(skb))
+		{
+			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
+		}
+		else if (is_synack_pkt(skb))
+		{
+			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
+		}
+		else if (is_ack_pkt(skb))
+		{
+			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+
+		}
+
 	}
 	else if(iph->protocol == IPPROTO_UDP)
 	{
@@ -1670,6 +1644,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	if (rcv_mpip_cm.flags == 5)
 	{
+		printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		if (is_syn_pkt(skb))
 		{
 			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
