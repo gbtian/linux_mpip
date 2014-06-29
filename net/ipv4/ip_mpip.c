@@ -1321,6 +1321,7 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		TCP_SKB_CB(skb)->end_seq = 1;
 	}
 
+	tcph->doff = sizeof(struct tcphdr) / 4;
 	tcph->seq = 0;
 	tcph->ack_seq	= 0;
 	tcph->source = sport;

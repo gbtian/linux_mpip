@@ -1980,7 +1980,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
 
 	if (th->doff < sizeof(struct tcphdr) / 4)
 	{
-		printk("%s, %d\n", __FILE__, __LINE__);
+		printk("%d, %s, %d\n", th->doff, __FILE__, __LINE__);
 		goto bad_packet;
 	}
 	if (!pskb_may_pull(skb, th->doff * 4))
