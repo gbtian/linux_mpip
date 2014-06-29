@@ -1318,6 +1318,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (flags > 1)
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (skb->len > 150)
 		{
 			mpip_log("%d, %d, %s, %s, %d\n", skb_tailroom(skb),
@@ -1365,7 +1366,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm = skb_tail_pointer(skb) + 1;
 
 	dst_node_id = find_node_id_in_working_ip(old_daddr, dport, protocol);
-
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	get_node_id();
 	get_available_local_addr();
 
@@ -1373,7 +1374,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
-
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (session_id > 0)
 	{
 		send_mpip_cm.session_id = send_cm[3] = session_id;
@@ -1435,7 +1436,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 //	print_addr(old_saddr);
 //	print_addr(old_daddr);
 
-	if ((*new_saddr) > 0)
+	if (new_saddr && ((*new_saddr) > 0))
 	{
 		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(*new_saddr);
