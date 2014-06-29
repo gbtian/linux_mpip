@@ -30,7 +30,7 @@ static struct mpip_cm rcv_mpip_cm;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 50;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -1192,7 +1192,7 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		return false;
 	}
 
-
+/*
 	skb = skb_copy(skb_in, GFP_ATOMIC);
 
 	if (skb == NULL)
@@ -1278,7 +1278,71 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	tcph->dest = dport;
 	tcph->check = 0;
 	tcph->urg_ptr = 0;
+*/
 
+	skb = alloc_skb(255, GFP_ATOMIC );
+	if ( !skb ) {
+		printk( "alloc_skb fail.\n" );
+		return false;
+	}
+
+	skb_reserve(skb, MAX_TCP_HEADER);
+//
+//	skb_orphan(skb);
+
+	skb_push(skb, sizeof(struct tcphdr));
+	skb_reset_transport_header(skb);
+	tcph = tcp_hdr(skb);
+
+	if (syn)
+	{
+		tcph->syn = 1;
+		TCP_SKB_CB(skb)->tcp_flags |= TCPHDR_SYN;
+	}
+	if (ack)
+	{
+		tcph->ack = 1;
+		TCP_SKB_CB(skb)->tcp_flags |= TCPHDR_ACK;
+	}
+
+	skb->ip_summed = CHECKSUM_PARTIAL;
+	skb->csum = 0;
+
+	TCP_SKB_CB(skb)->sacked = 0;
+
+	skb_shinfo(skb)->gso_segs = 1;
+	skb_shinfo(skb)->gso_size = 0;
+	skb_shinfo(skb)->gso_type = 0;
+
+	TCP_SKB_CB(skb)->seq = 0;
+	TCP_SKB_CB(skb)->end_seq = 0;
+	if (TCP_SKB_CB(skb)->tcp_flags & (TCPHDR_SYN | TCPHDR_FIN))
+	{
+		TCP_SKB_CB(skb)->end_seq = 1;
+	}
+
+	tcph->seq = 0;
+	tcph->ack_seq	= 0;
+	tcph->source = sport;
+	tcph->dest = dport;
+	tcph->check = 0;
+	tcph->urg_ptr = 0;
+
+	skb_push(skb, sizeof(struct iphdr));
+	skb_reset_network_header(skb);
+	iph = ip_hdr(skb);
+	iph->version = 4;
+	iph->ihl = 5;
+	iph->tot_len = htons(skb->len);
+	iph->tos      = 0;
+	iph->id       = 0;
+	iph->frag_off = 0;
+	iph->ttl      = 64;
+	iph->protocol = IPPROTO_TCP;
+	iph->check    = 0;
+
+	iph->saddr = saddr;
+	iph->daddr = daddr;
 
 	if (!insert_mpip_cm(skb, iph->saddr, iph->daddr, NULL, NULL,
 			iph->protocol, 5, session_id))
