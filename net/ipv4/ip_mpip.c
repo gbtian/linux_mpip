@@ -1639,22 +1639,20 @@ int process_mpip_cm(struct sk_buff *skb)
 	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.flags);
 
 	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id, iph->protocol);
-	add_path_info(rcv_mpip_cm.node_id, iph->saddr, dport, sport, rcv_mpip_cm.session_id, iph->protocol);
 	add_path_stat(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id);
 
 	update_path_stat_delay(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id, rcv_mpip_cm.timestamp);
 	update_path_delay(rcv_mpip_cm.path_stat_id, rcv_mpip_cm.delay);
-	update_path_info();
 
-	if (rcv_mpip_cm.session_id > 0)
-	{
-		session_id = get_receiver_session_id(static_node_id,
+	session_id = get_receiver_session_id(static_node_id,
 											rcv_mpip_cm.node_id,
 											iph->daddr, dport,
 											iph->saddr, sport,
 											rcv_mpip_cm.session_id,
 											rcv_mpip_cm.path_id);
-	}
+
+	add_path_info(rcv_mpip_cm.node_id, iph->saddr, dport, sport, rcv_mpip_cm.session_id, iph->protocol);
+	update_path_info();
 
 	if (rcv_mpip_cm.flags == 3)
 	{

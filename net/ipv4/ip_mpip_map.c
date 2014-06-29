@@ -804,7 +804,7 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	int sid;
 
 
-	if (!src_node_id || !dst_node_id || !session_id)
+	if (!src_node_id || !dst_node_id || (session_id <= 0))
 		return 0;
 
 	if ((src_node_id[0] == src_node_id[1]) || (dst_node_id[0] == dst_node_id[1]))
@@ -871,11 +871,14 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 		return 0;
 	}
 
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (is_equal_node_id(socket_session->dst_node_id, node_id) &&
 				(socket_session->session_id == session_id))
 		{
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			*saddr = socket_session->saddr;
 			*daddr = socket_session->daddr;
 			*sport = socket_session->sport;
