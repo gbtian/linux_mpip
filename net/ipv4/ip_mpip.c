@@ -30,7 +30,7 @@ static struct mpip_cm rcv_mpip_cm;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 1;
+int sysctl_mpip_log __read_mostly = 0;
 int sysctl_mpip_bw_factor __read_mostly = 50;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -1606,7 +1606,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	{
 		if (is_syn_pkt(skb))
 		{
-			printk("sending syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			send_mpip_syn(skb, iph->daddr, iph->saddr, tcph->dest, tcph->source,
 					true, true, rcv_mpip_cm.session_id);
 
@@ -1614,7 +1614,7 @@ int process_mpip_cm(struct sk_buff *skb)
 		}
 		else if (is_synack_pkt(skb))
 		{
-			printk("sending syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			send_mpip_syn(skb, iph->daddr, iph->saddr, tcph->dest, tcph->source,
 					false, true, rcv_mpip_cm.session_id);
 
@@ -1624,7 +1624,7 @@ int process_mpip_cm(struct sk_buff *skb)
 		}
 		else if (is_ack_pkt(skb))
 		{
-			printk("sending syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			ready_path_info(iph->daddr, iph->saddr, tcph->dest, tcph->source, rcv_mpip_cm.session_id);
 
 			goto msg_pkt;

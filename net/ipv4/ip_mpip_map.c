@@ -630,6 +630,7 @@ bool check_path_info_status(struct sk_buff *skb,
 		    (session_id == path_info->session_id) &&
 		    (path_info->status != 0))
 		{
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			send_mpip_syn(skb, path_info->saddr, path_info->daddr,
 					path_info->sport, path_info->dport,	true, false,
 					session_id);
@@ -817,10 +818,10 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	if (sid > 0)
 		return sid;
 
-	printk("%s, %d\n", __FILE__, __LINE__);
+	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	print_addr(saddr);
 	print_addr(daddr);
-	printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+	mpip_log("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 	sid = get_sender_session(saddr, sport, daddr, dport);
 	if (sid > 0)
@@ -1002,6 +1003,7 @@ bool ready_path_info(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport,
 	struct path_info_table *path_info = find_path_info(saddr, daddr,
 			sport, dport, session_id);
 
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (path_info)
 	{
 		path_info->status = 0;
@@ -1230,7 +1232,7 @@ void send_mpip_hb(struct sk_buff *skb, unsigned char session_id)
 
 	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, false, true, 2, session_id))
 			earliest_fbjiffies = jiffies;
 	}
@@ -1615,6 +1617,8 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
+		printk("%d  ", path_info->sport);
+
 		printk("%d  ", path_info->dport);
 
 		printk("%d  ", path_info->protocol);
@@ -1631,7 +1635,9 @@ asmlinkage long sys_mpip(void)
 
 		printk("%llu  ", path_info->bw);
 
-		printk("%llu  \n", path_info->pktcount);
+		printk("%llu  ", path_info->pktcount);
+
+		printk("%d\n", path_info->status);
 
 	}
 
