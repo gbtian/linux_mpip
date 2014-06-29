@@ -1096,7 +1096,7 @@ int add_path_info(unsigned char *node_id, __be32 daddr, __be16 sport,
 		item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 
 		if (is_original_path(node_id, item->saddr, item->daddr,
-				item->sport, item->dport, session_id))
+				item->sport, item->dport, session_id) || (protocol != IPPROTO_TCP))
 		{
 			item->status = 0;
 		}
