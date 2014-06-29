@@ -1294,15 +1294,35 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	skb_reset_transport_header(skb);
 	tcph = tcp_hdr(skb);
 
-	if (syn)
+	if (syn && !ack)
 	{
 		tcph->syn = 1;
-		TCP_SKB_CB(skb)->tcp_flags |= TCPHDR_SYN;
+		tcph->ack = 0;
+		tcph->psh = 0;
+		tcph->fin = 0;
+		tcph->rst = 0;
+		tcph->urg = 0;
+		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN;
 	}
-	if (ack)
+	if (syn && ack)
 	{
+		tcph->syn = 1;
 		tcph->ack = 1;
-		TCP_SKB_CB(skb)->tcp_flags |= TCPHDR_ACK;
+		tcph->psh = 0;
+		tcph->fin = 0;
+		tcph->rst = 0;
+		tcph->urg = 0;
+		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN | TCPHDR_ACK;
+	}
+	if (!syn && ack)
+	{
+		tcph->syn = 0;
+		tcph->ack = 1;
+		tcph->psh = 0;
+		tcph->fin = 0;
+		tcph->rst = 0;
+		tcph->urg = 0;
+		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_ACK;
 	}
 
 	skb->ip_summed = CHECKSUM_PARTIAL;
