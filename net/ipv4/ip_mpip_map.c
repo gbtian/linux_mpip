@@ -188,7 +188,7 @@ int add_mpip_enabled(__be32 addr, __be16 port, bool enabled)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &me_head);
 
-	mpip_log( "me: %d, %d\n", port, enabled);
+	mpip_log("%d, %d, %s, %s, %d\n", port, enabled, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(addr);
 
 	return 1;
@@ -379,8 +379,8 @@ int add_addr_notified(unsigned char *node_id)
 void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
 {
 
-	reset_mpip();
-	return;
+//	reset_mpip();
+//	return;
 
 //	struct working_ip_table *working_ip;
 //	struct working_ip_table *tmp_ip;
@@ -1335,8 +1335,8 @@ void get_available_local_addr(void)
 
 void update_addr_change(void)
 {
-	reset_mpip();
-	return;
+//	reset_mpip();
+//	return;
 
 	struct local_addr_table *local_addr;
 	struct local_addr_table *tmp_addr;
