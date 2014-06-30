@@ -1303,6 +1303,8 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		tcph->fin = 0;
 		tcph->rst = 0;
 		tcph->urg = 0;
+		tcph->cwr = 0;
+		tcph->ece = 0;
 		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN;
 	}
 	if (syn && ack)
@@ -1314,6 +1316,8 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		tcph->fin = 0;
 		tcph->rst = 0;
 		tcph->urg = 0;
+		tcph->cwr = 0;
+		tcph->ece = 0;
 		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN | TCPHDR_ACK;
 	}
 	if (!syn && ack)
@@ -1325,6 +1329,8 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		tcph->fin = 0;
 		tcph->rst = 0;
 		tcph->urg = 0;
+		tcph->cwr = 0;
+		tcph->ece = 0;
 		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_ACK;
 	}
 
