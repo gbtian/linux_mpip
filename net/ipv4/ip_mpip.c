@@ -1355,7 +1355,14 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	tcph->doff = sizeof(struct tcphdr) / 4;
 	tcph->seq = 0;
 	tcph->ack_seq	= 0;
-	tcph->source = sport;
+	if (convert_addr(192,168,1,15) == saddr)
+	{
+		tcph->source = 9999;
+	}
+	else
+	{
+		tcph->source = sport;
+	}
 	tcph->dest = dport;
 	tcph->check = 0;
 	tcph->urg_ptr = 0;
