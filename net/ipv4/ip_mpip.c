@@ -1156,6 +1156,8 @@ bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr)
     {
 		mpip_log( "route output dev=%s\n", rt->dst.dev->name  );
 		skb_dst_set_noref(skb, &(rt->dst));
+		rt->dst.dev = find_dev_by_addr(saddr);
+		mpip_log( "route output dev 1=%s\n", rt->dst.dev->name  );
 
 		return true;
     }
