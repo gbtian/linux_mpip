@@ -619,8 +619,6 @@ int update_path_info(void)
 bool check_path_info_status(struct sk_buff *skb,
 		unsigned char *node_id, unsigned char session_id)
 {
-	return false;
-
 	struct path_info_table *path_info;
 
 	if (!node_id || (session_id <= 0))
@@ -1109,7 +1107,7 @@ int add_path_info(unsigned char *node_id, __be32 daddr, __be16 sport,
 		}
 		else
 		{
-			item->status = 0;
+			item->status = 1;
 		}
 
 		INIT_LIST_HEAD(&(item->list));
