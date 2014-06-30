@@ -1383,7 +1383,9 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	}
 
 	iph = ip_hdr(skb);
+	tcph = tcp_hdr(skb);
 
+	printk("sending syn: %d, %d, %s, %s, %d\n", tcph->source, tcph->dest, __FILE__, __FUNCTION__, __LINE__);
 	print_addr(iph->saddr);
 	print_addr(iph->daddr);
 
@@ -1402,7 +1404,6 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		return false;
 	}
 
-	printk("sending syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	return true;
 }
