@@ -1296,6 +1296,7 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 
 	if (syn && !ack)
 	{
+		tcph->res1 = 0;
 		tcph->syn = 1;
 		tcph->ack = 0;
 		tcph->psh = 0;
@@ -1306,6 +1307,7 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	}
 	if (syn && ack)
 	{
+		tcph->res1 = 0;
 		tcph->syn = 1;
 		tcph->ack = 1;
 		tcph->psh = 0;
@@ -1316,6 +1318,7 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	}
 	if (!syn && ack)
 	{
+		tcph->res1 = 0;
 		tcph->syn = 0;
 		tcph->ack = 1;
 		tcph->psh = 0;
