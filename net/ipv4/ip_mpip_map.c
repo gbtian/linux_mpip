@@ -636,6 +636,8 @@ bool check_path_info_status(struct sk_buff *skb,
 					session_id);
 		}
 	}
+
+	return true;
 }
 
 
