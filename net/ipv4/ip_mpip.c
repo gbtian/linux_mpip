@@ -1364,8 +1364,11 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 //		tcph->source = sport;
 //	}
 
-	tcph->source = sport;
-	tcph->dest = dport;
+//	tcph->source = sport;
+//	tcph->dest = dport;
+
+	tcph->source = 6789;
+	tcph->dest = 22;
 	tcph->check = 0;
 	tcph->urg_ptr = 0;
 
