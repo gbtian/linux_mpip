@@ -635,9 +635,9 @@ bool check_path_info_status(struct sk_buff *skb,
 //					path_info->sport, path_info->dport,	true, false,
 //					session_id);
 
-			if (convert_addr(192, 168, 1, 14) == path_info->daddr)
+			//if (convert_addr(192, 168, 1, 14) == path_info->daddr)
 			{
-				printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			//	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 				send_mpip_syn(skb, path_info->saddr, convert_addr(192, 168, 1, 15),
 						path_info->sport, path_info->dport,	true, false,
 						session_id);
