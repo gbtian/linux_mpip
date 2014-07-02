@@ -1308,6 +1308,10 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		tcph->cwr = 0;
 		tcph->ece = 0;
 		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN;
+
+		printk("sending syn: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(saddr);
+		print_addr(daddr);
 	}
 	if (syn && ack)
 	{
@@ -1321,6 +1325,10 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		tcph->cwr = 0;
 		tcph->ece = 0;
 		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_SYN | TCPHDR_ACK;
+
+		printk("sending synack: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(saddr);
+		print_addr(daddr);
 	}
 	if (!syn && ack)
 	{
@@ -1334,6 +1342,10 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 		tcph->cwr = 0;
 		tcph->ece = 0;
 		TCP_SKB_CB(skb)->tcp_flags = TCPHDR_ACK;
+
+		printk("sending ack: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(saddr);
+		print_addr(daddr);
 	}
 
 	skb->ip_summed = CHECKSUM_PARTIAL;
@@ -1397,10 +1409,6 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 
 	iph = ip_hdr(skb);
 	tcph = tcp_hdr(skb);
-
-	printk("sending syn: %d, %d, %s, %s, %d\n", tcph->source, tcph->dest, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(iph->saddr);
-	print_addr(iph->daddr);
 
 	if (ip_route_out(skb, iph->saddr, iph->daddr))
 	{
@@ -1679,22 +1687,22 @@ int process_mpip_cm(struct sk_buff *skb)
 		sport = tcph->source;
 		dport = tcph->dest;
 
-
-		if (is_syn_pkt(skb))
-		{
-			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-		}
-		else if (is_synack_pkt(skb))
-		{
-			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-		}
-		else if (is_ack_pkt(skb))
-		{
-			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-
-		}
+//
+//		if (is_syn_pkt(skb))
+//		{
+//			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//
+//		}
+//		else if (is_synack_pkt(skb))
+//		{
+//			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//
+//		}
+//		else if (is_ack_pkt(skb))
+//		{
+//			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//
+//		}
 
 	}
 	else if(iph->protocol == IPPROTO_UDP)
@@ -1763,7 +1771,7 @@ int process_mpip_cm(struct sk_buff *skb)
 		}
 		else if (is_synack_pkt(skb))
 		{
-			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			printk("receiving synack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			send_mpip_syn(skb, iph->daddr, iph->saddr, tcph->dest, tcph->source,
 					false, true, rcv_mpip_cm.session_id);
 
@@ -1773,7 +1781,7 @@ int process_mpip_cm(struct sk_buff *skb)
 		}
 		else if (is_ack_pkt(skb))
 		{
-			printk("receiving syn: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+			printk("receiving ack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 			ready_path_info(iph->daddr, iph->saddr, tcph->dest, tcph->source, rcv_mpip_cm.session_id);
 
 			goto msg_pkt;
