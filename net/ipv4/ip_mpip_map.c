@@ -631,9 +631,9 @@ bool check_path_info_status(struct sk_buff *skb,
 		    (path_info->status != 0))
 		{
 			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-			send_mpip_syn(skb, path_info->saddr, path_info->daddr,
-					path_info->sport, path_info->dport,	true, false,
-					session_id);
+//			send_mpip_syn(skb, path_info->saddr, path_info->daddr,
+//					path_info->sport, path_info->dport,	true, false,
+//					session_id);
 
 			if (convert_addr(192, 168, 1, 14) == path_info->daddr)
 			{
@@ -883,14 +883,14 @@ int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 		return 0;
 	}
 
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (is_equal_node_id(socket_session->dst_node_id, node_id) &&
 				(socket_session->session_id == session_id))
 		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			*saddr = socket_session->saddr;
 			*daddr = socket_session->daddr;
 			*sport = socket_session->sport;
