@@ -1109,6 +1109,8 @@ int add_origin_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __b
 {
 	struct path_info_table *item = NULL;
 
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 	if (!node_id || session_id <= 0)
 		return 0;
 

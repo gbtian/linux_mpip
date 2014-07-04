@@ -286,13 +286,13 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 {
 
 	unsigned char session_id;
-//	printk("%s, %d\n", __FILE__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (!src_node_id || !dst_node_id)
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
 		return 0;
 	}
-//	printk("%s, %d\n", __FILE__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	session_id = get_sender_session(saddr, sport, daddr, dport);
 
 	if (session_id == 0)
@@ -1760,7 +1760,7 @@ int process_mpip_cm(struct sk_buff *skb)
 				   	   	    	rcv_cm[11]<<8 | rcv_cm[10]);
 	rcv_mpip_cm.addr1 	 		= (rcv_cm[17]<<24 | rcv_cm[16]<<16 |
 					   	   	    	rcv_cm[15]<<8 | rcv_cm[14]);
-	rcv_mpip_cm.addr1 	 		= (rcv_cm[21]<<24 | rcv_cm[20]<<16 |
+	rcv_mpip_cm.addr2 	 		= (rcv_cm[21]<<24 | rcv_cm[20]<<16 |
 						   	   	    	rcv_cm[19]<<8 | rcv_cm[18]);
 	rcv_mpip_cm.flags 			= rcv_cm[22];
 	rcv_mpip_cm.checksum 		= (rcv_cm[24]<<8 | rcv_cm[23]);
