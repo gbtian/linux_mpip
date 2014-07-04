@@ -212,7 +212,7 @@ bool is_mpip_enabled(__be32 addr, __be16 port)
 	return enabled;
 }
 
-__be32 get_local_addr1()
+__be32 get_local_addr1(void)
 {
 	struct local_addr_table *local_addr;
 
@@ -227,7 +227,7 @@ __be32 get_local_addr1()
 	return 0;
 }
 
-__be32 get_local_addr2()
+__be32 get_local_addr2(void)
 {
 	struct local_addr_table *local_addr;
 

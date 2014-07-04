@@ -1671,15 +1671,14 @@ int process_mpip_cm(struct sk_buff *skb)
 	struct iphdr *iph;
 	struct tcphdr *tcph = NULL;
 	struct udphdr *udph = NULL;
-	int  res;
+//	int  res;
 
-	struct net_device *new_dst_dev = NULL;
+//	struct net_device *new_dst_dev = NULL;
 	__be32 saddr = 0, daddr = 0;
 	__be16 sport = 0, dport = 0;
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
 	unsigned char *rcv_cm = NULL;
-	__be32 addr1 = 0, addr2 = 0;
 	__s16 checksum = 0;
 
 	if (!skb)
@@ -1769,10 +1768,10 @@ int process_mpip_cm(struct sk_buff *skb)
 	print_mpip_cm(&rcv_mpip_cm);
 
 	checksum = calc_checksum(rcv_cm);
-	if (checksum != (rcv_cm[16]<<8 | rcv_cm[15]))
+	if (checksum != (rcv_cm[24]<<8 | rcv_cm[23]))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-		mpip_log("%d, %d, %d, %d\n", rcv_cm[15], rcv_cm[16], checksum, (rcv_cm[16]<<8 | rcv_cm[15]));
+		mpip_log("%d, %d, %d, %d\n", rcv_cm[23], rcv_cm[24], checksum, (rcv_cm[24]<<8 | rcv_cm[23]));
 		goto fail;
 	}
 

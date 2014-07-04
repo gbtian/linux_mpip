@@ -250,9 +250,9 @@ bool is_mpip_enabled(__be32 addr, __be16 port);
 
 bool is_local_addr(__be32 addr);
 
-__be32 get_local_addr1();
+__be32 get_local_addr1(void);
 
-__be32 get_local_addr2();
+__be32 get_local_addr2(void);
 
 bool get_addr_notified(unsigned char *node_id);
 
