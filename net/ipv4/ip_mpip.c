@@ -251,6 +251,8 @@ void print_mpip_cm(struct mpip_cm *cm)
 	mpip_log("delay = %d\n",   cm->delay);
 	mpip_log("timestamp = %d\n",   cm->timestamp);
 	mpip_log("flags = %d\n",   cm->flags);
+	print_addr(cm->addr1);
+	print_addr(cm->addr2);
 	mpip_log("checksum = %d\n",   cm->checksum);
 }
 EXPORT_SYMBOL(print_mpip_cm);
@@ -305,7 +307,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 		{
 			add_sender_session(src_node_id, dst_node_id, saddr, sport, daddr, dport);
 			session_id = get_sender_session(saddr, sport, daddr, dport);
-			add_path_info(dst_node_id, daddr, sport, dport, session_id, protocol);
+			add_path_info(dst_node_id, saddr, daddr, sport, dport, session_id, protocol);
 		}
 	}
 	else
@@ -1188,13 +1190,14 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	if (session_id <= 0)
 		return false;
 
+	/*
 	if(!skb_in)
 	{
 		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return false;
 	}
 
-/*
+
 	skb = skb_copy(skb_in, GFP_ATOMIC);
 
 	if (skb == NULL)
@@ -1429,6 +1432,8 @@ bool send_mpip_syn(struct sk_buff *skb_in, __be32 saddr, __be32 daddr,
 	return true;
 }
 
+
+
 bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		__be32 *new_saddr, __be32 *new_daddr, unsigned int protocol,
 		unsigned char flags, unsigned char session_id)
@@ -1444,6 +1449,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	unsigned char path_stat_id = 0;
 	unsigned char *send_cm = NULL;
 	__s32 delay = 0;
+	__be32 addr1 = 0, addr2 = 0;
 	__s16 checksum = 0;
 
 	bool is_new = true;
@@ -1461,7 +1467,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (flags > 1)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (skb->len > 150)
 		{
 			mpip_log("%d, %d, %s, %s, %d\n", skb_tailroom(skb),
@@ -1509,15 +1514,18 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm = skb_tail_pointer(skb) + 1;
 
 	dst_node_id = find_node_id_in_working_ip(old_daddr, dport, protocol);
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 	get_node_id();
 	get_available_local_addr();
+
+	addr1 = get_local_addr1();
+	addr2 = get_local_addr2();
 
 	send_mpip_cm.len = send_cm[0] = MPIP_CM_LEN;
 
 	for(i = 0; i < MPIP_CM_NODE_ID_LEN; i++)
     	send_mpip_cm.node_id[i] = send_cm[1 + i] =  static_node_id[i];
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 	if (session_id > 0)
 	{
 		send_mpip_cm.session_id = send_cm[3] = session_id;
@@ -1532,7 +1540,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     {
     	send_mpip_cm.session_id = send_cm[3] = 0;
     }
-
 
     if ((!is_new || flags == 2) && new_saddr)
     {
@@ -1561,19 +1568,33 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[12] = (delay>>16) & 0xff;
 	send_cm[13] = (delay>>24) & 0xff;
 
+	send_mpip_cm.addr1 = addr1;
+
+	send_cm[14] = addr1 & 0xff;
+	send_cm[15] = (addr1>>8) & 0xff;
+	send_cm[16] = (addr1>>16) & 0xff;
+	send_cm[17] = (addr1>>24) & 0xff;
+
+	send_mpip_cm.addr2 = addr2;
+
+	send_cm[18] = addr2 & 0xff;
+	send_cm[19] = (addr2>>8) & 0xff;
+	send_cm[20] = (addr2>>16) & 0xff;
+	send_cm[21] = (addr2>>24) & 0xff;
+
 	if (get_addr_notified(dst_node_id))
-		send_mpip_cm.flags = send_cm[14] = 0;
+		send_mpip_cm.flags = send_cm[22] = 0;
 	else
-		send_mpip_cm.flags = send_cm[14] = 1;
+		send_mpip_cm.flags = send_cm[22] = 1;
 
 	if (flags > 1)
-		send_mpip_cm.flags = send_cm[14] = flags;
+		send_mpip_cm.flags = send_cm[22] = flags;
 
 	checksum = calc_checksum(send_cm);
 
 	send_mpip_cm.checksum = checksum;
-	send_cm[15] = checksum & 0xff;
-	send_cm[16] = (checksum>>8) & 0xff;
+	send_cm[23] = checksum & 0xff;
+	send_cm[24] = (checksum>>8) & 0xff;
 
 //	mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
 //	print_addr(old_saddr);
@@ -1658,6 +1679,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	__be16 osport = 0, odport = 0;
 	unsigned char session_id = 0;
 	unsigned char *rcv_cm = NULL;
+	__be32 addr1 = 0, addr2 = 0;
 	__s16 checksum = 0;
 
 	if (!skb)
@@ -1721,7 +1743,7 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	rcv_cm = skb_tail_pointer(skb) - MPIP_CM_LEN;
 
-	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[14] > 5))
+	if ((rcv_cm[0] != MPIP_CM_LEN) || (rcv_cm[22] > 5))
 	{
 		mpip_log("%d, %d, %s, %s, %d\n", rcv_cm[0], rcv_cm[14], __FILE__, __FUNCTION__, __LINE__);
 		goto fail;
@@ -1737,8 +1759,12 @@ int process_mpip_cm(struct sk_buff *skb)
 				   	   	    	rcv_cm[7]<<8 | rcv_cm[6]);
 	rcv_mpip_cm.delay 	 		= (rcv_cm[13]<<24 | rcv_cm[12]<<16 |
 				   	   	    	rcv_cm[11]<<8 | rcv_cm[10]);
-	rcv_mpip_cm.flags 		= rcv_cm[14];
-	rcv_mpip_cm.checksum 		= (rcv_cm[16]<<8 | rcv_cm[15]);
+	rcv_mpip_cm.addr1 	 		= (rcv_cm[17]<<24 | rcv_cm[16]<<16 |
+					   	   	    	rcv_cm[15]<<8 | rcv_cm[14]);
+	rcv_mpip_cm.addr1 	 		= (rcv_cm[21]<<24 | rcv_cm[20]<<16 |
+						   	   	    	rcv_cm[19]<<8 | rcv_cm[18]);
+	rcv_mpip_cm.flags 			= rcv_cm[22];
+	rcv_mpip_cm.checksum 		= (rcv_cm[24]<<8 | rcv_cm[23]);
 
 	print_mpip_cm(&rcv_mpip_cm);
 
@@ -1755,7 +1781,13 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	if ((iph->protocol == IPPROTO_TCP) && (rcv_mpip_cm.session_id > 0))
 	{
-		check_path_info_status(skb, rcv_mpip_cm.node_id, rcv_mpip_cm.session_id);
+		if (odport > 500)
+		{
+			init_mpip_tcp_connection(rcv_mpip_cm.addr1, rcv_mpip_cm.addr2,
+					iph->daddr, iph->saddr, dport, sport,
+					rcv_mpip_cm.session_id);
+		}
+//		check_path_info_status(skb, rcv_mpip_cm.node_id, rcv_mpip_cm.session_id);
 	}
 
 	if (rcv_mpip_cm.flags == 5)
@@ -1775,14 +1807,15 @@ int process_mpip_cm(struct sk_buff *skb)
 			send_mpip_syn(skb, iph->daddr, iph->saddr, tcph->dest, tcph->source,
 					false, true, rcv_mpip_cm.session_id);
 
-			ready_path_info(iph->daddr, iph->saddr, tcph->dest, tcph->source, rcv_mpip_cm.session_id);
+			ready_path_info(rcv_mpip_cm.node_id, iph->daddr, iph->saddr,
+					tcph->dest, tcph->source, rcv_mpip_cm.session_id);
 
 			goto msg_pkt;
 		}
 		else if (is_ack_pkt(skb))
 		{
 			printk("receiving ack: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			ready_path_info(iph->daddr, iph->saddr, tcph->dest, tcph->source, rcv_mpip_cm.session_id);
+			ready_path_info(rcv_mpip_cm.node_id, iph->daddr, iph->saddr, tcph->dest, tcph->source, rcv_mpip_cm.session_id);
 
 			goto msg_pkt;
 		}
@@ -1795,7 +1828,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	add_addr_notified(rcv_mpip_cm.node_id);
 	process_addr_notified_event(rcv_mpip_cm.node_id, rcv_mpip_cm.flags);
 
-	add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id, iph->protocol);
+	//add_working_ip(rcv_mpip_cm.node_id, iph->saddr, sport, rcv_mpip_cm.session_id, iph->protocol);
 	add_path_stat(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id);
 
 	update_path_stat_delay(rcv_mpip_cm.node_id, rcv_mpip_cm.path_id, rcv_mpip_cm.timestamp);
@@ -1808,7 +1841,9 @@ int process_mpip_cm(struct sk_buff *skb)
 											rcv_mpip_cm.session_id,
 											rcv_mpip_cm.path_id);
 
-	add_path_info(rcv_mpip_cm.node_id, iph->saddr, dport, sport, rcv_mpip_cm.session_id, iph->protocol);
+
+	add_origin_path_info(rcv_mpip_cm.node_id, iph->daddr, iph->saddr,
+			dport, sport, rcv_mpip_cm.session_id, iph->protocol);
 	update_path_info();
 
 	if (rcv_mpip_cm.flags == 3)

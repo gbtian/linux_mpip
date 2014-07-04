@@ -29,7 +29,7 @@
 #include <net/snmp.h>
 #include <net/flow.h>
 
-#define MPIP_CM_LEN 17
+#define MPIP_CM_LEN 25
 #define MPIP_CM_NODE_ID_LEN 2
 #define MPIP_TCP_BUF_LEN 5
 
@@ -66,6 +66,8 @@ struct mpip_cm
 	unsigned char	path_stat_id;
 	__s32			timestamp;
 	__s32			delay;
+	__be32          addr1;
+	__be32          addr2;
 	unsigned char	flags;
 	__s16			checksum;
 };
@@ -248,6 +250,10 @@ bool is_mpip_enabled(__be32 addr, __be16 port);
 
 bool is_local_addr(__be32 addr);
 
+__be32 get_local_addr1();
+
+__be32 get_local_addr2();
+
 bool get_addr_notified(unsigned char *node_id);
 
 struct addr_notified_table *find_addr_notified(unsigned char *node_id);
@@ -273,8 +279,8 @@ int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 de
 
 int update_path_delay(unsigned char path_id, __s32 delay);
 
-bool ready_path_info(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport,
-					unsigned char session_id);
+bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport,	unsigned char session_id);
 
 int update_path_info(void);
 
@@ -295,8 +301,19 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr,
 bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
 					unsigned char session_id, unsigned int protocol);
 
-int add_path_info(unsigned char *node_id, __be32 daddr, __be16 dport,
-		__be16 sport, unsigned char session_id, unsigned int protocol);
+bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
+							__be32 saddr, __be32 daddr,
+							__be16 sport, __be16 dport,
+							unsigned char session_id);
+
+int add_origin_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+		__be16 dport, unsigned char session_id, unsigned int protocol);
+
+int add_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+		__be16 dport, unsigned char session_id, unsigned int protocol);
+
+bool is_original_path(unsigned char *node_id, __be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport,	unsigned char session_id);
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 			   __be32 *saddr, __be32 *daddr,  __be16 *sport, __be16 *dport,

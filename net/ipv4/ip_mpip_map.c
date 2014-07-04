@@ -212,6 +212,38 @@ bool is_mpip_enabled(__be32 addr, __be16 port)
 	return enabled;
 }
 
+__be32 get_local_addr1()
+{
+	struct local_addr_table *local_addr;
+
+	int index = 0;
+
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+		if (index == 0)
+			return local_addr->addr;
+	}
+
+	return 0;
+}
+
+__be32 get_local_addr2()
+{
+	struct local_addr_table *local_addr;
+
+	int index = 0;
+
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+		if (index == 1)
+			return local_addr->addr;
+
+		++index;
+	}
+
+	return 0;
+}
+
 bool is_local_addr(__be32 addr)
 {
 	if (find_local_addr(addr) > 0)
@@ -630,19 +662,10 @@ bool check_path_info_status(struct sk_buff *skb,
 		    (session_id == path_info->session_id) &&
 		    (path_info->status != 0))
 		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//			send_mpip_syn(skb, path_info->saddr, path_info->daddr,
-//					path_info->sport, path_info->dport,	true, false,
-//					session_id);
-
-			//if (convert_addr(192, 168, 1, 14) == path_info->daddr)
-			{
-			//	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-				send_mpip_syn(skb, path_info->saddr, convert_addr(192, 168, 1, 15),
-						path_info->sport, path_info->dport,	true, false,
-						session_id);
-
-			}
+			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			send_mpip_syn(skb, path_info->saddr, convert_addr(192, 168, 1, 15),
+					path_info->sport, path_info->dport,	true, false,
+					session_id);
 
 		}
 	}
@@ -1011,9 +1034,179 @@ struct path_info_table *find_path_info(__be32 saddr, __be32 daddr,
 	return NULL;
 }
 
+bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
+							__be32 saddr, __be32 daddr,
+							__be16 sport, __be16 dport,
+							unsigned char session_id)
+{
 
-bool ready_path_info(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport,
-					unsigned char session_id)
+	struct local_addr_table *local_addr;
+	struct path_info_table *item = NULL;
+	list_for_each_entry(local_addr, &la_head, list)
+	{
+		if (local_addr->addr == saddr)
+		{
+			if (daddr1 == daddr)
+			{
+				if (!find_path_info(local_addr->addr, daddr2, sport + 1, dport, session_id))
+				{
+					send_mpip_syn(NULL, local_addr->addr, daddr2,
+							sport + 1, dport, true, false, session_id);
+				}
+			}
+			else
+			{
+				if (!find_path_info(local_addr->addr, daddr1, sport + 1, dport, session_id))
+				{
+					send_mpip_syn(NULL, local_addr->addr, daddr1,
+							sport + 1, dport, true, false, session_id);
+				}
+			}
+		}
+		else
+		{
+			if (!find_path_info(local_addr->addr, daddr1, sport + 2, dport, session_id))
+			{
+				send_mpip_syn(NULL, local_addr->addr, daddr1,
+						sport + 2, dport, true, false, session_id);
+			}
+
+			if (!find_path_info(local_addr->addr, daddr2, sport + 3, dport, session_id))
+			{
+				send_mpip_syn(NULL, local_addr->addr, daddr2,
+						sport + 3, dport, true, false, session_id);
+			}
+		}
+	}
+
+	return true;
+}
+
+
+bool is_origin_path_info_added(unsigned char *node_id, unsigned char session_id, unsigned int protocol)
+{
+	struct path_info_table *path_info;
+
+	if (!node_id || (session_id <= 0))
+		return false;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if (is_equal_node_id(path_info->node_id, node_id) &&
+		   (path_info->session_id == session_id) &&
+		   (path_info->protocol == protocol))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+int add_origin_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+		__be16 dport, unsigned char session_id, unsigned int protocol)
+{
+	struct path_info_table *item = NULL;
+
+	if (!node_id || session_id <= 0)
+		return 0;
+
+	if (node_id[0] == node_id[1])
+	{
+		return 0;
+	}
+
+	if (is_origin_path_info_added(node_id, session_id, protocol))
+		return 0;
+
+	item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
+
+	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
+	item->fbjiffies = jiffies;
+	item->saddr = saddr;
+	item->sport = sport;
+	item->daddr = daddr;
+	item->dport = dport;
+	item->protocol = protocol;
+	item->session_id = session_id;
+	item->min_delay = 0;
+	item->delay = 0;
+	item->queuing_delay = 0;
+	item->max_queuing_delay = 0;
+	item->count = 0;
+	item->bw = 1000;
+	item->pktcount = 0;
+	item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
+
+	if (is_original_path(node_id, item->saddr, item->daddr,
+			item->sport, item->dport, session_id) || (protocol != IPPROTO_TCP))
+	{
+		item->status = 0;
+	}
+	else
+	{
+		item->status = 0;
+	}
+
+	INIT_LIST_HEAD(&(item->list));
+	list_add(&(item->list), &pi_head);
+
+	return 1;
+}
+
+
+int add_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+		__be16 dport, unsigned char session_id, unsigned int protocol)
+{
+	struct path_info_table *item = NULL;
+
+	if (!node_id || session_id <= 0)
+		return 0;
+
+	if (node_id[0] == node_id[1])
+	{
+		return 0;
+	}
+
+	item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
+
+	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
+	item->fbjiffies = jiffies;
+	item->saddr = saddr;
+	item->sport = sport;
+	item->daddr = daddr;
+	item->dport = dport;
+	item->protocol = protocol;
+	item->session_id = session_id;
+	item->min_delay = 0;
+	item->delay = 0;
+	item->queuing_delay = 0;
+	item->max_queuing_delay = 0;
+	item->count = 0;
+	item->bw = 1000;
+	item->pktcount = 0;
+	item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
+
+	if (is_original_path(node_id, item->saddr, item->daddr,
+			item->sport, item->dport, session_id) || (protocol != IPPROTO_TCP))
+	{
+		item->status = 0;
+	}
+	else
+	{
+		item->status = 0;
+	}
+
+	INIT_LIST_HEAD(&(item->list));
+	list_add(&(item->list), &pi_head);
+
+	return 1;
+}
+
+
+bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
+		__be16 sport, __be16 dport,	unsigned char session_id)
 {
 	struct path_info_table *path_info = find_path_info(saddr, daddr,
 			sport, dport, session_id);
@@ -1023,6 +1216,11 @@ bool ready_path_info(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport,
 	{
 		path_info->status = 0;
 		return true;
+	}
+	else
+	{
+		if (add_path_info(node_id, saddr, daddr, sport, dport, session_id, IPPROTO_TCP))
+			return true;
 	}
 
 	return false;
@@ -1070,7 +1268,7 @@ bool is_original_path(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	return false;
 }
 
-int add_path_info(unsigned char *node_id, __be32 daddr, __be16 sport,
+int add_path_info_1(unsigned char *node_id, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol)
 {
 	struct local_addr_table *local_addr;
