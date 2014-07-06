@@ -1189,16 +1189,17 @@ int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16
 	item->bw = 1000;
 	item->pktcount = 0;
 	item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
+	item->status = 0;
 
-	if (is_original_path(node_id, item->saddr, item->daddr,
-			item->sport, item->dport, session_id) || (protocol != IPPROTO_TCP))
-	{
-		item->status = 0;
-	}
-	else
-	{
-		item->status = 0;
-	}
+//	if (is_original_path(node_id, item->saddr, item->daddr,
+//			item->sport, item->dport, session_id) || (protocol != IPPROTO_TCP))
+//	{
+//		item->status = 0;
+//	}
+//	else
+//	{
+//		item->status = 0;
+//	}
 
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &pi_head);
