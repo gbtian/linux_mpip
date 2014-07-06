@@ -306,10 +306,14 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 							__be16 sport, __be16 dport,
 							unsigned char session_id);
 
-int add_origin_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol);
 
-int add_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+
+int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+		__be16 dport, unsigned char session_id, unsigned int protocol);
+
+int add_path_info_udp(unsigned char *node_id, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol);
 
 bool is_original_path(unsigned char *node_id, __be32 saddr, __be32 daddr,

@@ -1104,7 +1104,7 @@ bool is_origin_path_info_added(unsigned char *node_id, unsigned char session_id,
 }
 
 
-int add_origin_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol)
 {
 	struct path_info_table *item = NULL;
@@ -1158,7 +1158,7 @@ int add_origin_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __b
 }
 
 
-int add_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol)
 {
 	struct path_info_table *item = NULL;
@@ -1221,7 +1221,7 @@ bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	}
 	else
 	{
-		if (add_path_info(node_id, saddr, daddr, sport, dport, session_id, IPPROTO_TCP))
+		if (add_path_info_tcp(node_id, saddr, daddr, sport, dport, session_id, IPPROTO_TCP))
 			return true;
 	}
 
@@ -1270,7 +1270,7 @@ bool is_original_path(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	return false;
 }
 
-int add_path_info_1(unsigned char *node_id, __be32 daddr, __be16 sport,
+int add_path_info_udp(unsigned char *node_id, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol)
 {
 	struct local_addr_table *local_addr;
