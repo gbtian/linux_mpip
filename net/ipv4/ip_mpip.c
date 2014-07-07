@@ -1656,6 +1656,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 			skb_reset_network_header(skb);
 			skb_set_transport_header(skb, sizeof(struct iphdr));
 
+			struct iphdr *iph = ip_hdr(skb);
+			iph->protocol = IPPROTO_UDP;
 			udph = udp_hdr(skb); //this fixed the problem
 			if (!udph)
 			{
@@ -1668,7 +1670,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 				udph->dest = new_dport;
 			}
 
-			udph->len = htons(ntohs(udph->len) + MPIP_CM_LEN + 1);
+			udph->len = skb->len - iph->ihl<<2;
 			udph->check = 0;
 			udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 										   skb->len, protocol,
