@@ -115,6 +115,13 @@ static struct ctl_table mpip_table[] =
 			.proc_handler = &proc_dointvec
 	},
  	{
+			.procname = "mpip_use_tcp",
+			.data = &sysctl_mpip_use_tcp,
+			.maxlen = sizeof(int),
+			.mode = 0644,
+			.proc_handler = &proc_dointvec
+	},
+ 	{
 			.procname = "mpip_tcp_buf_count",
 			.data = &sysctl_mpip_tcp_buf_count,
 			.maxlen = sizeof(int),
