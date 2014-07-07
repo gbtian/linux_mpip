@@ -728,7 +728,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 }
 
 
-unsigned char get_sender_session(__be32 saddr, __be16 sport,
+struct socket_session_table *get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport)
 {
 	struct socket_session_table *socket_session;
@@ -751,16 +751,17 @@ unsigned char get_sender_session(__be32 saddr, __be16 sport,
 //			print_addr(__FUNCTION__, daddr);
 //			printk("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
-			return socket_session->session_id;
+			return socket_session;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
-int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
+void add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 					   __be32 saddr, __be16 sport,
-					   __be32 daddr, __be16 dport)
+					   __be32 daddr, __be16 dport,
+					   unsigned int protocol)
 {
 	struct socket_session_table *item = NULL;
 
@@ -770,15 +771,15 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 //	}
 
 	if (!src_node_id || !dst_node_id)
-		return 0;
+		return;
 
 	if ((src_node_id[0] == src_node_id[1]) || (dst_node_id[0] == dst_node_id[1]))
 	{
-		return 0;
+		return;
 	}
 
-	if (get_sender_session(saddr, sport, daddr, dport) > 0)
-		return 0;
+	if (get_sender_session(saddr, sport, daddr, dport))
+		return;
 
 
 	item = kzalloc(sizeof(struct socket_session_table),	GFP_ATOMIC);
@@ -789,7 +790,7 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 	INIT_LIST_HEAD(&(item->tcp_buf));
 	item->next_seq = 0;
 	item->buf_count = 0;
-
+	item->protocol = protocol;
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -804,13 +805,11 @@ int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 	mpip_log( "ss: %d,%d,%d\n", item->session_id,
 			sport, dport);
 	mpip_log("%s, %d\n", __FILE__, __LINE__);
-
-	return 1;
 }
 
 
 
-unsigned char find_receiver_session(unsigned char *node_id, unsigned char session_id)
+struct socket_session_table *find_receiver_session(unsigned char *node_id, unsigned char session_id)
 {
 	struct socket_session_table *socket_session;
 
@@ -822,18 +821,19 @@ unsigned char find_receiver_session(unsigned char *node_id, unsigned char sessio
 		if (is_equal_node_id(socket_session->dst_node_id, node_id) &&
 			(socket_session->session_id == session_id))
 		{
-			return socket_session->session_id;
+			return socket_session;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
-unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
+struct socket_session_table *get_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id,
-		 	 	 	 	unsigned char path_id)
+		 	 	 	 	unsigned char path_id,
+		 	 	 	 	unsigned int protocol)
 {
 	struct socket_session_table *item = NULL;
 	int sid;
@@ -849,21 +849,21 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 
 	static_session_id = (static_session_id > session_id) ? static_session_id : session_id;
 
-	sid = find_receiver_session(dst_node_id, session_id);
-	if (sid > 0)
-		return sid;
+	item = find_receiver_session(dst_node_id, session_id);
+	if (item)
+		return item;
 
 	mpip_log("%s, %d\n", __FILE__, __LINE__);
 	print_addr(saddr);
 	print_addr(daddr);
 	mpip_log("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
-	sid = get_sender_session(saddr, sport, daddr, dport);
-	if (sid > 0)
-		return sid;
+	item = get_sender_session(saddr, sport, daddr, dport);
+	if (item)
+		return item;
 
 	if (path_id > 0)
-		return 0;
+		return NULL;
 
 	item = kzalloc(sizeof(struct socket_session_table), GFP_ATOMIC);
 
@@ -873,7 +873,7 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	INIT_LIST_HEAD(&(item->tcp_buf));
 	item->next_seq = 0;
 	item->buf_count = 0;
-
+	item->protocol = protocol;
 	item->saddr = saddr;
 	item->sport = sport;
 	item->daddr = daddr;
@@ -882,14 +882,7 @@ unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char 
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
-//	print_addr(__FUNCTION__, saddr);
-//	print_addr(__FUNCTION__, daddr);
-//	mpip_log( "ss: %d,%d,%d\n", item->session_id,
-//			sport, dport);
-//	mpip_log("%s, %d\n", __FILE__, __LINE__);
-
-	return item->session_id;
+	return item;
 }
 
 int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
@@ -1093,8 +1086,7 @@ bool is_origin_path_info_added(unsigned char *node_id, unsigned char session_id,
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if (is_equal_node_id(path_info->node_id, node_id) &&
-		   (path_info->session_id == session_id) &&
-		   (path_info->protocol == protocol))
+		   (path_info->session_id == session_id))
 		{
 			return true;
 		}
@@ -1130,7 +1122,6 @@ int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	item->protocol = protocol;
 	item->session_id = session_id;
 	item->min_delay = 0;
 	item->delay = 0;
@@ -1171,6 +1162,15 @@ int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16
 		return 0;
 	}
 
+	item = find_path_info(saddr, daddr,
+				sport, dport, session_id);
+
+	if (item)
+	{
+		item->status = 0;
+		return true;
+	}
+
 	item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
 	memcpy(item->node_id, node_id, MPIP_CM_NODE_ID_LEN);
@@ -1179,7 +1179,6 @@ int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16
 	item->sport = sport;
 	item->daddr = daddr;
 	item->dport = dport;
-	item->protocol = protocol;
 	item->session_id = session_id;
 	item->min_delay = 0;
 	item->delay = 0;
@@ -1242,8 +1241,7 @@ bool is_dest_added(unsigned char *node_id, __be32 addr, __be16 port,
 		if (is_equal_node_id(path_info->node_id, node_id) &&
 		   (path_info->daddr == addr) &&
 		   (path_info->dport == port) &&
-		   (path_info->session_id == session_id) &&
-		   (path_info->protocol == protocol))
+		   (path_info->session_id == session_id))
 		{
 			return true;
 		}
@@ -1286,13 +1284,21 @@ int add_path_info_udp(unsigned char *node_id, __be32 daddr, __be16 sport,
 	{
 		return 0;
 	}
-
-	if (is_dest_added(node_id, daddr, dport, session_id, protocol))
-		return 0;
+//
+//	if (is_dest_added(node_id, daddr, dport, session_id, protocol))
+//		return 0;
 
 
 	list_for_each_entry(local_addr, &la_head, list)
 	{
+
+		item = find_path_info(local_addr->addr, daddr,
+						sport, dport, session_id);
+		if (item)
+		{
+			item->status = 0;
+			continue;
+		}
 
 		item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
@@ -1302,7 +1308,6 @@ int add_path_info_udp(unsigned char *node_id, __be32 daddr, __be16 sport,
 		item->sport = sport;
 		item->daddr = daddr;
 		item->dport = dport;
-		item->protocol = protocol;
 		item->session_id = session_id;
 		item->min_delay = 0;
 		item->delay = 0;
@@ -1363,8 +1368,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	{
 		if (!is_equal_node_id(path->node_id, node_id) ||
 			path->session_id != session_id ||
-			path->status != 0 ||
-			path->protocol != protocol)
+			path->status != 0)
 		{
 			continue;
 		}
@@ -1836,8 +1840,6 @@ asmlinkage long sys_mpip(void)
 		printk("%d  ", path_info->sport);
 
 		printk("%d  ", path_info->dport);
-
-		printk("%d  ", path_info->protocol);
 
 		printk("%d  ", path_info->session_id);
 

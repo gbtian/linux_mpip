@@ -2092,7 +2092,7 @@ process:
 	return ret;
 
 no_tcp_socket:
-	printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+	printk("%s, %d\n", __FILE__, __LINE__);
 	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
 	{
 		printk("%s, %d\n", __FILE__, __LINE__);
@@ -2105,34 +2105,34 @@ csum_error:
 		printk("i: %s, %d\n", __FILE__, __LINE__);
 		TCP_INC_STATS_BH(net, TCP_MIB_CSUMERRORS);
 bad_packet:
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		TCP_INC_STATS_BH(net, TCP_MIB_INERRS);
 	} else {
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		tcp_v4_send_reset(NULL, skb);
 	}
 
 discard_it:
 	/* Discard frame. */
-	printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+	printk("%s, %d\n", __FILE__, __LINE__);
 	kfree_skb(skb);
 	return 0;
 
 discard_and_relse:
-	printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+	printk("%s, %d\n", __FILE__, __LINE__);
 	sock_put(sk);
 	goto discard_it;
 
 do_time_wait:
 //	printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
 	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		inet_twsk_put(inet_twsk(sk));
 		goto discard_it;
 	}
 
 	if (skb->len < (th->doff << 2)) {
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		inet_twsk_put(inet_twsk(sk));
 		goto bad_packet;
 	}
@@ -2140,7 +2140,7 @@ do_time_wait:
 	if (tcp_checksum_complete(skb))
 	{
 		inet_twsk_put(inet_twsk(sk));
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		goto csum_error;
 	}
 
@@ -2163,7 +2163,7 @@ do_time_wait:
 		tcp_v4_timewait_ack(sk, skb);
 		break;
 	case TCP_TW_RST:
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+		printk("%s, %d\n", __FILE__, __LINE__);
 		goto no_tcp_socket;
 	case TCP_TW_SUCCESS:;
 	}

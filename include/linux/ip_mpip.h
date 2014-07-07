@@ -43,6 +43,7 @@ extern int sysctl_mpip_bw_2;
 extern int sysctl_mpip_bw_3;
 extern int sysctl_mpip_bw_4;
 extern int sysctl_mpip_hb;
+extern int sysctl_mpip_use_tcp;
 extern int sysctl_mpip_tcp_buf_count;
 
 extern int max_pkt_len;
@@ -122,7 +123,7 @@ struct path_info_table
 	__be32				daddr; /* destination ip address*/
 	__be16				sport; /* source port*/
 	__be16				dport; /* destination port*/
-	unsigned int 		protocol;
+//	unsigned int 		protocol;
 	__s32 				min_delay;
 	__s32     			delay;
 	__s32     			queuing_delay;
@@ -156,6 +157,7 @@ struct socket_session_table
 	struct list_head 	tcp_buf;
 	__u32				next_seq;
 	int 				buf_count;
+	unsigned int 		protocol;
 
 	/* socket information seen at the receiver side*/
 	__be32				saddr; /* source ip address*/
@@ -285,11 +287,12 @@ bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
 int update_path_info(void);
 
 
-unsigned char get_receiver_session_id(unsigned char *src_node_id, unsigned char *dst_node_id,
+struct socket_session_table *get_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 						__be32 saddr, __be16 sport,
 		 	 	 	 	__be32 daddr, __be16 dport,
 		 	 	 	 	unsigned char session_id,
-		 	 	 	 	unsigned char path_id);
+		 	 	 	 	unsigned char path_id,
+		 	 	 	 	unsigned int protocol);
 
 int get_receiver_session_info(unsigned char *node_id,	unsigned char session_id,
 						__be32 *saddr, __be16 *sport,
@@ -327,12 +330,13 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 unsigned char find_earliest_path_stat_id(unsigned char *dest_node_id, __s32 *delay);
 
-unsigned char get_sender_session(__be32 saddr, __be16 sport,
+struct socket_session_table *get_sender_session(__be32 saddr, __be16 sport,
 								 __be32 daddr, __be16 dport);
 
-int add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
+void add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 					   __be32 saddr, __be16 sport,
-					   __be32 daddr, __be16 dport);
+					   __be32 daddr, __be16 dport,
+					   unsigned int protocol);
 
 __be32 find_local_addr(__be32 addr);
 
@@ -342,7 +346,7 @@ void update_addr_change(void);
 
 int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id);
 
-unsigned char get_session(struct sk_buff *skb);
+//unsigned char get_session(struct sk_buff *skb);
 
 void reset_mpip(void);
 

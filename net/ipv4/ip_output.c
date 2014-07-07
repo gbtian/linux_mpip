@@ -134,6 +134,7 @@ int ip_local_out(struct sk_buff *skb)
 						{
 							if (ip_route_out(skb, new_saddr, new_daddr))
 							{
+								iph = ip_hdr(skb);
 								iph->saddr = new_saddr;
 								iph->daddr = new_daddr;
 								if (sysctl_mpip_send)
