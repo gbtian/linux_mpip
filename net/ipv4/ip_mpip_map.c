@@ -1789,9 +1789,11 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-		printk("%d\t", socket_session->sport);
+		printk("%d  ", socket_session->sport);
 
-		printk("%d\n", socket_session->dport);
+		printk("%d  ", socket_session->dport);
+
+		printk("%d\n", socket_session->protocol);
 	}
 
 	printk("******************ps*************\n");
