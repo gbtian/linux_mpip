@@ -755,7 +755,7 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse,
 
 	iph = ip_hdr(nskb);
 
-	mpip_log("%d, %d, %s, %s, %d\n", iph->id, ip_hdr(skb), __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%d, %d, %s, %s, %d\n", iph->id, ip_hdr(skb)->protocol, __FILE__, __FUNCTION__, __LINE__);
 	if (!insert_mpip_cm(nskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
 			iph->protocol, flags, session_id))
 	{
@@ -1626,7 +1626,15 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if(protocol == IPPROTO_TCP)
 	{
-		if (sysctl_mpip_use_tcp)
+		bool inited = (new_dport != 0);
+		bool origin = false;
+		if (inited)
+		{
+			origin = is_original_path(dst_node_id, new_saddr, new_daddr,
+										new_sport, new_dport, send_mpip_cm.session_id);
+		}
+
+		if (sysctl_mpip_use_tcp || !init || origin)
 		{
 			tcph = tcp_hdr(skb); //this fixed the problem
 			if (!tcph)
