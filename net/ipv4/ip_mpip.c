@@ -1659,8 +1659,19 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		}
 		else
 		{
+			unsigned char *tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+
+			if (!tmp)
+			{
+				mpip_log("tmp == NULL\n");
+				return 0;
+			}
+
 			unsigned char *myiph = skb_network_header(skb);
-			memcpy(myiph - 8, myiph, sizeof(struct iphdr));
+			memcpy(tmp, myiph, sizeof(struct iphdr));
+			memcpy(myiph - 8, tmp, sizeof(struct iphdr));
+			kfree(tmp);
+
 			skb_push(skb, 8);
 			skb_reset_network_header(skb);
 			skb_set_transport_header(skb, sizeof(struct iphdr));
@@ -1928,9 +1939,20 @@ int process_mpip_cm(struct sk_buff *skb)
 			print_addr(iph->saddr);
 			print_addr(iph->daddr);
 
+			unsigned char *tmp = kzalloc(sizeof(struct iphdr), GFP_ATOMIC);
+
+			if (!tmp)
+			{
+				mpip_log("tmp == NULL\n");
+				return 0;
+			}
+
 			iph->protocol = IPPROTO_TCP;
 			unsigned char *myiph = skb_network_header(skb);
-			memcpy(myiph + 8, myiph, sizeof(struct iphdr));
+			memcpy(tmp, myiph, sizeof(struct iphdr));
+			memcpy(myiph + 8, tmp, sizeof(struct iphdr));
+			kfree(tmp);
+
 			skb_pull(skb, 8);
 			skb_reset_network_header(skb);
 			skb_set_transport_header(skb, sizeof(struct iphdr));
