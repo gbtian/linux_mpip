@@ -1631,7 +1631,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		bool origin = false;
 		if (inited)
 		{
-			origin = is_original_path(dst_node_id, new_saddr, new_daddr,
+			origin = is_original_path(dst_node_id, *new_saddr, *new_daddr,
 										new_sport, new_dport, send_mpip_cm.session_id);
 		}
 
