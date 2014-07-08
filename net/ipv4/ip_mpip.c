@@ -1607,8 +1607,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if (new_saddr && ((*new_saddr) > 0))
 	{
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
-				sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+				ip_hdr(skb)->protocol, sport, dport, __FILE__, __FUNCTION__,
+				__LINE__);
 		print_addr(*new_saddr);
 		print_addr(*new_daddr);
 	}
@@ -1684,6 +1685,10 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 										   skb->len, protocol,
 										   csum_partial((char *)udph, skb->len, 0));
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+			mpip_log("sending: %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+							ip_hdr(skb)->protocol, sport, dport, __FILE__, __FUNCTION__,
+							__LINE__);
 		}
 	}
 	else if(protocol == IPPROTO_UDP)
@@ -1910,11 +1915,19 @@ int process_mpip_cm(struct sk_buff *skb)
 
 	if (socket_session)
 	{
+		mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		print_addr(iph->saddr);
+		print_addr(iph->daddr);
+
 		iph->saddr = socket_session->daddr;
 		iph->daddr = socket_session->saddr;
 
 		if (iph->protocol == IPPROTO_UDP && socket_session->protocol == IPPROTO_TCP)
 		{
+			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
+
 			iph->protocol = IPPROTO_TCP;
 			unsigned char *myiph = skb_network_header(skb);
 			memcpy(myiph + 8, myiph, sizeof(struct iphdr));
@@ -1931,6 +1944,14 @@ int process_mpip_cm(struct sk_buff *skb)
 
 			tcph->source = socket_session->dport;
 			tcph->dest = socket_session->sport;
+
+			iph = ip_hdr(skb);
+			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", iph->id,
+					socket_session->dport, socket_session->sport,
+					__FILE__, __FUNCTION__, __LINE__);
+			print_addr(iph->saddr);
+			print_addr(iph->daddr);
+
 
 		}
 		else if(iph->protocol==IPPROTO_TCP && socket_session->protocol == IPPROTO_TCP)
