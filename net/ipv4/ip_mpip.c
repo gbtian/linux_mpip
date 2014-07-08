@@ -1604,19 +1604,19 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[23] = checksum & 0xff;
 	send_cm[24] = (checksum>>8) & 0xff;
 
-//	mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ntohs(udph->len), sport, dport, __FILE__, __FUNCTION__, __LINE__);
-//	print_addr(old_saddr);
-//	print_addr(old_daddr);
 
 	if (new_saddr && ((*new_saddr) > 0))
 	{
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+				sport, dport, __FILE__, __FUNCTION__, __LINE__);
 		print_addr(*new_saddr);
 		print_addr(*new_daddr);
 	}
 	else
 	{
-		mpip_log("sending: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+		mpip_log("sending: %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+				ip_hdr(skb)->protocol, sport, dport, __FILE__, __FUNCTION__,
+				__LINE__);
 		print_addr(ip_hdr(skb)->saddr);
 		print_addr(ip_hdr(skb)->daddr);
 	}

@@ -394,7 +394,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 			__be16 sport = 0, dport = 0;
 			if (get_skb_port(skb, &sport, &dport))
 			{
-				mpip_log("\nreceiving: %d, %d, %d, %s, %s, %d\n", iph->id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+				mpip_log("\nreceiving: %d, %d, %d, %d, %s, %s, %d\n", iph->id, iph->protocol, sport, dport, __FILE__, __FUNCTION__, __LINE__);
 				print_addr(iph->saddr);
 				print_addr(iph->daddr);
 			}
