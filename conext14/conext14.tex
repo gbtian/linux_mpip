@@ -1,0 +1,199 @@
+\documentclass[conference]{sig-alternate}
+
+\usepackage[tight,footnotesize]{subfigure}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{times}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+%\usepackage{slashbox}
+
+\usepackage{epsfig}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{psfrag}
+\usepackage{verbatim}
+\usepackage{color}
+%\usepackage{hyperref}
+\usepackage[bf]{caption}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{definition}{Definition}
+
+\newcommand {\bear}{\begin{eqnarray}}
+\newcommand {\eear}{\end{eqnarray}}
+\newcommand {\bearn}{\begin{eqnarray*}}
+\newcommand {\eearn}{\end{eqnarray*}}
+\newcommand {\barr}{\begin{array}}
+\newcommand {\earr}{\end{array}}
+\newcommand {\done} {\hfill\quad\vrule height4pt WIDTH4PT}
+\def\cee#1#2{\left(\barr{c} #1\\ #2 \earr \right)}
+\def\tA{\tilde{A}}
+\def\tL{\tilde{L}}
+\def\tM{\tilde{M}}
+\def\tP{\tilde{P}}
+\def\real{{\rm I\!R}}
+\def\cS{{\cal S}}
+\def\cF{{\cal F}}
+\def\hT{\hat{T}}
+\def\b1{\mathbf{1}}
+%\def\hr{\hat{R}}
+%\def\RR{\mathbb{R}}
+
+
+\newcommand{\la}{\lambda}
+\newcommand{\al}{\alpha}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\def\bearn{\begin{eqnarray*}}
+\def\eearn{\end{eqnarray*}}
+\def\bheader#1{\noindent{\bf #1}}
+\def\bie#1{\item{\bf{#1}}}
+
+\newcommand{\bmax}{\mathop{\boldsymbol{\max}}}
+\newcommand{\bmin}{\mathop{\boldsymbol{\min}}}
+\newcommand{\bargmax}{\mathop{\mathbf{argmax}}}
+\newcommand{\bargmin}{\mathop{\mathbf{argmin}}}
+
+%%%%%%%%%%%%%%%from harald
+\newcommand{\hide}[1]{}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\tr}{{\rm tr}}
+\newcommand{\tU}{P}
+\newcommand{\tV}{Q}
+\newcommand{\tW}{{\tilde{W}}}
+\newcommand{\tR}{{\tilde{R}}}
+\newcommand{\ba}{{\bf a}}
+\newcommand{\bb}{{\bf b}}
+\newcommand{\bd}{{\bf d}}
+\newcommand{\identity}{I}
+\newcommand{\ones}{{1\!\!1}}
+\newcommand{\elprod}{\otimes}
+\newcommand{\WMW}{{\rm WMW}}
+\newcommand{\stepfct}{{\bf 1}}
+\newcommand{\hy}{\hat{Y}}
+\newcommand{\hr}{\hat{R}}
+\newcommand{\rimp}{R^{\rm o\& i}}
+\newcommand{\rank}{{\rm Rank}}
+\newcommand{\nrank}{{\rm Nrank}}
+\newcommand{\anr}{{\rm ANR}}
+\newcommand{\aanr}{{\rm A}^{\rm 2}{\rm NR}}
+\newcommand{\pr}{ \bar{R}}
+\newcommand{\rmse}{{\rm RMSE}}
+\newcommand{\Robs}{R^{\rm obs}}
+\newcommand{\topk}{{\rm TOPK}}
+\newcommand{\areatop}{{\rm ATOP}}
+\newcommand{\ppp}{{\rm Prec}_u @ }
+\newcommand{\rrr}{{\rm Rec}_u @ }
+\newcommand{\sN}{\tilde{N}}
+\newcommand{\mult}{} %\cdot
+\newcommand{\auc}{{\rm AUC}} %\cdot
+\newcommand{\gauss}{{\cal N}} %\cdot
+\newcommand{\Qi}{i} %\cdot
+\newcommand{\hQ}{\hat{Q}} %\cdot
+\newcommand{\hP}{\hat{P}} %\cdot
+\newcommand{\hM}{\hat{M}} %\cdot
+\newcommand{\precision}{{\rm P}} %\cdot
+\newcommand{\recall}{{\rm R}} %\cdot
+\newcommand{\ndcg}{{\rm nDCG}} %\cdot
+\newcommand{\dcg}{{\rm DCG}} %\cdot
+\newcommand{\sdcg}{{\rm sDCG}} %\cdot
+\newcommand{\err}{{\rm ERR}} %\cdot
+\newcommand{\map}{{\rm MAP}} %\cdot
+\newcommand{\popcount}{{\rm pop}} %\cdot
+\newcommand{\countall}{{\rm \# ratings}} %\cdot
+\newcommand{\hitrate}{{\rm HR}} %\cdot
+\newcommand{\ic}{i_0} %number of items
+\newcommand{\uc}{u_0} %number of users
+\newcommand{\jc}{j_0} %rank of low-rank MF, or latent dimensions
+
+
+\newcommand{\cc}{CircleCon} %rank of low-rank MF, or latent dimensions
+\newcommand{\com}[1]{{\color{red}\bf #1}}
+\newcommand{\ci}{{\cal C}}
+\newcommand{\cat}{{\rm cat}}
+
+%%%----------------------- make it tighter ----------------------------
+%\topskip -0.5in            %between header and text
+%\parskip 0in            %gap between paragraphs
+%\floatsep 0.1in           %space left between floats
+%\textfloatsep 0.1in       %space between last top float or first bottom float and the text
+%\intextsep 0.1in          %space left on top and bottom of an in-text float
+%\dblfloatsep 0.1in        %floatsep for 2 column
+%\dbltextfloatsep 0.05in    %space between last top float or first bottom float and the text
+%\abovecaptionskip 0.01in   %space above caption
+%\belowcaptionskip 0.02in   %space below caption
+%\abovedisplayskip 0.1in   %space before maths
+%\belowdisplayskip 0.1in   %space after maths
+%\arraycolsep 0in       %gap between columns of an array
+%\topsep 0in             %space between first list item and preceding paragraph.
+%\partopsep 0.1in          %extra space added to \topsep when environment
+
+%\ifCLASSINFOpdf
+%  \graphicspath{{./fig/}}
+%\else
+%\fi
+
+%\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+%\conferenceinfo{CoNEXT'12,} {December 10--13, 2012, Nice, France.}
+%\CopyrightYear{2012}
+%\crdata{978-1-4503-1775-7/12/12}
+%\clubpenalty=10000
+%\widowpenalty = 10000
+
+\title{Multipath IP transmission: Motivation, Design, Performance}
+%\author{
+%\alignauthor Guibin Tian and Yong Liu\\
+%        \affaddr{Department of Electrical and Computer Engineering}\\
+%        \affaddr{New York University Polytechnic School of Engineering}\\
+%        \affaddr{Brooklyn, NY, USA 11201}\\
+%        \email{gt680@nyu.edu, yongliu@poly.edu}
+%}
+
+
+
+\maketitle
+
+
+\begin{abstract}
+%\boldmath
+Multipath Internet transmission has become available in recent years. Most devices have more than one interfaces that can be connected to Internet. Especially the booming of mobile devices introduces the greatest chance for multipath communication. 
+
+In $2011$, multipath TCP was introduced as RFC by IETF. This draft defines the architecture and guideline of multipath TCP development. Also, a popular multipath TCP implementation\cite{mptcp} has been in process for several years. Most research work on multipath TCP is based on this implementation. But, as the name refers, multipath TCP is only designed for TCP traffic. Inside the current Internet infrastructure, it is still an accepted assumption that most Internet traffic is transmitted via the TCP protocol. However, the rise of new streaming applications and P$2$P protocols that try to avoid traffic shaping techniques will likely increase the use of other protocols like UDP as a transport protocol.
+
+In this paper, we introduce multipath communication at network layer instead of transmission layer. By implementing multipath feature at network layer, almost all traffic on Internet can enjoy the convenience and performance improvement introduced by multipath. Also, because of the design and internal characters of multipath TCP and multipath IP, we can get a lighter weight implementation of multipath at network layer. We implement our proposition in the latest Linux kernel and evaluate its performance under multiple Internet scenarios. 
+
+\end{abstract}
+
+%\category{H.5.1}{Information Systems}{Multimedia Information Systems}[Video(e.g., tape, disk, DVI)]
+%\terms{Design}
+%\keywords{Adaptation, DASH, Emulab, Multiple CDN, SVR}
+%\IEEEpeerreviewmaketitle
+
+\input{intro}
+\input{related}
+\input{design}
+\input{evaluation}
+
+\section{Conclusions and Future Work}
+\label{sec:conclusion}
+
+\bibliographystyle{./bib/IEEEtran}
+\bibliography{./bib/IEEEfull}
+\end{document}
+
+

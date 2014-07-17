@@ -33,6 +33,8 @@
 #define MPIP_CM_NODE_ID_LEN 2
 #define MPIP_TCP_BUF_LEN 5
 
+//#define MPIP_FLAG_
+
 extern int sysctl_mpip_enabled;
 extern int sysctl_mpip_send;
 extern int sysctl_mpip_rcv;
@@ -117,7 +119,6 @@ struct path_info_table
 	/*update sent*/
 	unsigned char 		node_id[MPIP_CM_NODE_ID_LEN]; /*destination node id*/
 	unsigned char		path_id; /* path id: 0,1,2,3,4....*/
-	unsigned long 		fbjiffies; /* last feedback time of this path */
 	unsigned char		session_id;
 	__be32				saddr; /* source ip address*/
 	__be32				daddr; /* destination ip address*/
@@ -128,8 +129,9 @@ struct path_info_table
 	__s32     			delay;
 	__s32     			queuing_delay;
 	__s32     			max_queuing_delay;
-	unsigned char		count;
 	__u64				bw;  /* bandwidth */
+	unsigned long 		fbjiffies; /* last feedback time of this path */
+	unsigned char		count;
 	__u64				pktcount;
 	unsigned char		status;/* For tcp additional path:
 	 	 	 	 	 	 	 	0: ready for use

@@ -1,0 +1,20 @@
+%!TEX root =conext14.tex
+\section{Performance Evaluation}
+\label{sec:evaluation}
+To evaluate the performance of our proposed system, we implemented our multipath IP in Ubuntu under Linux kernel $3.12.1$. Two desktops are installed with the MPIP enabled Ubuntu system. At each desktop, two NICs working at $100$Mbits/sec are installed which means that there are totally $4$ paths and the throughput upper bound is $200$Mbits/sec between the two nodes. We modify an open source software \bf{Simple Traffic Monitor}\cite{simon01} to record the real time traffic that goes through each NIC.
+
+%For mobile devices, we implement this feature in Google Nexus $4$ with Android $4.01$.
+
+\subsection{TCP/UDP throughput enhancement}
+\label{sec:tcp}
+
+In this section, we try to verify that our system can achieve high throughput in both TCP and UDP scenarios. As a typical implementation of multipath, MPTCP creates the highest TCP throughput record between two nodes in \cite{record}. In that demonstration, they used $6$ $1$Gbps NIC interfaces at each node, and connect them directly without only middle boxes, and they limited the number of paths to $6$ by setting up IP TABLES in Ubuntu. Also, they did bunch of TCP parameter optimization to squeeze out all possible throughout. They achieved a breathtaking $51$Gbps throughput in that demonstration. 
+
+\subsection{Skype voice call improvement}
+\label{sec:skype}
+
+\subsection{Datacenter use case}
+\label{sec:datacenter}
+
+\subsection{Seamless handover with dynamic networks}
+\label{sec:handover}

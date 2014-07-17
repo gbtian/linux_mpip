@@ -1,0 +1,601 @@
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.5.2)  17 JUL 2014 00:56
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**conext14.tex
+(./conext14.tex
+LaTeX2e <2011/06/27>
+Babel <3.9f> and hyphenation patterns for 78 languages loaded.
+(./sig-alternate.cls
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/epsfig.sty
+Package: epsfig 1999/02/16 v1.7a (e)psfig emulation (SPQR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/latexconfig/graphics.cfg
+File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
+
+(/usr/share/texlive/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count79
+))
+\Gin@req@height=\dimen102
+\Gin@req@width=\dimen103
+)
+\epsfxsize=\dimen104
+\epsfysize=\dimen105
+)
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\@emptytoks=\toks15
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2013/01/14 v2.14 AMS math features
+\@mathmargin=\skip41
+
+For additional information on amsmath, use the `?' option.
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2000/06/29 v2.01
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0
+\@emptytoks=\toks16
+\ex@=\dimen106
+))
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d
+\pmbraise@=\dimen107
+)
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 1999/12/14 v2.01 operator names
+)
+\inf@bad=\count80
+LaTeX Info: Redefining \frac on input line 210.
+\uproot@=\count81
+\leftroot@=\count82
+LaTeX Info: Redefining \overline on input line 306.
+\classnum@=\count83
+\DOTSCASE@=\count84
+LaTeX Info: Redefining \ldots on input line 378.
+LaTeX Info: Redefining \dots on input line 381.
+LaTeX Info: Redefining \cdots on input line 466.
+\Mathstrutbox@=\box26
+\strutbox@=\box27
+\big@size=\dimen108
+LaTeX Font Info:    Redeclaring font encoding OML on input line 566.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
+\macc@depth=\count85
+\c@MaxMatrixCols=\count86
+\dotsspace@=\muskip10
+\c@parentequation=\count87
+\dspbrk@lvl=\count88
+\tag@help=\toks17
+\row@=\count89
+\column@=\count90
+\maxfields@=\count91
+\andhelp@=\toks18
+\eqnshift@=\dimen109
+\alignsep@=\dimen110
+\tagshift@=\dimen111
+\tagwidth@=\dimen112
+\totwidth@=\dimen113
+\lineht@=\dimen114
+\@envbody=\toks19
+\multlinegap=\skip42
+\multlinetaggap=\skip43
+\mathdisplay@stack=\toks20
+LaTeX Info: Redefining \[ on input line 2665.
+LaTeX Info: Redefining \] on input line 2666.
+)
+Document Class 'sig-alternate' <23rd. May '12>. Modified by G.K.M. Tobin/Gerry 
+Murray
+Based in part upon document Style `acmconf' <22 May 89>. Hacked 4/91 by
+shivers@cs.cmu.edu, 4/93 by theobald@cs.mcgill.ca
+Excerpts were taken from (Journal Style) 'esub2acm.cls'.
+****** Bugs/comments/suggestions/technicalities to Gerry Murray -- murray@hq.ac
+m.org ******
+Questions on the style, SIGS policies, etc. to Adrienne Griscti griscti@acm.org
+
+\footheight=\dimen115
+\@maxsep=\dimen116
+\@dblmaxsep=\dimen117
+\aucount=\count92
+\originalaucount=\count93
+\auwidth=\dimen118
+\auskip=\dimen119
+\auskipcount=\count94
+\auskip=\dimen120
+\allauboxes=\dimen121
+\addauthors=\toks21
+\addauflag=\count95
+\subtitletext=\toks22
+\savesection=\count96
+\sectioncntr=\count97
+\c@figure=\count98
+\c@table=\count99
+\titleboxnotes=\toks23
+\titleboxnoteflag=\count100
+Document Class: sig-alternate 2012/05/23 - V2.5 - based on acmproc.cls V1.3 <No
+v. 30 '99>
+(/usr/share/texlive/texmf-dist/tex/latex/base/latexsym.sty
+Package: latexsym 1998/08/17 v2.2e Standard LaTeX package (lasy symbols)
+\symlasy=\mathgroup6
+LaTeX Font Info:    Overwriting symbol font `lasy' in version `bold'
+(Font)                  U/lasy/m/n --> U/lasy/b/n on input line 47.
+)
+\@acmtitlebox=\box28
+\titlenotecount=\count101
+\tntoks=\toks24
+\tntokstwo=\toks25
+\tntoksthree=\toks26
+\tntoksfour=\toks27
+\tntoksfive=\toks28
+\catcount=\count102
+\copyrightnotice=\toks29
+\conf=\toks30
+\confinfo=\toks31
+\c@part=\count103
+\c@section=\count104
+\c@subsection=\count105
+\c@subsubsection=\count106
+\c@paragraph=\count107
+
+Using 'Abbrev' bibliography style
+LaTeX Info: Redefining \cite on input line 1211.
+\bibindent=\dimen122
+\colcntr=\count108
+\saveb@x=\box29
+\copyrtyr=\toks32
+\acmcopyr=\toks33
+\boilerplate=\toks34
+\copyrightetc=\toks35
+(/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2005/09/27 v1.99g Standard LaTeX package
+
+(/usr/share/texlive/texmf-dist/tex/latex/base/t1enc.def
+File: t1enc.def 2005/09/27 v1.99g Standard LaTeX file
+LaTeX Font Info:    Redeclaring font encoding T1 on input line 43.
+)
+LaTeX Font Info:    Try loading font information for T1+aer on input line 100.
+
+(/usr/share/texlive/texmf-dist/tex/latex/ae/t1aer.fd
+File: t1aer.fd 1997/11/16 Font definitions for T1/aer.
+)))
+(/usr/share/texlive/texmf-dist/tex/latex/subfigure/subfigure.sty
+Package: subfigure 2002/03/15 v2.1.5 subfigure package
+\subfigtopskip=\skip44
+\subfigcapskip=\skip45
+\subfigcaptopadj=\dimen123
+\subfigbottomskip=\skip46
+\subfigcapmargin=\dimen124
+\subfiglabelskip=\skip47
+\c@subfigure=\count109
+\c@lofdepth=\count110
+\c@subtable=\count111
+\c@lotdepth=\count112
+
+****************************************
+* Local config file subfigure.cfg used *
+****************************************
+(/usr/share/texlive/texmf-dist/tex/latex/subfigure/subfigure.cfg)
+\subfig@top=\skip48
+\subfig@bottom=\skip49
+)
+(/usr/share/texlive/texmf-dist/tex/latex/algorithms/algorithm.sty
+Package: algorithm 2009/08/24 v0.1 Document Style `algorithm' - floating enviro
+nment
+
+(/usr/share/texlive/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count113
+\float@exts=\toks36
+\float@box=\box30
+\@float@everytoks=\toks37
+\@floatcapt=\box31
+)
+(/usr/share/texlive/texmf-dist/tex/latex/base/ifthen.sty
+Package: ifthen 2001/05/26 v1.1c Standard LaTeX ifthen package (DPC)
+)
+\@float@every@algorithm=\toks38
+\c@algorithm=\count114
+)
+(/usr/share/texlive/texmf-dist/tex/latex/algorithms/algorithmic.sty
+Package: algorithmic 2009/08/24 v0.1 Document Style `algorithmic'
+\c@ALC@unique=\count115
+\c@ALC@line=\count116
+\c@ALC@rem=\count117
+\c@ALC@depth=\count118
+\ALC@tlm=\skip50
+\algorithmicindent=\skip51
+)
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/times.sty
+Package: times 2005/04/12 PSNFSS-v9.2a (SPQR) 
+)
+(/usr/share/texlive/texmf-dist/tex/latex/oberdiek/epstopdf.sty
+Package: epstopdf 2010/02/09 v2.5 Conversion with epstopdf on the fly (HO)
+
+(/usr/share/texlive/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
+
+(/usr/share/texlive/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2010/08/19 v1.1 Manage graphics extensions (HO)
+
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
+Package: kvdefinekeys 2011/04/07 v1.3 Define keys (HO)
+))
+(/usr/share/texlive/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2011/06/30 v3.11 Key value format for package options (HO)
+
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
+Package: kvsetkeys 2012/04/25 v1.16 Key value parser (HO)
+
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/etexcmds.sty
+Package: etexcmds 2011/02/16 v1.5 Avoid name clashes with e-TeX commands (HO)
+
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/ifluatex.sty
+Package: ifluatex 2010/03/01 v1.3 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+)))
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
+Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in PDF mode is detected.
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+Package grfext Info: Graphics extension search list:
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 452.
+
+(/usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+)))
+(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip11
+Package: url 2006/04/12  ver 3.3  Verb mode for urls, etc.
+)
+(/usr/share/texlive/texmf-dist/tex/latex/psfrag/psfrag.sty
+Package: psfrag 1998/04/11 v3.04 PSfrag (MCG)
+\pfg@pcount=\count119
+\pfg@scount=\count120
+\pfg@temp=\write3
+)
+(/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty
+Package: verbatim 2003/08/22 v1.5q LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks39
+\verbatim@line=\toks40
+\verbatim@in@stream=\read1
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2005/11/14 v1.0j Standard LaTeX Color (DPC)
+
+(/usr/share/texlive/texmf-dist/tex/latex/latexconfig/color.cfg
+File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
+)
+Package color Info: Driver file: pdftex.def on input line 130.
+)
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2013/05/02 v3.3-89 Customizing captions (AR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2013/05/02 v1.6-88 caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 57.
+\captionmargin=\dimen125
+\captionmargin@=\dimen126
+\captionwidth=\dimen127
+\caption@tempdima=\dimen128
+\caption@indent=\dimen129
+\caption@parindent=\dimen130
+\caption@hangindent=\dimen131
+\abovecaptionskip=\skip52
+\belowcaptionskip=\skip53
+Package caption Info: Unknown document class (or package),
+(caption)             standard defaults will be used.
+)
+
+Package caption Warning: Unsupported document class (or package) detected,
+(caption)                usage of the caption package is not recommended.
+See the caption package documentation for explanation.
+
+Package caption Info: \@makecaption = \long macro:#1#2-> \vskip 10pt \setbox \@
+tempboxa \hbox {\textbf {#1: #2}} \ifdim \wd \@tempboxa >\hsize \textbf {#1: #2
+}\par \else \hbox to\hsize {\hfil \box \@tempboxa \hfil } \fi .
+\c@ContinuedFloat=\count121
+Package caption Info: float package is loaded.
+Package caption Info: subfigure package is loaded.
+)
+\c@lemma=\count122
+\c@theorem=\count123
+\c@proposition=\count124
+\c@conjecture=\count125
+\c@definition=\count126
+
+
+LaTeX Warning: Unused global option(s):
+    [conference].
+
+(./conext14.aux)
+\openout1 = `conext14.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 151.
+LaTeX Font Info:    ... okay on input line 151.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 151.
+LaTeX Font Info:    ... okay on input line 151.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 151.
+LaTeX Font Info:    ... okay on input line 151.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 151.
+LaTeX Font Info:    ... okay on input line 151.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 151.
+LaTeX Font Info:    ... okay on input line 151.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 151.
+LaTeX Font Info:    ... okay on input line 151.
+LaTeX Font Info:    Try loading font information for T1+ptm on input line 151.
+ (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1ptm.fd
+File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
+)
+(/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count127
+\scratchdimen=\dimen132
+\scratchbox=\box32
+\nofMPsegments=\count128
+\nofMParguments=\count129
+\everyMPshowfont=\toks41
+\MPscratchCnt=\count130
+\MPscratchDim=\dimen133
+\MPnumerator=\count131
+\makeMPintoPDFobject=\count132
+\everyMPtoPDFconversion=\toks42
+)
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+LaTeX Font Info:    Try loading font information for U+msa on input line 169.
+ (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Try loading font information for U+msb on input line 169.
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+LaTeX Font Info:    Try loading font information for U+lasy on input line 169.
+
+(/usr/share/texlive/texmf-dist/tex/latex/base/ulasy.fd
+File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
+)
+
+LaTeX Warning: No \author given.
+
+
+Overfull \hbox (4.97694pt too wide) in paragraph at lines 174--175
+\T1/ptm/m/n/9 Multipath In-ter-net trans-mis-sion has be-come avail-able in re-
+cent years.
+ []
+
+(./intro.tex [1
+Non-PDF special ignored!{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
+
+
+]
+Overfull \hbox (2.06078pt too wide) in paragraph at lines 32--33
+[]\T1/ptm/m/n/9 More straight-for-ward to im-ple-ment mul-ti-path at IP layer s
+ince
+ []
+
+) (./related.tex) (./design.tex
+Package epstopdf Info: Source file: <fig/arch.eps>
+(epstopdf)                    date: 2014-05-14 22:15:19
+(epstopdf)                    size: 6968 bytes
+(epstopdf)             Output file: <fig/arch-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-05-15 00:52:27
+(epstopdf)                    size: 6715 bytes
+(epstopdf)             Command: <repstopdf --outfile=fig/arch-eps-converted-to.
+pdf fig/arch.eps>
+(epstopdf)             \includegraphics on input line 9.
+Package epstopdf Info: Output file is already uptodate.
+
+<fig/arch-eps-converted-to.pdf, id=10, 436.63126pt x 219.82124pt>
+File: fig/arch-eps-converted-to.pdf Graphic file (type pdf)
+
+<use fig/arch-eps-converted-to.pdf>
+Package pdftex.def Info: fig/arch-eps-converted-to.pdf used on input line 9.
+(pdftex.def)             Requested size: 192.00073pt x 96.66125pt.
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 10.
+Package epstopdf Info: Source file: <fig/cm.eps>
+(epstopdf)                    date: 2014-07-14 19:15:47
+(epstopdf)                    size: 1559255 bytes
+(epstopdf)             Output file: <fig/cm-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-07-14 19:16:26
+(epstopdf)                    size: 39192 bytes
+(epstopdf)             Command: <repstopdf --outfile=fig/cm-eps-converted-to.pd
+f fig/cm.eps>
+(epstopdf)             \includegraphics on input line 38.
+Package epstopdf Info: Output file is already uptodate.
+
+<fig/cm-eps-converted-to.pdf, id=11, 465.74pt x 509.905pt>
+File: fig/cm-eps-converted-to.pdf Graphic file (type pdf)
+
+<use fig/cm-eps-converted-to.pdf>
+Package pdftex.def Info: fig/cm-eps-converted-to.pdf used on input line 38.
+(pdftex.def)             Requested size: 192.00073pt x 210.20613pt.
+ [2 <./fig/arch-eps-converted-to.pdf> <./fig/cm-eps-converted-to.pdf>]
+Overfull \hbox (1.80086pt too wide) in paragraph at lines 82--91
+ [][] 
+ []
+
+Package epstopdf Info: Source file: <fig/me.eps>
+(epstopdf)                    date: 2014-05-14 23:43:23
+(epstopdf)                    size: 36106 bytes
+(epstopdf)             Output file: <fig/me-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-05-15 00:52:27
+(epstopdf)                    size: 29238 bytes
+(epstopdf)             Command: <repstopdf --outfile=fig/me-eps-converted-to.pd
+f fig/me.eps>
+(epstopdf)             \includegraphics on input line 113.
+Package epstopdf Info: Output file is already uptodate.
+<fig/me-eps-converted-to.pdf, id=23, 1356.06625pt x 1026.83624pt>
+File: fig/me-eps-converted-to.pdf Graphic file (type pdf)
+
+<use fig/me-eps-converted-to.pdf>
+Package pdftex.def Info: fig/me-eps-converted-to.pdf used on input line 113.
+(pdftex.def)             Requested size: 192.00073pt x 145.38559pt.
+ [3 <./fig/me-eps-converted-to.pdf>]
+Package epstopdf Info: Source file: <fig/cm.eps>
+(epstopdf)                    date: 2014-07-14 19:15:47
+(epstopdf)                    size: 1559255 bytes
+(epstopdf)             Output file: <fig/cm-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-07-14 19:16:26
+(epstopdf)                    size: 39192 bytes
+(epstopdf)             Command: <repstopdf --outfile=fig/cm-eps-converted-to.pd
+f fig/cm.eps>
+(epstopdf)             \includegraphics on input line 133.
+Package epstopdf Info: Output file is already uptodate.
+File: fig/cm-eps-converted-to.pdf Graphic file (type pdf)
+
+<use fig/cm-eps-converted-to.pdf>
+Package pdftex.def Info: fig/cm-eps-converted-to.pdf used on input line 133.
+(pdftex.def)             Requested size: 192.00073pt x 210.20613pt.
+Package epstopdf Info: Source file: <fig/delay.eps>
+(epstopdf)                    date: 2014-05-15 00:50:55
+(epstopdf)                    size: 21016 bytes
+(epstopdf)             Output file: <fig/delay-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-05-15 00:52:28
+(epstopdf)                    size: 18741 bytes
+(epstopdf)             Command: <repstopdf --outfile=fig/delay-eps-converted-to
+.pdf fig/delay.eps>
+(epstopdf)             \includegraphics on input line 160.
+Package epstopdf Info: Output file is already uptodate.
+
+<fig/delay-eps-converted-to.pdf, id=31, 1888.05376pt x 991.705pt>
+File: fig/delay-eps-converted-to.pdf Graphic file (type pdf)
+
+<use fig/delay-eps-converted-to.pdf>
+Package pdftex.def Info: fig/delay-eps-converted-to.pdf used on input line 160.
+
+(pdftex.def)             Requested size: 192.00073pt x 100.84085pt.
+
+Overfull \hbox (30.22418pt too wide) in paragraph at lines 176--190
+ [][] 
+ []
+
+[4 <./fig/delay-eps-converted-to.pdf>] [5]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (3.14084pt too wide) in paragraph at lines 362--363
+[]\T1/ptm/m/n/9 After the MPIP avail-abil-ity hand-shake has been suc-cess-full
+y com-
+ []
+
+[6]
+Underfull \vbox (badness 2073) has occurred while \output is active []
+
+Package epstopdf Info: Source file: <fig/outoforder.eps>
+(epstopdf)                    date: 2014-05-15 00:50:48
+(epstopdf)                    size: 46934 bytes
+(epstopdf)             Output file: <fig/outoforder-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-05-15 00:52:28
+(epstopdf)                    size: 33727 bytes
+(epstopdf)             Command: <repstopdf --outfile=fig/outoforder-eps-convert
+ed-to.pdf fig/outoforder.eps>
+(epstopdf)             \includegraphics on input line 406.
+Package epstopdf Info: Output file is already uptodate.
+
+<fig/outoforder-eps-converted-to.pdf, id=51, 1080.035pt x 1243.64626pt>
+File: fig/outoforder-eps-converted-to.pdf Graphic file (type pdf)
+
+<use fig/outoforder-eps-converted-to.pdf>
+Package pdftex.def Info: fig/outoforder-eps-converted-to.pdf used on input line
+ 406.
+(pdftex.def)             Requested size: 192.00073pt x 221.0761pt.
+
+Underfull \vbox (badness 2073) has occurred while \output is active []
+
+ [7])
+(./evaluation.tex
+
+LaTeX Warning: Citation `simon01' on page \thepage  undefined on input line 4.
+
+
+LaTeX Warning: Citation `record' on page \thepage  undefined on input line 11.
+
+
+Overfull \hbox (4.42595pt too wide) in paragraph at lines 19--19
+[]\secfnt Seamless han-dover with dy-namic net-works 
+ []
+
+) (./conext14.bbl
+LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <9> not available
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 28.
+) [8 <./fig/outoforder-eps-converted-to.pdf>] (./conext14.aux) ) 
+Here is how much of TeX's memory you used:
+ 4663 strings out of 493307
+ 64819 string characters out of 6139906
+ 145710 words of memory out of 5000000
+ 7988 multiletter control sequences out of 15000+600000
+ 52083 words of font info for 67 fonts, out of 8000000 for 9000
+ 957 hyphenation exceptions out of 8191
+ 42i,11n,38p,1228b,338s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/tex
+live/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/texmf-dist/font
+s/type1/public/amsfonts/cmextra/cmex9.pfb></usr/share/texlive/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmmi9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
+5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/shar
+e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share/texli
+ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texlive/texmf-dist/fonts
+/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/time
+s/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><
+/usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on conext14.pdf (8 pages, 315413 bytes).
+PDF statistics:
+ 112 PDF objects out of 1000 (max. 8388607)
+ 76 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 26 words of extra memory for PDF output out of 10000 (max. 10000000)
+

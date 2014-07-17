@@ -1,0 +1,47 @@
+%!TEX root =conext14.tex
+\section{Introduction}
+\label{sec:intro}
+Multipath has become available in recent years. Also, IETF proposed RFC $6182$ specifically for multipath TCP development in $2011$. By introducing multipath between both ends for one connection, not only higher throughput can be achieve, different characters on different paths can be complementary to satisfy different user requirement under volatile Internet congestion situations.
+
+In data center network, almost every two nodes are connected by multiple physical paths. Because of this unique structure, multipath has been deployed for a long time to increase throughput and improve reliability.
+
+Most current devices (Mainly mobile devices) have more than one internet interface ($3$G, WiFi), it is possible to make use of this facility to improve internet transmission. In use cases that end users want high throughput, like user is watching HD movies, parallel multipath transmission can greatly improve throughput. In use cases that end users have intermittent internet connection on one interface, multipath connection can provide smooth switching between connections which improves user experience.	
+
+
+Current work on multipath is mainly on TCP. In multipath TCP, if the user has more than one internet interface, there will be more than one sub TCP sub-flow in one TCP connection. In this way, the user does not need to re-establish the connection again when switching connection. The most popular implementation is from \cite{mptcp}, which maintains multiple sub-flows for a single TCP connection. But in multipath TCP also has some problems. 
+
+\begin{enumerate}
+\item In multipath TCP, between the client and server, there will be multiple TCP connections. Normally, the number of connections is all the possible composition of all interfaces between the client and server. If clients and the server both have 2 interfaces, it means that there will be 4 sub-flows for each connection. This can be a very high workload for the server if the server has large number of parallel clients.
+
+\item In multipath TCP, each sub-flow has its own congestion window, and also, to guarantee 
+fairness, the congestion windows of all sub-flows are coupled. This makes the mechanism too complicated.
+
+\item In multipath TCP, as designed, there will be two levels of sequence number. There will be a mapping between the overall sequence number and independent sequence number of each sub-flow. Also, this will make things complicated. Complicated things are always vulnerable.
+
+\item In multipath TCP, when switching connection, TCP slow-start will be done which may result in delays.
+
+\item multipath TCP can only be used in TCP connection. For other transport layer protocol, multipath can not be used. Although TCP traffic is dominating the Internet nowadays, there are studies showing that other protocols like UDP still play important roles. For some specific applications, TCP is not the best choice. 
+\end{enumerate}
+
+Based on this, we propose our multipath implementation at IP layer.
+
+Implementing multipath functionality at IP layer has following pros.
+\begin{enumerate}
+\item IP layer is relatively simpler than transport layer because it is connectionless. We do not need to deal with the complicated congestion window and flow control which resides in TCP protocol. Instead, we only do the implementation at IP layer and the implementation is also connectionless. This is totally transparent to other layers. 
+
+\item More straightforward to implement multipath at IP layer since multipath is in fact multiple IP addresses.
+
+\item MPTCP can only be used for TCP connection while MPIP is eligible for all protocols above IP layer.
+\end{enumerate}
+
+Our contribution is four-fold.
+\begin{enumerate}
+\item We propose the overall design and architecture of multipath IP transmission. By comparing our design with multipath TCP, we see that implementing multipath at IP layer has lighter weight than at TCP layer because of the internal simple character of IP layer.
+
+\item We implement our design in the latest Linux kernel. 
+
+\item We evaluate our implementation in different Internet environments. We show that our implementation can match multipath TCP in TCP protocol, and also, other protocols like UDP can fit perfectly with multipath IP.
+\end{enumerate}
+
+The rest of the paper is organized as follows. Section \ref{sec:related} describes the related work.
+The design of our implementation is introduced in Section \ref{sec:design}. In Section \ref{sec:evaluation}, we report the experimental results for our multipath IP design. We conclude the paper with summary and future work in Section \ref{sec:conclusion}.
