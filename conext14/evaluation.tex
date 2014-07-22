@@ -10,15 +10,39 @@ To evaluate the performance of our proposed system, we implemented our multipath
 
 In this section, we try to verify that our system can achieve high throughput in both TCP and UDP scenarios. As a typical implementation of multipath, MPTCP creates the highest TCP throughput record between two nodes in \cite{record}. In that demonstration, they used $6$ $1$Gbps NIC interfaces at each node, and connect them directly without only middle boxes, and they limited the number of paths to $6$ by setting up IP TABLES in Ubuntu. Also, they did bunch of TCP parameter optimization to squeeze out all possible throughout. They achieved a breathtaking $51$Gbps throughput in that demonstration. 
 
-For TCP, under the same network configuration, we do a side-by-side comparison among regular TCP, MPTCP and MPIP. For each case, we repeatedly download a large file for $100$ times with wget. Figure~\ref{fig.tcp} shows the comparison among these three scenarios.
+We don't have the same configuration of the record-breaking plat of MPTCP, but we use the same typical configuration for all scenarios to do side-by-side configuration. We try to verify that our implementation can achieve the same throughput improvement as MPTCP for TCP traffic, and also our system can have the same enhancement for UDP traffic. 
+
+In our experiment setup, we have four NIC cards, but we limit their bandwidth to $5$Mbps. And (NAT configuration). Then this means that the network capacity of the network is 10Mbps. On this platform, we do a side-by-side comparison among regular TCP, MPTCP and MPIP. For each case, we use iperf3 to transmit TCP traffic for five minutes, and we customized iperf3 to record real-time throughput of each second.
+
+In Figure~\ref{fig.tcp_dir}, we connect the two machine directly, then the capacity is 200Mbps
+
+In Figure~\ref{fig.tcp_nat}, we connect 
+
+In  Figure~\ref{fig.tcp_int}, we make Emulab as the server.....
+
+Figure~\ref{fig.tcp_nat} shows the comparison among these three scenarios.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.8\linewidth]{fig/tcp.eps}
+\includegraphics[width=0.8\linewidth]{fig/tcp_dir.eps}
 \caption{Side-by-side Throughput Comparison for TCP}
-\label{fig.tcp}
+\label{fig.tcp_dir}
 \end{figure}
 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\linewidth]{fig/tcp_nat.eps}
+\caption{Side-by-side Throughput Comparison for TCP}
+\label{fig.tcp_nat}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\linewidth]{fig/tcp_int.eps}
+\caption{Side-by-side Throughput Comparison for TCP}
+\label{fig.tcp_int}
+\end{figure}
 
 Besides TCP, another major category of traffic on the Internet is UDP. To our knowledge, MPIP is the first implementation on end nodes that supports multipath transmission for UDP traffic. We use iperf as the test tool for UDP. At the client, we set the bandwidth to be $200Mbps$ which is larger than the capacity of our test platform. Then iperf will hit the upper bound of the network's capacity. We also repeat the experiment for $100$ times for each scenario. Figure~\ref{fig.udp} shows the comparison among regular UDP and UDP with MPIP enabled.
 

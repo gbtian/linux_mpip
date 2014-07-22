@@ -1035,7 +1035,7 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 	{
 		if (local_addr->addr == saddr)
 		{
-			if (daddr1 == daddr)
+			if ((daddr1 == daddr) && (daddr1 != 0))
 			{
 				if (!find_path_info(local_addr->addr, daddr2, sport + 1, dport, session_id))
 				{
@@ -1043,7 +1043,7 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 							sport + 1, dport, true, false, session_id);
 				}
 			}
-			else
+			else if (daddr1 != 0)
 			{
 				if (!find_path_info(local_addr->addr, daddr1, sport + 1, dport, session_id))
 				{
@@ -1052,7 +1052,7 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 				}
 			}
 		}
-		else
+		else if (daddr2 != 0)
 		{
 			if (!find_path_info(local_addr->addr, daddr1, sport + 2, dport, session_id))
 			{
