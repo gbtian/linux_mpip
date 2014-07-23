@@ -1627,8 +1627,6 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 	if(protocol == IPPROTO_TCP)
 	{
-		printk("TCP: %d, %s, %s, %d\n", ip_hdr(skb)->protocol,
-							__FILE__, __FUNCTION__,	__LINE__);
 		bool inited = (new_dport != 0);
 		bool origin = false;
 		if (inited)
@@ -1648,6 +1646,8 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
 			if (new_dport != 0)
 			{
+				mpip_log("Sending change port: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+								 new_sport, new_dport, __FILE__, __FUNCTION__, __LINE__);
 				tcph->source = new_sport;
 				tcph->dest = new_dport;
 			}
@@ -1969,6 +1969,9 @@ int process_mpip_cm(struct sk_buff *skb)
 				return false;
 			}
 
+			mpip_log("Receiving change port: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+					socket_session->dport, socket_session->sport, __FILE__, __FUNCTION__, __LINE__);
+
 			tcph->source = socket_session->dport;
 			tcph->dest = socket_session->sport;
 
@@ -1983,11 +1986,16 @@ int process_mpip_cm(struct sk_buff *skb)
 		}
 		else if(iph->protocol==IPPROTO_TCP && socket_session->protocol == IPPROTO_TCP)
 		{
+			mpip_log("Receiving change port: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+								socket_session->dport, socket_session->sport, __FILE__, __FUNCTION__, __LINE__);
+
 			tcph->source = socket_session->dport;
 			tcph->dest = socket_session->sport;
 		}
 		else if(iph->protocol==IPPROTO_UDP && socket_session->protocol == IPPROTO_UDP)
 		{
+			mpip_log("Receiving change port: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+								socket_session->dport, socket_session->sport, __FILE__, __FUNCTION__, __LINE__);
 			udph->source = socket_session->dport;
 			udph->dest = socket_session->sport;
 		}
