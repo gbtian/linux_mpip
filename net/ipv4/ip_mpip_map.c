@@ -1210,7 +1210,7 @@ bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	struct path_info_table *path_info = find_path_info(saddr, daddr,
 			sport, dport, session_id);
 
-	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (path_info)
 	{
 		path_info->status = 0;
