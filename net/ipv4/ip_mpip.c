@@ -30,7 +30,7 @@ static struct mpip_cm rcv_mpip_cm;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 1;
+int sysctl_mpip_log __read_mostly = 0;
 int sysctl_mpip_bw_factor __read_mostly = 50;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -1722,6 +1722,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 									   skb->len, protocol,
 									   csum_partial((char *)udph, skb->len, 0));
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+		printk("UDP: %d, %d, %s, %s, %d\n", udph->len, ip_hdr(skb)->protocol,
+					__FILE__, __FUNCTION__,	__LINE__);
 	}
 
 	return true;
