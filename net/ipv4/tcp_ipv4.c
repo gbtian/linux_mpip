@@ -2013,10 +2013,10 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	sk = __inet_lookup_skb(&tcp_hashinfo, skb, th->source, th->dest);
 	if (!sk)
 	{
-		printk("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
-		print_addr( iph->saddr);
-		print_addr( iph->daddr);
-		printk("%d, %d, %s, %d\n", th->source, th->dest, __FILE__, __LINE__);
+//		mpip_log("%d, %s, %d\n", iph->id, __FILE__, __LINE__);
+//		print_addr( iph->saddr);
+//		print_addr( iph->daddr);
+//		mpip_log("%d, %d, %s, %d\n", th->source, th->dest, __FILE__, __LINE__);
 		goto no_tcp_socket;
 	}
 	else

@@ -117,7 +117,7 @@ int delete_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport)
 		if ((saddr == mpip_query->saddr) && (daddr == mpip_query->daddr) &&
 			(sport == mpip_query->sport) && (dport == mpip_query->dport))
 		{
-			mpip_log("%s, %d\n", __FILE__, __LINE__);
+//			mpip_log("%s, %d\n", __FILE__, __LINE__);
 			list_del(&(mpip_query->list));
 			kfree(mpip_query);
 
@@ -144,10 +144,10 @@ int add_mpip_query(__be32 saddr, __be32 daddr, __be16 sport, __be16 dport)
 	item->dport = dport;
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &mq_head);
-
-	mpip_log( "mq: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(saddr);
-	print_addr(saddr);
+//
+//	mpip_log( "mq: %d, %d, %s, %s, %d\n", sport, dport, __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(saddr);
+//	print_addr(saddr);
 
 	return 1;
 }
@@ -188,8 +188,8 @@ int add_mpip_enabled(__be32 addr, __be16 port, bool enabled)
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &me_head);
 
-	mpip_log("%d, %d, %s, %s, %d\n", port, enabled, __FILE__, __FUNCTION__, __LINE__);
-	print_addr(addr);
+//	mpip_log("%d, %d, %s, %s, %d\n", port, enabled, __FILE__, __FUNCTION__, __LINE__);
+//	print_addr(addr);
 
 	return 1;
 }
@@ -369,7 +369,7 @@ bool get_addr_notified(unsigned char *node_id)
 		else
 			addr_notified->count = 0;
 
-		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
+//		mpip_log("%d, %s, %d\n", notified, __FILE__, __LINE__);
 		return notified;
 	}
 
@@ -431,7 +431,7 @@ void process_addr_notified_event(unsigned char *node_id, unsigned char flags)
 		return;
 	}
 
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
 
 
 
@@ -662,7 +662,7 @@ bool check_path_info_status(struct sk_buff *skb,
 		    (session_id == path_info->session_id) &&
 		    (path_info->status != 0))
 		{
-			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//			mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			send_mpip_syn(skb, path_info->saddr, convert_addr(192, 168, 1, 15),
 					path_info->sport, path_info->dport,	true, false,
 					session_id);
@@ -800,12 +800,12 @@ void add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 	INIT_LIST_HEAD(&(item->list));
 	list_add(&(item->list), &ss_head);
 
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
-	print_addr(saddr);
-	print_addr(daddr);
-	mpip_log( "ss: %d,%d,%d\n", item->session_id,
-			sport, dport);
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(saddr);
+//	print_addr(daddr);
+//	mpip_log( "ss: %d,%d,%d\n", item->session_id,
+//			sport, dport);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
 }
 
 
@@ -854,10 +854,10 @@ struct socket_session_table *get_receiver_session(unsigned char *src_node_id, un
 	if (item)
 		return item;
 
-	mpip_log("%s, %d\n", __FILE__, __LINE__);
-	print_addr(saddr);
-	print_addr(daddr);
-	mpip_log("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
+//	mpip_log("%s, %d\n", __FILE__, __LINE__);
+//	print_addr(saddr);
+//	print_addr(daddr);
+//	mpip_log("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
 	item = get_sender_session(saddr, sport, daddr, dport, protocol);
 	if (item)
@@ -933,14 +933,14 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 			tcph = tcp_hdr(skb);
 			if (!tcph)
 			{
-				mpip_log("%s, %d\n", __FILE__, __LINE__);
+//				mpip_log("%s, %d\n", __FILE__, __LINE__);
 				goto fail;
 			}
 
 			if ((ntohl(tcph->seq) < socket_session->next_seq) &&
 				(socket_session->next_seq) - ntohl(tcph->seq) < 0xFFFFFFF)
 			{
-				mpip_log("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+//				mpip_log("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 				goto success;
 			}
@@ -950,7 +950,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				(ntohl(tcph->seq) == socket_session->next_seq + 1)) //for three-way handshake
 			{
 				socket_session->next_seq = skb->len - ip_hdr(skb)->ihl * 4 - tcph->doff * 4 + ntohl(tcph->seq);
-				mpip_log("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+//				mpip_log("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 
 recursive:
@@ -960,7 +960,7 @@ recursive:
 					{
 						socket_session->next_seq = tcp_buf->skb->len - ip_hdr(tcp_buf->skb)->ihl * 4 -
 																	   tcp_hdr(tcp_buf->skb)->doff * 4 + tcp_buf->seq;
-						mpip_log("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
+//						mpip_log("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
 
 						dst_input(tcp_buf->skb);
 
@@ -987,9 +987,9 @@ recursive:
 			list_add(&(item->list), &(socket_session->tcp_buf));
 			socket_session->buf_count += 1;
 
-			mpip_log("out of order: %u, %u, %d, %s, %d\n", ntohl(tcph->seq),
-					socket_session->next_seq, socket_session->buf_count,
-					__FILE__, __LINE__);
+//			mpip_log("out of order: %u, %u, %d, %s, %d\n", ntohl(tcph->seq),
+//					socket_session->next_seq, socket_session->buf_count,
+//					__FILE__, __LINE__);
 
 			goto success;
 		}
@@ -1001,7 +1001,7 @@ success:
 	return 1;
 fail:
 	rcu_read_unlock();
-	mpip_log("Fail: %s, %d\n", __FILE__, __LINE__);
+//	mpip_log("Fail: %s, %d\n", __FILE__, __LINE__);
 	return 0;
 }
 
@@ -1098,7 +1098,7 @@ int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr,
 {
 	struct path_info_table *item = NULL;
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	if (!node_id || session_id <= 0)
 		return 0;
@@ -1210,7 +1210,7 @@ bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	struct path_info_table *path_info = find_path_info(saddr, daddr,
 			sport, dport, session_id);
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (path_info)
 	{
 		path_info->status = 0;
@@ -1447,13 +1447,13 @@ void send_mpip_hb(struct sk_buff *skb, unsigned char session_id)
 {
 	if (!skb)
 	{
-		mpip_log("%s, %d\n", __FILE__, __LINE__);
+//		mpip_log("%s, %d\n", __FILE__, __LINE__);
 		return;
 	}
 
 	if (((jiffies - earliest_fbjiffies) * 1000 / HZ) >= sysctl_mpip_hb)
 	{
-		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (send_mpip_msg(skb, false, true, 2, session_id))
 			earliest_fbjiffies = jiffies;
 	}
@@ -1569,7 +1569,7 @@ void update_addr_change(void)
 	struct path_stat_table *path_stat;
 	struct path_stat_table *tmp_stat;
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	struct addr_notified_table *addr_notified;
 	list_for_each_entry(addr_notified, &an_head, list)
@@ -1601,7 +1601,7 @@ void update_addr_change(void)
 			list_del(&(path_stat->list));
 			kfree(path_stat);
 	}
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+//	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 struct net_device *find_dev_by_addr(__be32 addr)
