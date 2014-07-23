@@ -137,13 +137,10 @@ int ip_local_out(struct sk_buff *skb)
 								iph = ip_hdr(skb);
 								iph->saddr = new_saddr;
 								iph->daddr = new_daddr;
-								if (sysctl_mpip_send)
-								{
-									skb_dst(skb)->dev = new_dst_dev;
-									skb->dev = new_dst_dev;
-								}
+								skb_dst(skb)->dev = new_dst_dev;
+								skb->dev = new_dst_dev;
 
-								mpip_log("\nsending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+								mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 								print_addr(iph->saddr);
 								print_addr(iph->daddr);
 							}
@@ -168,9 +165,9 @@ int ip_local_out(struct sk_buff *skb)
 	{
 		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
 		{
-			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-			print_addr(iph->saddr);
-			print_addr(iph->daddr);
+//			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+//			print_addr(iph->saddr);
+//			print_addr(iph->daddr);
 			send_mpip_enable(myskb, true, false);
 
 			if (iph->protocol == IPPROTO_TCP)

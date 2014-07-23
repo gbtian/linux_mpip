@@ -1831,7 +1831,7 @@ int process_mpip_cm(struct sk_buff *skb)
 	if ((iph->protocol == IPPROTO_TCP) && (rcv_mpip_cm.session_id > 0))
 	{
 
-		if ((odport > 500) && is_original_path(rcv_mpip_cm.node_id,
+		if ((odport > 6000) && is_original_path(rcv_mpip_cm.node_id,
 				iph->daddr, iph->saddr, dport, sport, rcv_mpip_cm.session_id))
 		{
 			if (sysctl_mpip_use_tcp)
