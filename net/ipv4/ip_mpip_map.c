@@ -1396,8 +1396,12 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 
 		list_for_each_entry(path, &pi_head, list)
 		{
-			if (!is_equal_node_id(path->node_id, node_id))
+			if (!is_equal_node_id(path->node_id, node_id) ||
+				path->session_id != session_id ||
+				path->status != 0)
+			{
 				continue;
+			}
 
 			if (random < (path->bw + tmptotal))
 			{
