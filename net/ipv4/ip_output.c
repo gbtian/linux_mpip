@@ -140,8 +140,8 @@ int ip_local_out(struct sk_buff *skb)
 								if (rt != NULL)
 								{
 									rt->dst.dev = new_dst_dev;
-//									mpip_log("oute output dev: %s, %s, %s, %d\n", rt->dst.dev->name,
-//											__FILE__, __FUNCTION__, __LINE__);
+									mpip_log("oute output dev: %s, %s, %s, %d\n", rt->dst.dev->name,
+											__FILE__, __FUNCTION__, __LINE__);
 								}
 
 								iph->saddr = new_saddr;
@@ -149,16 +149,16 @@ int ip_local_out(struct sk_buff *skb)
 								skb_dst(skb)->dev = new_dst_dev;
 								skb->dev = new_dst_dev;
 
-//								mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-//								print_addr(iph->saddr);
-//								print_addr(iph->daddr);
+								mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+								print_addr(iph->saddr);
+								print_addr(iph->daddr);
 							}
 						}
 					}
 				}
 				else
 				{
-//					mpip_log("Error Insert CM: %s, %s, %d\n",  __FILE__, __FUNCTION__, __LINE__);
+					mpip_log("Error Insert CM: %s, %s, %d\n",  __FILE__, __FUNCTION__, __LINE__);
 				}
 			}
 		}

@@ -354,7 +354,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 				NET_INC_STATS_BH(dev_net(skb->dev),
 						 LINUX_MIB_IPRPFILTER);
 
-//			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
+			mpip_log("%s, %s, %s, %d\n", skb->dev->name, __FILE__, __FUNCTION__, __LINE__);
 			goto drop;
 		}
 	}
@@ -394,9 +394,9 @@ static int ip_rcv_finish(struct sk_buff *skb)
 			__be16 sport = 0, dport = 0;
 			if (get_skb_port(skb, &sport, &dport))
 			{
-//				mpip_log("\nreceiving: %d, %d, %d, %d, %s, %s, %d\n", iph->id, iph->protocol, sport, dport, __FILE__, __FUNCTION__, __LINE__);
-//				print_addr(iph->saddr);
-//				print_addr(iph->daddr);
+				mpip_log("\nreceiving: %d, %d, %d, %d, %s, %s, %d\n", iph->id, iph->protocol, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+				print_addr(iph->saddr);
+				print_addr(iph->daddr);
 			}
 		}
 
@@ -424,7 +424,7 @@ static int ip_rcv_finish(struct sk_buff *skb)
 	return dst_input(skb);
 
 drop:
-//	mpip_log("Drop: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+	mpip_log("Drop: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	kfree_skb(skb);
 	return NET_RX_DROP;
 }
@@ -515,15 +515,15 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		       ip_rcv_finish);
 
 csum_error:
-//	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_CSUMERRORS);
 inhdr_error:
-//	mpip_log("Checksum Error:  %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error:  %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	IP_INC_STATS_BH(dev_net(dev), IPSTATS_MIB_INHDRERRORS);
 drop:
-//	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	kfree_skb(skb);
 out:
-//	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
+	mpip_log("Checksum Error: %s, %s, %d\n", __FILE__, __FUNCTION__,  __LINE__);
 	return NET_RX_DROP;
 }
