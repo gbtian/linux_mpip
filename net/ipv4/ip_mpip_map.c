@@ -729,7 +729,7 @@ int add_path_stat(unsigned char *node_id, unsigned char path_id)
 
 
 struct socket_session_table *get_sender_session(__be32 saddr, __be16 sport,
-								 __be32 daddr, __be16 dport)
+								 __be32 daddr, __be16 dport, unsigned int protocol)
 {
 	struct socket_session_table *socket_session;
 
@@ -744,7 +744,8 @@ struct socket_session_table *get_sender_session(__be32 saddr, __be16 sport,
 		if ((socket_session->saddr == saddr) &&
 			(socket_session->sport == sport) &&
 			(socket_session->daddr == daddr) &&
-			(socket_session->dport == dport))
+			(socket_session->dport == dport) &&
+			(socket_session->protocol == protocol))
 		{
 //			printk("%s, %d\n", __FILE__, __LINE__);
 //			print_addr(__FUNCTION__, saddr);
@@ -778,7 +779,7 @@ void add_sender_session(unsigned char *src_node_id, unsigned char *dst_node_id,
 		return;
 	}
 
-	if (get_sender_session(saddr, sport, daddr, dport))
+	if (get_sender_session(saddr, sport, daddr, dport, protocol))
 		return;
 
 
@@ -858,7 +859,7 @@ struct socket_session_table *get_receiver_session(unsigned char *src_node_id, un
 	print_addr(daddr);
 	mpip_log("%d, %d, %s, %d\n", sport, dport, __FILE__, __LINE__);
 
-	item = get_sender_session(saddr, sport, daddr, dport);
+	item = get_sender_session(saddr, sport, daddr, dport, protocol);
 	if (item)
 		return item;
 

@@ -301,7 +301,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 		return 0;
 	}
 	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-	socket_session = get_sender_session(saddr, sport, daddr, dport);
+	socket_session = get_sender_session(saddr, sport, daddr, dport, protocol);
 
 	if (!socket_session)
 	{
@@ -314,7 +314,7 @@ unsigned char get_session_id(unsigned char *src_node_id, unsigned char *dst_node
 		if (src_node_id && dst_node_id)
 		{
 			add_sender_session(src_node_id, dst_node_id, saddr, sport, daddr, dport, protocol);
-			socket_session = get_sender_session(saddr, sport, daddr, dport);
+			socket_session = get_sender_session(saddr, sport, daddr, dport, protocol);
 			add_path_info_tcp(dst_node_id, saddr, daddr, sport, dport, socket_session->session_id, protocol);
 		}
 	}
