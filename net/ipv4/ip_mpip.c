@@ -37,7 +37,7 @@ int sysctl_mpip_bw_2 __read_mostly = 60;
 int sysctl_mpip_bw_3 __read_mostly = 30;
 int sysctl_mpip_bw_4 __read_mostly = 30;
 int sysctl_mpip_hb __read_mostly = 1000;
-int sysctl_mpip_use_tcp __read_mostly = 1;
+int sysctl_mpip_use_tcp __read_mostly = 0;
 int sysctl_mpip_tcp_buf_count __read_mostly = 10;
 int max_pkt_len = 65500;
 
@@ -1692,7 +1692,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 				udph->dest = new_dport;
 			}
 
-			udph->len = skb->len - iph->ihl * 4;
+			//udph->len = skb->len - iph->ihl * 4;
+
+			udph->len = htons(skb->len - iph->ihl * 4);
 			udph->check = 0;
 			udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 										   skb->len, protocol,
