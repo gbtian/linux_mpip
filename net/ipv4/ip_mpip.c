@@ -1692,14 +1692,14 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 				udph->dest = new_dport;
 			}
 
-			udph->len = skb->len - iph->ihl<<2;
+			udph->len = skb->len - iph->ihl * 4;
 			udph->check = 0;
 			udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
 										   skb->len, protocol,
 										   csum_partial((char *)udph, skb->len, 0));
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
 
-			mpip_log("sending: %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id,
+			mpip_log("sending: %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, udph->len,
 							ip_hdr(skb)->protocol, sport, dport, __FILE__, __FUNCTION__,
 							__LINE__);
 		}
