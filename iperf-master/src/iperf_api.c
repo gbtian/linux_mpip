@@ -931,6 +931,7 @@ iperf_send(struct iperf_test *test, fd_set *write_setP)
 		if ((r = sp->snd(sp)) < 0) {
 		    if (r == NET_SOFTERROR)
 			break;
+		    print_trace();
 		    i_errno = IESTREAMWRITE;
 		    return r;
 		}

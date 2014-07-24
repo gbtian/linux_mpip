@@ -49,6 +49,7 @@ struct iperf_stream;
 #define ACCESS_DENIED (-1)
 #define SERVER_ERROR (-2)
 
+void print_trace (void);
 /* Getter routines for some fields inside iperf_test. */
 int	iperf_get_verbose( struct iperf_test* ipt );
 int	iperf_get_control_socket( struct iperf_test* ipt );

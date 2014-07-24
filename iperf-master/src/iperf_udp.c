@@ -161,6 +161,7 @@ iperf_udp_accept(struct iperf_test *test)
     /* Let the client know we're ready "accept" another UDP "stream" */
     buf = 987654321;
     if (write(s, &buf, sizeof(buf)) < 0) {
+    	print_trace();
         i_errno = IESTREAMWRITE;
         return -1;
     }
@@ -205,6 +206,7 @@ iperf_udp_connect(struct iperf_test *test)
     buf = 123456789;
     if (write(s, &buf, sizeof(buf)) < 0) {
         // XXX: Should this be changed to IESTREAMCONNECT? 
+    	print_trace();
         i_errno = IESTREAMWRITE;
         return -1;
     }
