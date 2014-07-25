@@ -1701,7 +1701,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 										   csum_partial((char *)udph, skb->len, 0));
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
 
-			mpip_log("sending: %d, %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, udph->len,
+			mpip_log("sending: %d, %d, %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
 							ip_hdr(skb)->protocol, sport, dport, __FILE__, __FUNCTION__,
 							__LINE__);
 		}
