@@ -837,9 +837,7 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	if (sysctl_mpip_send && sysctl_mpip_enabled && (dnsport != 53) &&
 		is_mpip_enabled(inet->inet_daddr, inet->inet_dport))
 	{
-		if (len > 500)
-			len -= ((MPIP_CM_LEN * 2 + 3) & ~3);
-
+		len -= ((MPIP_CM_LEN * 2 + 3) & ~3);
 	}
 
 	printk("len = %d, %s, %s, %d\n", len, __FILE__, __FUNCTION__, __LINE__);
