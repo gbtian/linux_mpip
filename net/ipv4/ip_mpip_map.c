@@ -644,14 +644,17 @@ int update_path_info(unsigned char session_id)
 	if (max_bw > 5000)
 	{
 		__u64 times = max_bw / 5000;
-		list_for_each_entry(path_info, &pi_head, list)
+		if (times > 0)
 		{
-			if (path_info->session_id != session_id)
-				continue;
+			list_for_each_entry(path_info, &pi_head, list)
+			{
+				if (path_info->session_id != session_id)
+					continue;
 
-			path_info->bw /= times;
-			if (path_info->bw <= 0)
-				path_info->bw = 0;
+				path_info->bw /= times;
+				if (path_info->bw <= 0)
+					path_info->bw = 0;
+			}
 		}
 	}
 
