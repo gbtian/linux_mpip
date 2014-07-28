@@ -588,8 +588,8 @@ __s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
 	__s32 diff = queuing_delay - min_queuing_delay;
 	__s32 si = calc_si_diff();
 	//printk("%d, %s, %d\n", si, __FILE__, __LINE__);
-	return diff / (sysctl_mpip_bw_factor * si);
-	//return diff / sysctl_mpip_bw_factor;
+	//return diff / (sysctl_mpip_bw_factor * si);
+	return diff / sysctl_mpip_bw_factor;
 }
 
 int update_path_info(unsigned char session_id)
