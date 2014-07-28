@@ -33,12 +33,12 @@ To support additional multipath feature at IP layer, we need to introduce feedba
 
 For each MPIP enabled packet that goes out of the system, we add an additional data block at the end of user data. As shown in Figure~\ref{fig.cm}.
 
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/cm.eps}
-\caption{CM data block}
-\label{fig.cm}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.8\linewidth]{fig/cm.eps}
+%\caption{CM data block}
+%\label{fig.cm}
+%\end{figure}
 
 \begin{table}
 \caption{\label{tb.cm}Control Message Structure}
@@ -128,12 +128,12 @@ The other option we provide for multipath TCP traffic is UDP wrapper. Because th
 
 As shown in Figure~\ref{fig.udpwrapper}, at the sender side, every time the network layer gets a TCP packet from transport layer, the system chooses a path to send the packet out as shown in Section~\ref{sec:path}. If the chosen path isn't the original path, we wrap the user data and TCP header into an UDP packet.
 
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/cm.eps}
-\caption{UDP wrapper for TCP packet}
-\label{fig.udpwrapper}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.8\linewidth]{fig/cm.eps}
+%\caption{UDP wrapper for TCP packet}
+%\label{fig.udpwrapper}
+%\end{figure}
 
 \subsection{Path Management}
 \label{sec:path}

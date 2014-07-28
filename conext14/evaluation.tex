@@ -12,53 +12,50 @@ In this section, we try to verify that our system can achieve high throughput in
 
 We don't have the same configuration of the record-breaking plat of MPTCP, but we use the same typical configuration for all scenarios to do side-by-side configuration. We try to verify that our implementation can achieve the same throughput improvement as MPTCP for TCP traffic, and also our system can have the same enhancement for UDP traffic. 
 
-In our experiment setup, we have four NIC cards, but we limit their bandwidth to $5$Mbps. And (NAT configuration). Then this means that the network capacity of the network is 10Mbps. On this platform, we do a side-by-side comparison among regular TCP, MPTCP and MPIP. For each case, we use iperf3 to transmit TCP traffic for five minutes, and we customized iperf3 to record real-time throughput of each second.
+In our experiment setup, we have two PCs while each PC has two NIC cards, every NIC card works at 100Mbps. With these four NIC cards, we have different configurations to verify our system. For each configuration, we do side-by-side comparision among regular connection, MPTCP(For TCP), and MPIP connection. We use iperf to transmit traffic for five minutes, and we customized iperf to record real-time throughput of each second.
 
-In Figure~\ref{fig.tcp_dir}, we connect the two machine directly, then the capacity is 200Mbps
+In Figure~\ref{fig.nonat}, we connect the two machine to the same router which means there are no NAT devices on all the paths.
 
-In Figure~\ref{fig.tcp_nat}, we connect 
+\begin{figure*}[htb]
+\centering{
+\subfigure[TCP throughput with psudo TCP connection\label{fig.tcp_usetcp_nonat}]{\includegraphics[width=0.33\linewidth]{fig/tcp_usetcp_nonat.eps}}
+\subfigure[TCP throughput with UDP Wrapper\label{fig.tcp_useudp_nonat}]{\includegraphics[width=0.33\linewidth]{fig/tcp_useudp_nonat.eps}}
+\subfigure[UDP throughput\label{fig.udp_nonat}]{\includegraphics[width=0.33\linewidth]{fig/udp_nonat.eps}}
+}
+\caption{Side-by-side comparison without NAT}
+\label{fig.nonat}
+\end{figure*}
 
-In  Figure~\ref{fig.tcp_int}, we make Emulab as the server.....
+Also, we set up a NAT network with two routers as shown in Figure~\ref{fig.nat}. Because our router only has 100Mbps capacity while each NIC has 100Mbps, this means that our router can't fit all capacity of the NIC cards. To avoid this problem, we limit the bandwidth of our NIC cards to be 5Mbps with WonderShaper. Then the total capacity of our connection is 10Mbps. Figure~\ref{fig.nat} shows the result for this configuration.
 
-Figure~\ref{fig.tcp_nat} shows the comparison among these three scenarios.
-
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/tcp_dir.eps}
-\caption{Side-by-side Throughput Comparison for TCP}
-\label{fig.tcp_dir}
-\end{figure}
-
-
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/tcp_nat.eps}
-\caption{Side-by-side Throughput Comparison for TCP}
-\label{fig.tcp_nat}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/tcp_int.eps}
-\caption{Side-by-side Throughput Comparison for TCP}
-\label{fig.tcp_int}
-\end{figure}
-
-Besides TCP, another major category of traffic on the Internet is UDP. To our knowledge, MPIP is the first implementation on end nodes that supports multipath transmission for UDP traffic. We use iperf as the test tool for UDP. At the client, we set the bandwidth to be $200Mbps$ which is larger than the capacity of our test platform. Then iperf will hit the upper bound of the network's capacity. We also repeat the experiment for $100$ times for each scenario. Figure~\ref{fig.udp} shows the comparison among regular UDP and UDP with MPIP enabled.
-
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/udp.eps}
-\caption{Side-by-side Throughput Comparison for UDP}
-\label{fig.udp}
-\end{figure}
+\begin{figure*}[htb]
+\centering{
+\subfigure[TCP throughput with psudo TCP connection\label{fig.tcp_usetcp_nat}]{\includegraphics[width=0.33\linewidth]{fig/tcp_usetcp_nat.eps}}
+\subfigure[TCP throughput with UDP Wrapper\label{fig.tcp_useudp_nat}]{\includegraphics[width=0.33\linewidth]{fig/tcp_useudp_nat.eps}}
+\subfigure[UDP throughput\label{fig.udp_nat}]{\includegraphics[width=0.33\linewidth]{fig/udp_nat.eps}}
+}
+\caption{Side-by-side comparison with a simple NAT}
+\label{fig.nat}
+\end{figure*}
 
 
-\subsection{Skype voice call improvement}
-\label{sec:skype}
+In Figure~\ref{fig.net}, we set up our server in Emulab to verify our system in Internet. Because the server in Emulab only has one public IP address which means our connection only has two paths. Also, Emulab doesn't support iperf with UDP traffic, so we only test TCP scenario.
 
-\subsection{Datacenter use case}
-\label{sec:datacenter}
+\begin{figure*}[htb]
+\centering{
+\subfigure[TCP throughput with psudo TCP connection\label{fig.tcp_usetcp_net}]{\includegraphics[width=0.49\linewidth]{fig/tcp_usetcp_net.eps}}
+\subfigure[TCP throughput with UDP Wrapper\label{fig.tcp_useudp_net}]{\includegraphics[width=0.49\linewidth]{fig/tcp_useudp_net.eps}}
+}
+\caption{Side-by-side comparison in Internet}
+\label{fig.net}
+\end{figure*}
 
-\subsection{Seamless handover with dynamic networks}
-\label{sec:handover}
+
+%\subsection{Skype voice call improvement}
+%\label{sec:skype}
+%
+%\subsection{Datacenter use case}
+%\label{sec:datacenter}
+%
+%\subsection{Seamless handover with dynamic networks}
+%\label{sec:handover}
