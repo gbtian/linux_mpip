@@ -592,18 +592,21 @@ __s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
 	return diff / sysctl_mpip_bw_factor;
 }
 
-int update_path_info(void)
+int update_path_info(unsigned char session_id)
 {
 	struct path_info_table *path_info;
 	__s32 min_queuing_delay = -1;
 	__s32 max_queuing_delay = 0;
-
-
 	__u64 max_bw = 0;
 
+	if (session_id <= 0)
+		return 0;
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
+		if (path_info->session_id != session_id)
+			continue;
+
 		if (path_info->queuing_delay < min_queuing_delay || min_queuing_delay == -1)
 		{
 			min_queuing_delay = path_info->queuing_delay;
@@ -620,6 +623,9 @@ int update_path_info(void)
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
+		if (path_info->session_id != session_id)
+			continue;
+
 		__s32 diff = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
@@ -640,6 +646,9 @@ int update_path_info(void)
 		__u64 times = max_bw / 5000;
 		list_for_each_entry(path_info, &pi_head, list)
 		{
+			if (path_info->session_id != session_id)
+				continue;
+
 			path_info->bw /= times;
 			if (path_info->bw <= 0)
 				path_info->bw = 0;

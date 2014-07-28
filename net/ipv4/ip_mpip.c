@@ -1916,7 +1916,8 @@ int process_mpip_cm(struct sk_buff *skb)
 		add_path_info_udp(rcv_mpip_cm.node_id, iph->saddr, dport,
 				sport, rcv_mpip_cm.session_id, iph->protocol);
 	}
-	update_path_info();
+
+	update_path_info(rcv_mpip_cm.session_id);
 
 	if (rcv_mpip_cm.flags == 3)
 	{
