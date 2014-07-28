@@ -629,11 +629,14 @@ int update_path_info(unsigned char session_id)
 
 		__s32 diff = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
+		if (diff == 0)
+			diff = 1;
+
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			path_info->bw += max_queuing_delay / (diff + 1);
+			path_info->bw += max_queuing_delay / diff;
 		}
 
 		if (path_info->bw > max_bw)
