@@ -776,11 +776,8 @@ static bool copy_and_send(struct sk_buff *skb, bool reverse,
 
 	if (ip_route_out(nskb, iph->saddr, iph->daddr))
 	{
-		if (sysctl_mpip_send)
-		{
-			skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
-			skb->dev = find_dev_by_addr(iph->saddr);
-		}
+		skb_dst(skb)->dev = find_dev_by_addr(iph->saddr);
+		skb->dev = find_dev_by_addr(iph->saddr);
 
 		err = __ip_local_out(nskb);
 		if (likely(err == 1))
@@ -2044,33 +2041,33 @@ fail:
 	return 0;
 }
 EXPORT_SYMBOL(process_mpip_cm);
-//
-//unsigned char get_session(struct sk_buff *skb)
-//{
-//	struct iphdr *iph;
-//	struct tcphdr *tcph = NULL;
-//	__be16 sport = 0, dport = 0;
-//
-//	if (!skb)
-//	{
-//		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-//		return 0;
-//	}
-//
-//	iph = ip_hdr(skb);
-//
-//	if (iph->ihl == 5 || iph->protocol != IPPROTO_TCP)
-//		return 0;
-//
-//	tcph= tcp_hdr(skb); //this fixed the problem
-//	if (!tcph)
-//	{
-//		mpip_log("%s, %d\n", __FILE__, __LINE__);
-//		return 0;
-//	}
-//	sport = tcph->source;
-//	dport = tcph->dest;
-//
-//	return get_sender_session(iph->daddr, dport, iph->saddr, sport);
-//
-//}
+
+unsigned char get_tcp_session(struct sk_buff *skb)
+{
+	struct iphdr *iph;
+	struct tcphdr *tcph = NULL;
+	__be16 sport = 0, dport = 0;
+
+	if (!skb)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return 0;
+	}
+
+	iph = ip_hdr(skb);
+
+	if (iph->ihl == 5 || iph->protocol != IPPROTO_TCP)
+		return 0;
+
+	tcph= tcp_hdr(skb); //this fixed the problem
+	if (!tcph)
+	{
+		mpip_log("%s, %d\n", __FILE__, __LINE__);
+		return 0;
+	}
+	sport = tcph->source;
+	dport = tcph->dest;
+
+	return get_sender_session(iph->daddr, dport, iph->saddr, sport, IPPROTO_TCP);
+
+}

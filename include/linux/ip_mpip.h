@@ -352,4 +352,6 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id);
 
 void reset_mpip(void);
 
+unsigned char get_tcp_session(struct sk_buff *skb);
+
 #endif	/* _IP_MPIP_H */
