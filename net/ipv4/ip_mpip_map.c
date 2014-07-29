@@ -943,7 +943,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 
 	//rcu_read_lock();
 
-	printk("%d, %s, %s, %d\n", session_id, __FILE__, __FUNCTION__, __LINE__);
+	//printk("%d, %s, %s, %d\n", session_id, __FILE__, __FUNCTION__, __LINE__);
 
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
@@ -956,7 +956,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				goto fail;
 			}
 
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		//	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 			if ((ntohl(tcph->seq) < socket_session->next_seq) &&
 				(socket_session->next_seq) - ntohl(tcph->seq) < 0xFFFFFFF)
@@ -970,8 +970,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				(ntohl(tcph->seq) == socket_session->next_seq) ||
 				(ntohl(tcph->seq) == socket_session->next_seq + 1)) //for three-way handshake
 			{
-				socket_session->next_seq = skb->len - ip_hdr(skb)->ihl * 4 - tcph->doff * 4 + ntohl(tcph->seq);
 				printk("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+				socket_session->next_seq = skb->len - ip_hdr(skb)->ihl * 4 - tcph->doff * 4 + ntohl(tcph->seq);
 				dst_input(skb);
 
 recursive:
