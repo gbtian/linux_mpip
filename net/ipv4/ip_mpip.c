@@ -2056,7 +2056,7 @@ unsigned char get_tcp_session(struct sk_buff *skb)
 
 	iph = ip_hdr(skb);
 
-	if (iph->ihl == 5 || iph->protocol != IPPROTO_TCP)
+	if (iph->protocol != IPPROTO_TCP)
 		return 0;
 
 	tcph= tcp_hdr(skb); //this fixed the problem
