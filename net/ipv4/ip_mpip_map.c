@@ -943,6 +943,8 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 
 	rcu_read_lock();
 
+	printk("%d, %s, %s, %d\n", session_id, __FILE__, __FUNCTION__, __LINE__);
+
 	list_for_each_entry(socket_session, &ss_head, list)
 	{
 		if (socket_session->session_id == session_id)
@@ -954,10 +956,12 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				goto fail;
 			}
 
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
 			if ((ntohl(tcph->seq) < socket_session->next_seq) &&
 				(socket_session->next_seq) - ntohl(tcph->seq) < 0xFFFFFFF)
 			{
-				mpip_log("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+				printk("late: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 				goto success;
 			}
@@ -967,7 +971,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				(ntohl(tcph->seq) == socket_session->next_seq + 1)) //for three-way handshake
 			{
 				socket_session->next_seq = skb->len - ip_hdr(skb)->ihl * 4 - tcph->doff * 4 + ntohl(tcph->seq);
-				mpip_log("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
+				printk("send: %u, %u, %s, %d\n", ntohl(tcph->seq), socket_session->next_seq, __FILE__, __LINE__);
 				dst_input(skb);
 
 recursive:
@@ -977,7 +981,7 @@ recursive:
 					{
 						socket_session->next_seq = tcp_buf->skb->len - ip_hdr(tcp_buf->skb)->ihl * 4 -
 																	   tcp_hdr(tcp_buf->skb)->doff * 4 + tcp_buf->seq;
-						mpip_log("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
+						printk("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
 
 						dst_input(tcp_buf->skb);
 
@@ -1004,7 +1008,7 @@ recursive:
 			list_add(&(item->list), &(socket_session->tcp_buf));
 			socket_session->buf_count += 1;
 
-			mpip_log("out of order: %u, %u, %d, %s, %d\n", ntohl(tcph->seq),
+			printk("out of order: %u, %u, %d, %s, %d\n", ntohl(tcph->seq),
 					socket_session->next_seq, socket_session->buf_count,
 					__FILE__, __LINE__);
 
