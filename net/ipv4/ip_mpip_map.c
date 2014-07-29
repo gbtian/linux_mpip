@@ -941,7 +941,7 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 	struct tcp_skb_buf *tcp_buf = NULL;
 	struct tcp_skb_buf *tmp_buf = NULL;
 
-	rcu_read_lock();
+	//rcu_read_lock();
 
 	printk("%d, %s, %s, %d\n", session_id, __FILE__, __FUNCTION__, __LINE__);
 
@@ -975,24 +975,28 @@ int add_to_tcp_skb_buf(struct sk_buff *skb, unsigned char session_id)
 				dst_input(skb);
 
 recursive:
-				list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
+				if (socket_session->buf_count > 0)
 				{
-					if (tcp_buf->seq == socket_session->next_seq)
+					list_for_each_entry_safe(tcp_buf, tmp_buf, &(socket_session->tcp_buf), list)
 					{
-						socket_session->next_seq = tcp_buf->skb->len - ip_hdr(tcp_buf->skb)->ihl * 4 -
-																	   tcp_hdr(tcp_buf->skb)->doff * 4 + tcp_buf->seq;
-						printk("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
+						if (tcp_buf->seq == socket_session->next_seq)
+						{
+							socket_session->next_seq = tcp_buf->skb->len - ip_hdr(tcp_buf->skb)->ihl * 4 -
+																		   tcp_hdr(tcp_buf->skb)->doff * 4 + tcp_buf->seq;
+							printk("push: %u, %u, %s, %d\n", tcp_buf->seq, socket_session->next_seq, __FILE__, __LINE__);
 
-						dst_input(tcp_buf->skb);
+							dst_input(tcp_buf->skb);
 
-						list_del(&(tcp_buf->list));
-						kfree(tcp_buf);
+							list_del(&(tcp_buf->list));
+							kfree(tcp_buf);
 
-						socket_session->buf_count -= 1;
+							socket_session->buf_count -= 1;
 
-						goto recursive;
+							goto recursive;
+						}
 					}
 				}
+
 				goto success;
 			}
 
@@ -1018,10 +1022,10 @@ recursive:
 
 
 success:
-	rcu_read_unlock();
+//	rcu_read_unlock();
 	return 1;
 fail:
-	rcu_read_unlock();
+//	rcu_read_unlock();
 	mpip_log("Fail: %s, %d\n", __FILE__, __LINE__);
 	return 0;
 }
