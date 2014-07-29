@@ -296,8 +296,8 @@ $SI_q$ and $SI_d$ are the smooth index of queuing delay $Q$ and network delay $D
 
 \begin{eqnarray}
 \label{eq.bw}
-W(k+1) = W(k) + \frac{Q_{max}(k)}{\frac{Q(k)-Q_{min}(k)}{SI_q(k)*C_1}+1} \nonumber \\
-\left.		  + \frac{D_{max}(k)}{\frac{D(k)-D_{min}(k)}{SI_d(k)*C_2}+1}\right. 
+W(k+1) = W(k) + \frac{C_1*Q_{max}(k)}{\frac{Q(k)-Q_{min}(k)}{SI_q(k)}+1} \nonumber \\
+\left.		  + \frac{C_2*D_{max}(k)}{\frac{D(k)-D_{min}(k)}{SI_d(k)}+1}\right. 
 \end{eqnarray}
 
 \be

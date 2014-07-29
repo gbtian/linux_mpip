@@ -590,14 +590,16 @@ __s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
 	__s32 si = calc_si_diff();
 	//printk("%d, %s, %d\n", si, __FILE__, __LINE__);
 	//return diff / (sysctl_mpip_bw_factor * si);
-	return diff / sysctl_mpip_bw_factor;
+	return diff;
 }
 
 int update_path_info(unsigned char session_id)
 {
 	struct path_info_table *path_info;
 	__s32 min_queuing_delay = -1;
+	__s32 min_delay = -1;
 	__s32 max_queuing_delay = 0;
+	__s32 max_delay = 0;
 	__u64 max_bw = 0;
 
 	if (session_id <= 0)
@@ -608,14 +610,24 @@ int update_path_info(unsigned char session_id)
 		if (path_info->session_id != session_id)
 			continue;
 
-		if (path_info->delay < min_queuing_delay || min_queuing_delay == -1)
+		if (path_info->queuing_delay < min_queuing_delay || min_queuing_delay == -1)
 		{
-			min_queuing_delay = path_info->delay;
+			min_queuing_delay = path_info->queuing_delay;
 		}
 
-		if (path_info->delay > max_queuing_delay)
+		if (path_info->queuing_delay > max_queuing_delay)
 		{
-			max_queuing_delay = path_info->delay;
+			max_queuing_delay = path_info->queuing_delay;
+		}
+
+		if (path_info->delay < min_delay || min_delay == -1)
+		{
+			min_delay = path_info->delay;
+		}
+
+		if (path_info->delay > max_delay)
+		{
+			max_delay = path_info->delay;
 		}
 	}
 
@@ -627,17 +639,26 @@ int update_path_info(unsigned char session_id)
 		if (path_info->session_id != session_id)
 			continue;
 
-		__s32 diff = calc_diff(path_info->delay, min_queuing_delay);
+		__s32 diff1 = calc_diff(path_info->queuing_delay, min_queuing_delay);
 
-		if (diff == 0)
-			diff = 1;
+		if (diff1 == 0)
+			diff1 = 1;
+
+		__s32 diff2 = calc_diff(path_info->delay, min_delay);
+
+		if (diff2 == 0)
+			diff2 = 1;
 
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			//path_info->bw += max_queuing_delay / diff;
-			path_info->bw += 10000 / diff;
+			path_info->bw += sysctl_mpip_bw_factor * max_queuing_delay / diff1;
+
+			if (max_delay < 0)
+				max_delay = -max_delay;
+
+			path_info->bw += (100 - sysctl_mpip_bw_factor) * max_delay / diff2;
 		}
 
 		if (path_info->bw > max_bw)
@@ -1370,7 +1391,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			   __be32 *saddr, __be32 *daddr,  __be16 *sport, __be16 *dport,
 			   __be32 origin_saddr, __be32 origin_daddr, __be16 origin_sport,
 			   __be16 origin_dport, unsigned char session_id,
-			   unsigned int protocol)
+			   unsigned int protocol, unsigned int len)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;

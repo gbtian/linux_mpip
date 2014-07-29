@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.5.2)  27 JUL 2014 18:06
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.5.2)  29 JUL 2014 18:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -522,7 +522,7 @@ ed-to.pdf fig/outoforder.eps>
 (epstopdf)             \includegraphics on input line 406.
 Package epstopdf Info: Output file is already uptodate.
 
-<fig/outoforder-eps-converted-to.pdf, id=47, 1080.035pt x 1243.64626pt>
+<fig/outoforder-eps-converted-to.pdf, id=46, 1080.035pt x 1243.64626pt>
 File: fig/outoforder-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/outoforder-eps-converted-to.pdf>
@@ -547,7 +547,7 @@ Package epstopdf Info: Source file: <fig/tcp_usetcp_nonat.eps>
 onverted-to.pdf fig/tcp_usetcp_nonat.eps>
 (epstopdf)             \includegraphics on input line 21.
 Package epstopdf Info: Output file is already uptodate.
-<fig/tcp_usetcp_nonat-eps-converted-to.pdf, id=55, 515.9275pt x 423.5825pt>
+<fig/tcp_usetcp_nonat-eps-converted-to.pdf, id=54, 515.9275pt x 423.5825pt>
 File: fig/tcp_usetcp_nonat-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/tcp_usetcp_nonat-eps-converted-to.pdf>
@@ -566,7 +566,7 @@ onverted-to.pdf fig/tcp_useudp_nonat.eps>
 (epstopdf)             \includegraphics on input line 22.
 Package epstopdf Info: Output file is already uptodate.
 
-<fig/tcp_useudp_nonat-eps-converted-to.pdf, id=56, 515.9275pt x 423.5825pt>
+<fig/tcp_useudp_nonat-eps-converted-to.pdf, id=55, 515.9275pt x 423.5825pt>
 File: fig/tcp_useudp_nonat-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/tcp_useudp_nonat-eps-converted-to.pdf>
@@ -584,7 +584,7 @@ d-to.pdf fig/udp_nonat.eps>
 (epstopdf)             \includegraphics on input line 23.
 Package epstopdf Info: Output file is already uptodate.
 
-<fig/udp_nonat-eps-converted-to.pdf, id=57, 515.9275pt x 423.5825pt>
+<fig/udp_nonat-eps-converted-to.pdf, id=56, 515.9275pt x 423.5825pt>
 File: fig/udp_nonat-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/udp_nonat-eps-converted-to.pdf>
@@ -595,17 +595,14 @@ Package epstopdf Info: Source file: <fig/tcp_usetcp_nat.eps>
 (epstopdf)                    date: 2014-07-27 16:33:52
 (epstopdf)                    size: 16343 bytes
 (epstopdf)             Output file: <fig/tcp_usetcp_nat-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-07-27 18:06:25
+(epstopdf)                    size: 11335 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/tcp_usetcp_nat-eps-con
 verted-to.pdf fig/tcp_usetcp_nat.eps>
 (epstopdf)             \includegraphics on input line 33.
-runsystem(repstopdf --outfile=fig/tcp_usetcp_nat-eps-converted-to.pdf fig/tcp_u
-setcp_nat.eps)...executed safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/tcp_usetcp_nat-eps-converted-to.pdf>
-(epstopdf)                    date: 2014-07-27 18:06:25
-(epstopdf)                    size: 11335 bytes.
-
-<fig/tcp_usetcp_nat-eps-converted-to.pdf, id=58, 507.8975pt x 423.5825pt>
+<fig/tcp_usetcp_nat-eps-converted-to.pdf, id=57, 507.8975pt x 423.5825pt>
 File: fig/tcp_usetcp_nat-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/tcp_usetcp_nat-eps-converted-to.pdf>
@@ -616,17 +613,14 @@ Package epstopdf Info: Source file: <fig/tcp_useudp_nat.eps>
 (epstopdf)                    date: 2014-07-27 16:33:53
 (epstopdf)                    size: 18572 bytes
 (epstopdf)             Output file: <fig/tcp_useudp_nat-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-07-27 18:06:26
+(epstopdf)                    size: 11624 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/tcp_useudp_nat-eps-con
 verted-to.pdf fig/tcp_useudp_nat.eps>
 (epstopdf)             \includegraphics on input line 34.
-runsystem(repstopdf --outfile=fig/tcp_useudp_nat-eps-converted-to.pdf fig/tcp_u
-seudp_nat.eps)...executed safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/tcp_useudp_nat-eps-converted-to.pdf>
-(epstopdf)                    date: 2014-07-27 18:06:26
-(epstopdf)                    size: 11624 bytes.
-
-<fig/tcp_useudp_nat-eps-converted-to.pdf, id=59, 507.8975pt x 423.5825pt>
+<fig/tcp_useudp_nat-eps-converted-to.pdf, id=58, 507.8975pt x 423.5825pt>
 File: fig/tcp_useudp_nat-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/tcp_useudp_nat-eps-converted-to.pdf>
@@ -637,17 +631,14 @@ Package epstopdf Info: Source file: <fig/udp_nat.eps>
 (epstopdf)                    date: 2014-07-27 16:33:54
 (epstopdf)                    size: 13467 bytes
 (epstopdf)             Output file: <fig/udp_nat-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-07-27 18:06:26
+(epstopdf)                    size: 9874 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/udp_nat-eps-converted-
 to.pdf fig/udp_nat.eps>
 (epstopdf)             \includegraphics on input line 35.
-runsystem(repstopdf --outfile=fig/udp_nat-eps-converted-to.pdf fig/udp_nat.eps)
-...executed safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/udp_nat-eps-converted-to.pdf>
-(epstopdf)                    date: 2014-07-27 18:06:26
-(epstopdf)                    size: 9874 bytes.
-
-<fig/udp_nat-eps-converted-to.pdf, id=60, 507.8975pt x 423.5825pt>
+<fig/udp_nat-eps-converted-to.pdf, id=59, 507.8975pt x 423.5825pt>
 File: fig/udp_nat-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/udp_nat-eps-converted-to.pdf>
@@ -665,7 +656,7 @@ verted-to.pdf fig/tcp_usetcp_net.eps>
 (epstopdf)             \includegraphics on input line 46.
 Package epstopdf Info: Output file is already uptodate.
 
-<fig/tcp_usetcp_net-eps-converted-to.pdf, id=61, 507.8975pt x 423.5825pt>
+<fig/tcp_usetcp_net-eps-converted-to.pdf, id=60, 507.8975pt x 423.5825pt>
 File: fig/tcp_usetcp_net-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/tcp_usetcp_net-eps-converted-to.pdf>
@@ -683,7 +674,7 @@ verted-to.pdf fig/tcp_useudp_net.eps>
 (epstopdf)             \includegraphics on input line 47.
 Package epstopdf Info: Output file is already uptodate.
 
-<fig/tcp_useudp_net-eps-converted-to.pdf, id=62, 507.8975pt x 423.5825pt>
+<fig/tcp_useudp_net-eps-converted-to.pdf, id=61, 507.8975pt x 423.5825pt>
 File: fig/tcp_useudp_net-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/tcp_useudp_net-eps-converted-to.pdf>
@@ -716,19 +707,18 @@ texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-d
 ist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fon
 ts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type
 1/public/amsfonts/cm/cmmi9.pfb></usr/share/texlive/texmf-dist/fonts/type1/publi
-c/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
-ts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-r9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb>
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/s
-hare/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texlive
-/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fon
-ts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/t
-imes/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pf
-b>
-Output written on conext14.pdf (9 pages, 344496 bytes).
+c/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+sy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb
+></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-
+dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/typ
+e1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/ut
+mri8a.pfb>
+Output written on conext14.pdf (9 pages, 336747 bytes).
 PDF statistics:
- 160 PDF objects out of 1000 (max. 8388607)
- 108 compressed objects within 2 object streams
+ 156 PDF objects out of 1000 (max. 8388607)
+ 105 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  61 words of extra memory for PDF output out of 10000 (max. 10000000)
 

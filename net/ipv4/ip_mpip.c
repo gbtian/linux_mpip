@@ -331,7 +331,7 @@ unsigned char get_path_id(unsigned char *node_id,
 		__be32 *saddr, __be32 *daddr, __be16 *sport, __be16 *dport,
 		__be32 origin_saddr, __be32 origin_daddr, __be16 origin_sport,
 		__be16 origin_dport, unsigned char session_id,
-		unsigned int protocol)
+		unsigned int protocol, unsigned int len)
 {
 	if (!node_id || session_id <= 0)
 		return 0;
@@ -344,7 +344,7 @@ unsigned char get_path_id(unsigned char *node_id,
 	return find_fastest_path_id(node_id, saddr, daddr, sport, dport,
 								origin_saddr, origin_daddr, origin_sport,
 								origin_dport, session_id,
-								protocol);
+								protocol, len);
 }
 
 
@@ -1550,7 +1550,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     {
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_sport, &new_dport,
     							old_saddr, old_daddr, sport, dport,
-    							send_mpip_cm.session_id, protocol);
+    							send_mpip_cm.session_id, protocol, skb->len);
     }
 
     path_stat_id = get_path_stat_id(dst_node_id, &delay);
