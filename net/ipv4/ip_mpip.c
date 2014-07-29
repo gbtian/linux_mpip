@@ -2047,6 +2047,7 @@ unsigned char get_tcp_session(struct sk_buff *skb)
 	struct iphdr *iph;
 	struct tcphdr *tcph = NULL;
 	__be16 sport = 0, dport = 0;
+	struct socket_session_table *socket_session = NULL;
 
 	if (!skb)
 	{
@@ -2068,6 +2069,11 @@ unsigned char get_tcp_session(struct sk_buff *skb)
 	sport = tcph->source;
 	dport = tcph->dest;
 
-	return get_sender_session(iph->daddr, dport, iph->saddr, sport, IPPROTO_TCP);
+	socket_session = get_sender_session(iph->daddr, dport, iph->saddr, sport, IPPROTO_TCP);
+
+	if (!socket_session)
+		return 0;
+
+	return socket_session->session_id;
 
 }
