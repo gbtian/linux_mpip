@@ -1386,6 +1386,35 @@ int add_path_info_udp(unsigned char *node_id, __be32 daddr, __be16 sport,
 	return 1;
 }
 
+struct path_info_table *find_lowest_delay_path(unsigned char *node_id,
+		unsigned char session_id)
+{
+	struct path_info_table *path_info;
+	struct path_info_table *f_path = NULL;
+	__s32 min_delay = -1;
+
+
+	if (session_id <= 0)
+		return 0;
+
+	list_for_each_entry(path_info, &pi_head, list)
+	{
+		if (!is_equal_node_id(path_info->node_id, node_id) ||
+				path_info->session_id != session_id ||
+				path_info->status != 0)
+		{
+			continue;
+		}
+
+		if (path_info->delay < min_delay || min_delay == -1)
+		{
+			min_delay = path_info->delay;
+			f_path = path_info;
+		}
+	}
+
+	return f_path;
+}
 
 unsigned char find_fastest_path_id(unsigned char *node_id,
 			   __be32 *saddr, __be32 *daddr,  __be16 *sport, __be16 *dport,
@@ -1407,6 +1436,24 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	if (node_id[0] == node_id[1])
 	{
 		return 0;
+	}
+
+	//for short packet, use the path with lowest delay
+	if (len < 150)
+	{
+		f_path = find_lowest_delay_path(node_id, session_id);
+
+		if (f_path)
+		{
+			*saddr = f_path->saddr;
+			*daddr = f_path->daddr;
+			*sport = f_path->sport;
+			*dport = f_path->dport;
+			f_path->pktcount += 1;
+			f_path_id = f_path->path_id;
+
+			return f_path_id;
+		}
 	}
 
 	//if comes here, it means all paths have been probed
