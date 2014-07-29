@@ -636,7 +636,8 @@ int update_path_info(unsigned char session_id)
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			path_info->bw += max_queuing_delay / diff;
+			//path_info->bw += max_queuing_delay / diff;
+			path_info->bw += 10000 / diff;
 		}
 
 		if (path_info->bw > max_bw)
