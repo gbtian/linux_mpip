@@ -614,7 +614,8 @@ __s32 calc_diff(__s32 value, __s32 min_value, bool is_delay)
 	__s32 diff = value - min_value;
 	__s32 si = calc_si_diff(is_delay);
 	//printk("%d, %s, %d\n", si, __FILE__, __LINE__);
-	return diff / si;
+//	return diff / si;
+	return diff;
 }
 
 int update_path_info(unsigned char session_id)
@@ -677,7 +678,7 @@ int update_path_info(unsigned char session_id)
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			path_info->bw += sysctl_mpip_bw_factor * max_queuing_delay / diff1;
+			path_info->bw = sysctl_mpip_bw_factor * max_queuing_delay / diff1;
 
 			if (max_delay < 0)
 				max_delay = -max_delay;
