@@ -678,12 +678,12 @@ int update_path_info(unsigned char session_id)
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			path_info->bw = sysctl_mpip_bw_factor * max_queuing_delay / diff1;
+			path_info->bw = sysctl_mpip_bw_factor * max_queuing_delay / (diff1+sysctl_mpip_bw_4);
 
 			if (max_delay < 0)
 				max_delay = -max_delay;
 
-			path_info->bw += (100 - sysctl_mpip_bw_factor) * max_delay / diff2;
+			path_info->bw += (100 - sysctl_mpip_bw_factor) * max_delay / (diff2+sysctl_mpip_bw_4);
 		}
 
 		if (path_info->bw > max_bw)
