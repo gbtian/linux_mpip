@@ -545,7 +545,7 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 
 
 
-__s32 calc_si_diff(void)
+__s32 calc_si_diff(bool is_delay)
 {
 	__s32 si = 0;
 	__s32 K = 0;
@@ -553,27 +553,52 @@ __s32 calc_si_diff(void)
 	__s32 diff = 0;
 	__s32 max = 0;
 	struct path_info_table *path_info, *prev_info;
-	list_for_each_entry(path_info, &pi_head, list)
+
+	if (is_delay)
 	{
-		prev_info = list_entry(path_info->list.prev, typeof(*path_info), list);
-		if (!prev_info)
-			continue;
-		
-
-		diff = (path_info->queuing_delay - prev_info->queuing_delay > 0) ? 
-		       (path_info->queuing_delay - prev_info->queuing_delay) :
-		       (prev_info->queuing_delay - path_info->queuing_delay);
-		
-		max = (path_info->queuing_delay > prev_info->queuing_delay) ? 
-		       path_info->queuing_delay : prev_info->queuing_delay;
-		
-		if (max > diff)
+		list_for_each_entry(path_info, &pi_head, list)
 		{
-			sigma += (100 * diff) / (max + 500);
-			++K;
-		}
+			prev_info = list_entry(path_info->list.prev, typeof(*path_info), list);
+			if (!prev_info)
+				continue;
 
-		//printk("%d, %d, %d, %d, %d\n", diff, max, (100 * diff) / (max + 500), sigma, __LINE__);
+
+			diff = (path_info->delay - prev_info->delay > 0) ?
+				   (path_info->delay - prev_info->delay) :
+				   (prev_info->delay - path_info->delay);
+
+			max = (path_info->delay > prev_info->delay) ?
+				   path_info->delay : prev_info->delay;
+
+			if (max > diff)
+			{
+				sigma += (100 * diff) / (max + 500);
+				++K;
+			}
+		}
+	}
+	else
+	{
+		list_for_each_entry(path_info, &pi_head, list)
+		{
+			prev_info = list_entry(path_info->list.prev, typeof(*path_info), list);
+			if (!prev_info)
+				continue;
+
+
+			diff = (path_info->queuing_delay - prev_info->queuing_delay > 0) ?
+				   (path_info->queuing_delay - prev_info->queuing_delay) :
+				   (prev_info->queuing_delay - path_info->queuing_delay);
+
+			max = (path_info->queuing_delay > prev_info->queuing_delay) ?
+				   path_info->queuing_delay : prev_info->queuing_delay;
+
+			if (max > diff)
+			{
+				sigma += (100 * diff) / (max + 500);
+				++K;
+			}
+		}
 	}
 
 	if (K == 0)
@@ -584,13 +609,12 @@ __s32 calc_si_diff(void)
 	return 100 - si;
 }
 
-__s32 calc_diff(__s32 queuing_delay, __s32 min_queuing_delay)
+__s32 calc_diff(__s32 value, __s32 min_value, bool is_delay)
 {
-	__s32 diff = queuing_delay - min_queuing_delay;
-	__s32 si = calc_si_diff();
+	__s32 diff = value - min_value;
+	__s32 si = calc_si_diff(is_delay);
 	//printk("%d, %s, %d\n", si, __FILE__, __LINE__);
-	//return diff / (sysctl_mpip_bw_factor * si);
-	return diff;
+	return diff / si;
 }
 
 int update_path_info(unsigned char session_id)
@@ -639,12 +663,12 @@ int update_path_info(unsigned char session_id)
 		if (path_info->session_id != session_id)
 			continue;
 
-		__s32 diff1 = calc_diff(path_info->queuing_delay, min_queuing_delay);
+		__s32 diff1 = calc_diff(path_info->queuing_delay, min_queuing_delay, false);
 
 		if (diff1 == 0)
 			diff1 = 1;
 
-		__s32 diff2 = calc_diff(path_info->delay, min_delay);
+		__s32 diff2 = calc_diff(path_info->delay, min_delay, true);
 
 		if (diff2 == 0)
 			diff2 = 1;
