@@ -41,14 +41,14 @@ Also, we set up a NAT network with two routers as shown in Figure~\ref{fig.nat}.
 
 In Figure~\ref{fig.net}, we set up our server in Emulab to verify our system in Internet. Because the server in Emulab only has one public IP address which means our connection only has two paths. Also, Emulab doesn't support iperf with UDP traffic, so we only test TCP scenario.
 
-\begin{figure*}[htb]
+\begin{figure}[htb]
 \centering{
 \subfigure[TCP throughput with psudo TCP connection\label{fig.tcp_usetcp_net}]{\includegraphics[width=0.49\linewidth]{fig/tcp_usetcp_net.eps}}
 \subfigure[TCP throughput with UDP Wrapper\label{fig.tcp_useudp_net}]{\includegraphics[width=0.49\linewidth]{fig/tcp_useudp_net.eps}}
 }
 \caption{Side-by-side comparison in Internet}
 \label{fig.net}
-\end{figure*}
+\end{figure}
 
 
 %\subsection{Skype voice call improvement}

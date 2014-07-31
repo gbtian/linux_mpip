@@ -666,12 +666,12 @@ int update_path_info(unsigned char session_id)
 
 		__s32 diff1 = calc_diff(path_info->queuing_delay, min_queuing_delay, false);
 
-		if (diff1 == 0)
+		if (diff1 <= 0)
 			diff1 = 1;
 
 		__s32 diff2 = calc_diff(path_info->delay, min_delay, true);
 
-		if (diff2 == 0)
+		if (diff2 <= 0)
 			diff2 = 1;
 
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))

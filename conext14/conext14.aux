@@ -33,7 +33,6 @@
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Node ID vs IP address and Port\relax }}{\thepage }}
 \newlabel{tb.wi}{{4}{\thepage }}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.3}Feedback Loop}{\thepage }}
-\citation{mptcp}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Path information\relax }}{\thepage }}
 \newlabel{tb.pi}{{3}{\thepage }}
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Path Feedback information\relax }}{\thepage }}
@@ -41,10 +40,12 @@
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.4}Periodical Heartbeat}{\thepage }}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.5.5}Path Selection}{\thepage }}
 \newlabel{sec:selection}{{3.5.5}{\thepage }}
+\citation{mptcp}
 \newlabel{eq.choose}{{1}{\thepage }}
 \newlabel{eq.bw}{{2}{\thepage }}
 \newlabel{eq.siq}{{3}{\thepage }}
 \newlabel{eq.sid}{{4}{\thepage }}
+\newlabel{eq.c}{{5}{\thepage }}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Session Management}{\thepage }}
 \newlabel{sec:session}{{3.6}{\thepage }}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.1}Addition/Removal of Sessions}{\thepage }}
@@ -54,17 +55,25 @@
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.6.3}Dealing with out of order TCP traffic}{\thepage }}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces TCP Out-Of-Order Packet Process\relax }}{\thepage }}
 \newlabel{fig.outoforder}{{4}{\thepage }}
-\newlabel{eq.seq}{{5}{\thepage }}
 \citation{simon01}
 \citation{record}
 \bibstyle{./bib/IEEEtran}
 \bibdata{./bib/IEEEfull}
 \bibcite{mptcp}{1}
+\newlabel{eq.seq}{{6}{\thepage }}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Andriod implementation}{\thepage }}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Performance Evaluation}{\thepage }}
 \newlabel{sec:evaluation}{{4}{\thepage }}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}TCP/UDP throughput enhancement}{\thepage }}
 \newlabel{sec:tcp}{{4.1}{\thepage }}
+\newlabel{fig.tcp_usetcp_net}{{7(a)}{\thepage }}
+\newlabel{sub@fig.tcp_usetcp_net}{{(a)}{\thepage }}
+\newlabel{fig.tcp_useudp_net}{{7(b)}{\thepage }}
+\newlabel{sub@fig.tcp_useudp_net}{{(b)}{\thepage }}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Side-by-side comparison in Internet\relax }}{\thepage }}
+\newlabel{fig.net}{{7}{\thepage }}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {TCP throughput with psudo TCP connection}}}{\thepage }}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {TCP throughput with UDP Wrapper}}}{\thepage }}
 \@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions and Future Work}{\thepage }}
 \newlabel{sec:conclusion}{{5}{\thepage }}
 \@writefile{toc}{\contentsline {section}{\numberline {6}References}{\thepage }}
@@ -90,11 +99,3 @@
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {TCP throughput with psudo TCP connection}}}{\thepage }}
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {TCP throughput with UDP Wrapper}}}{\thepage }}
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces {UDP throughput}}}{\thepage }}
-\newlabel{fig.tcp_usetcp_net}{{7(a)}{\thepage }}
-\newlabel{sub@fig.tcp_usetcp_net}{{(a)}{\thepage }}
-\newlabel{fig.tcp_useudp_net}{{7(b)}{\thepage }}
-\newlabel{sub@fig.tcp_useudp_net}{{(b)}{\thepage }}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Side-by-side comparison in Internet\relax }}{\thepage }}
-\newlabel{fig.net}{{7}{\thepage }}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {TCP throughput with psudo TCP connection}}}{\thepage }}
-\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {TCP throughput with UDP Wrapper}}}{\thepage }}
