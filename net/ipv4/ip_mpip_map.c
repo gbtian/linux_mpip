@@ -513,19 +513,19 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 			}
 			else
 			{
-				path_info->delay = (99 * path_info->delay + delay) / 100;
+				path_info->delay = (9 * path_info->delay + delay) / 10;
 			}
 
 			if (path_info->count < 500)
 			{
-				path_info->min_delay = (99 * path_info->min_delay + delay) / 100;
+				path_info->min_delay = (9 * path_info->min_delay + delay) / 10;
 				path_info->count += 1;
 			}
 			else
 			{
 				if (path_info->min_delay > path_info->delay)
 				{
-					path_info->min_delay = (99 * path_info->min_delay + delay) / 100;
+					path_info->min_delay = (9 * path_info->min_delay + delay) / 10;
 //					path_info->min_delay = path_info->delay;
 				}
 			}
