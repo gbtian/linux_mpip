@@ -286,7 +286,7 @@ int update_path_delay(unsigned char path_id, __s32 delay);
 bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
 		__be16 sport, __be16 dport,	unsigned char session_id);
 
-int update_path_info(unsigned char session_id);
+int update_path_info(unsigned char session_id, unsigned int len);
 
 
 struct socket_session_table *get_receiver_session(unsigned char *src_node_id, unsigned char *dst_node_id,

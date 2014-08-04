@@ -618,7 +618,7 @@ __s32 calc_diff(__s32 value, __s32 min_value, bool is_delay)
 	return diff;
 }
 
-int update_path_info(unsigned char session_id)
+int update_path_info(unsigned char session_id, unsigned int len)
 {
 	struct path_info_table *path_info;
 	__s32 min_queuing_delay = -1;
@@ -678,12 +678,12 @@ int update_path_info(unsigned char session_id)
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			path_info->bw = sysctl_mpip_bw_factor * max_queuing_delay / (diff1+sysctl_mpip_bw_4);
+			path_info->bw = len * max_queuing_delay / (diff1+sysctl_mpip_bw_4);
 
 			if (max_delay < 0)
 				max_delay = -max_delay;
 
-			path_info->bw += (100 - sysctl_mpip_bw_factor) * max_delay / (diff2+sysctl_mpip_bw_4);
+			path_info->bw += (1500 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
 		}
 
 		if (path_info->bw > max_bw)
@@ -691,9 +691,9 @@ int update_path_info(unsigned char session_id)
 
 	}
 
-	if (max_bw > 5000)
+	if (max_bw > 50000)
 	{
-		__u64 times = max_bw / 5000;
+		__u64 times = max_bw / 50000;
 		if (times > 0)
 		{
 			list_for_each_entry(path_info, &pi_head, list)
@@ -1464,22 +1464,24 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	}
 
 	//for short packet, use the path with lowest delay
-	if (len < 150)
-	{
-		f_path = find_lowest_delay_path(node_id, session_id);
+//	if (len < 150)
+//	{
+//		f_path = find_lowest_delay_path(node_id, session_id);
+//
+//		if (f_path)
+//		{
+//			*saddr = f_path->saddr;
+//			*daddr = f_path->daddr;
+//			*sport = f_path->sport;
+//			*dport = f_path->dport;
+//			f_path->pktcount += 1;
+//			f_path_id = f_path->path_id;
+//
+//			return f_path_id;
+//		}
+//	}
 
-		if (f_path)
-		{
-			*saddr = f_path->saddr;
-			*daddr = f_path->daddr;
-			*sport = f_path->sport;
-			*dport = f_path->dport;
-			f_path->pktcount += 1;
-			f_path_id = f_path->path_id;
-
-			return f_path_id;
-		}
-	}
+	update_path_info(session_id, len);
 
 	//if comes here, it means all paths have been probed
 	list_for_each_entry(path, &pi_head, list)

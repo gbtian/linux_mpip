@@ -289,9 +289,10 @@ P(k) = \frac{W_k}{\sum_{i=1}^{N}W_i}
 
 From above, the path weight is the only criterion to choose the most suitable path, so the calculation of path weight $W$ is critical to the performance of the system. Wrong decision can result in catastrophic disaster. In our prototype, the value of $W$ is calculated by Equation~\ref{eq.bw}. 
 
-In Equation~\ref{eq.bw}, we update the path weight by progressive increasing to make the trend of path weight smooth. The increment consists of two parts. In the first part, we calculate the weight with queuing delay. This is beneficial for high bandwidth-delay product links according to \cite{mptcp}. By assigning high priority for this part, we can achieve high throughput. In the second part, we calculate the weight with the total network delay. For applications that prefer low delay to high throughput, assigning high priority to the second part will be of much benefit. 
+In Equation~\ref{eq.bw}, we update the path weight by progressive increasing to make the trend of path weight smooth. The increment consists of two parts. In the first part, we calculate the weight with the total network delay. For applications that prefer low delay to high throughput, assigning high priority to this part will be of much benefit. In the second part, we calculate the weight with queuing delay. This is beneficial for high bandwidth-delay product links according to \cite{mptcp}. By assigning high priority for this part, we can achieve high throughput. 
 
-The parameter $C$ is used to adjust the weight of each part. For packets of different size, we have different calculation of $C$. For packets of small size, we can try more to send it out with a path with lower delay. On the other side, for packets of large size, we need to choose a path with less queuing delay which means lower congestion to send it out. To achieve this goal, the parameter $C$ is calculated through Equation~\ref{eq.c} where $L$ is the packet size and $MTU$ is the Maximum Transmission Unit of the NIC card.
+The parameter $C$ is used to adjust the weight of each part. For packets of different size, we have different calculation of $C$. For packets of small size, we can try more to send it out with a path with lower delay. On the other side, for packets of large size, we need to choose a path with less queuing delay which means lower congestion to send it out. To achieve this goal, the parameter $C$ is calculated through Equation~\ref{eq.c} where $L$ is the packet size and $MTU$ is the Maximum Transmission Unit of the NIC card. Applications like Skype have separate audio and video streaming, and users are more sensitive on audio delay. Generally voice packets have smaller length than video packets. According to Equation~\ref{eq.c}, when routing an audio packet, the delay-based routing calculation will get higher priority, and the packet will more likely be sent out through the interface that has low delay.
+
 
 $SI_q$ and $SI_d$ are the smooth index of queuing delay $Q$ and network delay $D$ of all paths calculated in Equation~\ref{eq.siq}  and Equation~\ref{eq.sid} where $N$ is the total number of paths in Table~\ref{tb.pi}. Please be noted that $Q_{max}$, $Q_{min}$ mean the maximum and minimum queuing delay out of all paths, while $D_{max}$, $D_{min}$ mean the maximum and minimum network delay in Equation~\ref{eq.bw}, Equation~\ref{eq.siq} and Equation~\ref{eq.sid}.
 %
@@ -302,18 +303,18 @@ $SI_q$ and $SI_d$ are the smooth index of queuing delay $Q$ and network delay $D
 
 \begin{eqnarray}
 \label{eq.bw}
-W(k+1) = W(k) + \frac{C*Q_{max}(k)}{\frac{Q(k)-Q_{min}(k)}{SI_q(k)}+1} \nonumber \\
-\left.		  + \frac{(100-C)*D_{max}(k)}{\frac{D(k)-D_{min}(k)}{SI_d(k)}+1}\right. 
+W(k+1) = W(k) + \frac{C*D_{max}(k)}{\frac{D(k)-D_{min}(k)}{SI_d(k)}+1} \nonumber \\
+\left.		  + \frac{(100-C)*Q_{max}(k)}{\frac{Q(k)-Q_{min}(k)}{SI_q(k)}+1} \right. 
 \end{eqnarray}
-
-\be
-\label{eq.siq}
-SI_q(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|Q(i) - Q(i-1)|}{Q_{max}})
-\ee
 
 \be
 \label{eq.sid}
 SI_d(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|D(i) - D(i-1)|}{D_{max}})
+\ee
+
+\be
+\label{eq.siq}
+SI_q(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|Q(i) - Q(i-1)|}{Q_{max}})
 \ee
 
 \be

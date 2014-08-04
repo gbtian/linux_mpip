@@ -1914,7 +1914,7 @@ int process_mpip_cm(struct sk_buff *skb)
 				sport, rcv_mpip_cm.session_id, iph->protocol);
 	}
 
-	update_path_info(rcv_mpip_cm.session_id);
+//	update_path_info(rcv_mpip_cm.session_id);
 
 	if (rcv_mpip_cm.flags == 3)
 	{
