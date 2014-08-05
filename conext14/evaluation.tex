@@ -51,8 +51,30 @@ In Figure~\ref{fig.net}, we set up our server in Emulab to verify our system in 
 \end{figure}
 
 
-%\subsection{Skype voice call improvement}
-%\label{sec:skype}
+\subsection{Skype voice call improvement}
+\label{sec:skype}
+
+In Figure~\ref{fig.skype}, we prove that our packet-size based routing decision works perfectly for audio application like Skype. In our experiment, we change the delay of NIC cards using the netem package in Ubuntu. On one side of the Skype call, we have two NIC cards as stated above. We ran the experiment for $360$ seconds with $3$ sections. In the first $120$ seconds, there is no manually added delay on each NIC card, we add additional $120ms$ delay to the first NIC card in the following $120$ seconds, finally for the last $120$ seconds, we add $120ms$ delay to the second NIC card. We did our Skype audio experiment without video content while most packets on the connection are audio packets except some control packets.The size of Audio packets is relative small, generally under $200$KB. In this case, according to Equation~\ref{eq.bw} to Equation~\ref{eq.c}, the routing decision will mostly depend on the delay value instead of queuing delay. Figure~\ref{fig.skype} shows the packets routing adaptation as the delay value changes. By this adaptation, we can make sure that the audio streaming will always choose the path that has lower delay to keep the best user experience even other paths have the same throughput.
+
+\begin{figure}
+\centering
+\includegraphics[width=1\linewidth]{fig/skype.eps}
+\caption{Skype Audio Streaming Routing Adaptation}
+\label{fig.skype}
+\end{figure}
+
+
+\subsection{Smooth connection switch}
+\label{sec:switch}
+
+In Figure~\ref{fig.switch}, we verify that smooth switch between different NIC cards works perfectly over our MPIP implementation by doing an IPERF TCP experiment. We do a side-by-side comparison between MPIP and MPTCP. We also divide the experiment into $3$ sections with $120$ seconds for each section. On the client side of the connection, there are two NIC cards. In the first $120$ seconds, both NIC cards work synchronously, then we disable one of them for $120$ seconds, and during the last $120$ seconds, we enable back the NIC card. The result shows that our MPIP system can follow this on/off process perfectly with stable throughput. For MPTCP, besides the fluctuating throughput which also happened in previous experiments, when trying to enable back the disabled NIC card, the throughput doesn't come back at all. According to monitoring the TCP connections between the client the server, MPTCP does constructs two new TCP connections after enabling back the NIC card, but it doesn't transmit any data after coming back.
+
+\begin{figure}
+\centering
+\includegraphics[width=1\linewidth]{fig/switch.eps}
+\caption{Connection Smooth Switch}
+\label{fig.switch}
+\end{figure}
 %
 %\subsection{Datacenter use case}
 %\label{sec:datacenter}
