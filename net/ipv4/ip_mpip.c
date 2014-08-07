@@ -1470,6 +1470,14 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 		return false;
 	}
 
+	if (skb_tailroom(skb) < MPIP_CM_LEN * 2)
+	{
+		mpip_log("%d, %d, %s, %s, %d\n", skb_tailroom(skb),
+				skb->len, __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+
 	if (flags > 1)
 	{
 		if (skb->len > 150)
