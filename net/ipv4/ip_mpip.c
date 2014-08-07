@@ -1717,6 +1717,9 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 			udph->dest = new_dport;
 		}
 
+		mpip_log("UDP: %d, %d, %s, %s, %d\n", ntohs(udph->len), ip_hdr(skb)->protocol,
+					__FILE__, __FUNCTION__,	__LINE__);
+
 		udph->len = htons(ntohs(udph->len) + MPIP_CM_LEN + 1);
 		udph->check = 0;
 		udph->check = csum_tcpudp_magic(old_saddr, old_daddr,
