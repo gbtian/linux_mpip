@@ -30,7 +30,7 @@ static struct mpip_cm rcv_mpip_cm;
 int sysctl_mpip_enabled __read_mostly = 0;
 int sysctl_mpip_send __read_mostly = 0;
 int sysctl_mpip_rcv __read_mostly = 0;
-int sysctl_mpip_log __read_mostly = 0;
+int sysctl_mpip_log __read_mostly = 1;
 int sysctl_mpip_bw_factor __read_mostly = 1;
 int sysctl_mpip_bw_1 __read_mostly = 240;
 int sysctl_mpip_bw_2 __read_mostly = 60;
@@ -1998,6 +1998,16 @@ int process_mpip_cm(struct sk_buff *skb)
 								socket_session->dport, socket_session->sport, __FILE__, __FUNCTION__, __LINE__);
 			udph->source = socket_session->dport;
 			udph->dest = socket_session->sport;
+
+			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
+													ip_hdr(skb)->protocol,  __FILE__, __FUNCTION__,
+													__LINE__);
+
+			udph->len = htons(ntohs(udph->len) - MPIP_CM_LEN - 1);
+
+			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
+													ip_hdr(skb)->protocol,  __FILE__, __FUNCTION__,
+													__LINE__);
 		}
 	}
 
