@@ -1999,15 +1999,6 @@ int process_mpip_cm(struct sk_buff *skb)
 			udph->source = socket_session->dport;
 			udph->dest = socket_session->sport;
 
-			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
-													ip_hdr(skb)->protocol,  __FILE__, __FUNCTION__,
-													__LINE__);
-
-			udph->len = htons(ntohs(udph->len) - MPIP_CM_LEN - 1);
-
-			mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
-													ip_hdr(skb)->protocol,  __FILE__, __FUNCTION__,
-													__LINE__);
 		}
 	}
 
@@ -2025,6 +2016,16 @@ int process_mpip_cm(struct sk_buff *skb)
 	}
 	else if(iph->protocol==IPPROTO_UDP)
 	{
+		mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
+												ip_hdr(skb)->protocol,  __FILE__, __FUNCTION__,
+												__LINE__);
+
+		udph->len = htons(ntohs(udph->len) - MPIP_CM_LEN - 1);
+
+		mpip_log("receiving: %d, %d, %d, %s, %s, %d\n", ip_hdr(skb)->id, ntohs(udph->len),
+												ip_hdr(skb)->protocol,  __FILE__, __FUNCTION__,
+												__LINE__);
+
 		udph->check = 0;
 		udph->check = csum_tcpudp_magic(iph->saddr, iph->daddr,
 									   skb->len, iph->protocol,
