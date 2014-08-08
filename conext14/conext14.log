@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.5.2)  8 AUG 2014 01:10
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.5.2)  8 AUG 2014 01:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -681,15 +681,12 @@ Package epstopdf Info: Source file: <fig/udp_net.eps>
 (epstopdf)                    date: 2014-08-08 01:08:57
 (epstopdf)                    size: 13073 bytes
 (epstopdf)             Output file: <fig/udp_net-eps-converted-to.pdf>
+(epstopdf)                    date: 2014-08-08 01:10:43
+(epstopdf)                    size: 9543 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/udp_net-eps-converted-
 to.pdf fig/udp_net.eps>
 (epstopdf)             \includegraphics on input line 48.
-runsystem(repstopdf --outfile=fig/udp_net-eps-converted-to.pdf fig/udp_net.eps)
-...executed safely (allowed).
-
-Package epstopdf Info: Result file: <fig/udp_net-eps-converted-to.pdf>
-(epstopdf)                    date: 2014-08-08 01:10:43
-(epstopdf)                    size: 9543 bytes.
+Package epstopdf Info: Output file is already uptodate.
 
 <fig/udp_net-eps-converted-to.pdf, id=59, 499.8675pt x 423.5825pt>
 File: fig/udp_net-eps-converted-to.pdf Graphic file (type pdf)
@@ -747,9 +744,6 @@ df>] (./conext14.aux)
 
 LaTeX Warning: There were undefined references.
 
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
  ) 
 Here is how much of TeX's memory you used:
  4736 strings out of 493307
@@ -773,7 +767,7 @@ sy6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb
 dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/typ
 e1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/ut
 mri8a.pfb>
-Output written on conext14.pdf (10 pages, 364400 bytes).
+Output written on conext14.pdf (10 pages, 364763 bytes).
 PDF statistics:
  177 PDF objects out of 1000 (max. 8388607)
  119 compressed objects within 2 object streams

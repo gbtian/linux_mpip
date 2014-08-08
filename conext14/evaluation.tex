@@ -39,7 +39,7 @@ Also, we set up a NAT network with two routers as shown in Figure~\ref{fig.nat}.
 \end{figure*}
 
 
-In Figure~\ref{fig.net}, we set up our server in Emulab to verify our system in Internet. Because the server in Emulab only has one public IP address which means our connection only has two paths. We do evaluation for both TCP and UDP. We can see that there is not throughput increase at all because the bottleneck is on the path of the connection. To improve throughput, we need another path that can avoid the bottleneck, like a $4$G path.
+In Figure~\ref{fig.net}, we set up our server in Emulab to verify our system in Internet. Because the server in Emulab only has one public IP address which means our connection only has two paths. We do evaluation for both TCP and UDP. We can see that there is not throughput increase at all because the bottleneck is on the path of the connection. To improve throughput, we need another path that can avoid the bottleneck, like a $4$G path. Instead of increasing throughput, according to our evaluation, our MPIP implementation can perform as good as regular connection. And in TCP scenario, we reduce throughput fluctuations which happens a lot in regular TCP and MPTCP by using MPIP.
 
 \begin{figure*}[htb]
 \centering{
