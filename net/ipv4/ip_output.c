@@ -116,8 +116,8 @@ int ip_local_out(struct sk_buff *skb)
 	int err;
 	struct iphdr *iph = ip_hdr(skb);
 
-	printk("sending: %d, %d, %s, %s, %d\n", iph->id,
-			iph->protocol, __FILE__, __FUNCTION__,	__LINE__);
+//	printk("sending: %d, %d, %s, %s, %d\n", iph->id,
+//			iph->protocol, __FILE__, __FUNCTION__,	__LINE__);
 
 	if (sysctl_mpip_enabled)
 	{

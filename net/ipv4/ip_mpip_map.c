@@ -1174,8 +1174,6 @@ int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr,
 {
 	struct path_info_table *item = NULL;
 
-	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
-
 	if (!node_id || session_id <= 0)
 		return 0;
 
@@ -1186,6 +1184,8 @@ int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr,
 
 	if (is_origin_path_info_added(node_id, session_id, protocol))
 		return 0;
+
+	mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	item = kzalloc(sizeof(struct path_info_table),	GFP_ATOMIC);
 
