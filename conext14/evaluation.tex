@@ -76,6 +76,37 @@ In Figure~\ref{fig.switch}, we verify that smooth switch between different NIC c
 \caption{Connection Smooth Switch}
 \label{fig.switch}
 \end{figure}
+
+
+\subsection{Combination of MPIP and MPTCP}
+\label{sec:mpip_mptcp}
+
+MPTCP is implemented at Transportation Layer while MPIP is implemented at Network Layer. Both implementations try to be totally independent with other layers. Under this precondition, it is possible to combine MPTCP and MPIP together to see how the system performs. Based on the implementation of MPTCP V$0.88$, we merged our MPIP implementation to the source of MPTCP, and enable both MPTCP and MPIP.
+
+In Figure~\ref{fig.mpip_mptcp}, we did an experiment of $20$ minutes to see how MPTCP, MPIP and combination of MPTCP and MPIP perform under the same network condition. As we can see, MPTCP can achieve much higher throughput than MPIP, but it doesn't stay there for long. The throughput fluctuates a lot through the whole experiment. On the other hand, when MPIP is applied, both MPIP alone and the combination of MPIP and MPTCP, consistent throughput can be achieved. Actually, MPIP alone has the best smoothness, but the combination also has huge improvement of consistency. The variance of each case can exactly reflect the difference. Table~\ref{tb.stat} shows the overall statistic result.
+
+\begin{figure}
+\centering
+\includegraphics[width=1\linewidth]{fig/mpip_mptcp.eps}
+\caption{Performance of MPIP, MPTCP and Combination}
+\label{fig.mpip_mptcp}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{\label{tb.stat}MPIP, MPTCP, MPIP and MPTCP}
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+ & MPIP & MPTCP & MPIP and MPTCP\\
+\hline
+Variance (${10}^{12}$) & 2.65 & 417.08 & 14.46 \\
+\hline
+Average &&&\\
+Throughput(Mbps) & 156.3 & 150.6 & 137.4  \\
+\hline
+\end{tabular}
+\end{table}
+
 %
 %\subsection{Datacenter use case}
 %\label{sec:datacenter}
