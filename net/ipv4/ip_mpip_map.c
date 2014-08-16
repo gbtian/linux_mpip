@@ -1447,7 +1447,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			   __be32 *saddr, __be32 *daddr,  __be16 *sport, __be16 *dport,
 			   __be32 origin_saddr, __be32 origin_daddr, __be16 origin_sport,
 			   __be16 origin_dport, unsigned char session_id,
-			   unsigned int protocol, unsigned int len)
+			   unsigned int protocol, unsigned int len, bool is_ack)
 {
 	struct path_info_table *path;
 	struct path_info_table *f_path;
@@ -1465,23 +1465,23 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 		return 0;
 	}
 
-	//for short packet, use the path with lowest delay
-//	if (len < 150)
-//	{
-//		f_path = find_lowest_delay_path(node_id, session_id);
-//
-//		if (f_path)
-//		{
-//			*saddr = f_path->saddr;
-//			*daddr = f_path->daddr;
-//			*sport = f_path->sport;
-//			*dport = f_path->dport;
-//			f_path->pktcount += 1;
-//			f_path_id = f_path->path_id;
-//
-//			return f_path_id;
-//		}
-//	}
+	//for ack packet, use the path with lowest delay
+	if (is_ack)
+	{
+		f_path = find_lowest_delay_path(node_id, session_id);
+
+		if (f_path)
+		{
+			*saddr = f_path->saddr;
+			*daddr = f_path->daddr;
+			*sport = f_path->sport;
+			*dport = f_path->dport;
+			f_path->pktcount += 1;
+			f_path_id = f_path->path_id;
+
+			return f_path_id;
+		}
+	}
 
 	update_path_info(session_id, len);
 
