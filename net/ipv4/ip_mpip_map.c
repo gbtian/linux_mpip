@@ -1464,6 +1464,7 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	__u64 totalbw = 0, tmptotal = 0, f_bw = 0;
 	int random = 0;
 	bool path_done = true;
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	if (!node_id || session_id <= 0)
 		return 0;
@@ -1472,10 +1473,11 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 	{
 		return 0;
 	}
-
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	//for ack packet, use the path with lowest delay
 	if (is_ack)
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		f_path = find_lowest_delay_path(node_id, session_id);
 
 		if (f_path)
@@ -1490,9 +1492,9 @@ unsigned char find_fastest_path_id(unsigned char *node_id,
 			return f_path_id;
 		}
 	}
-
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	update_path_info(session_id, len);
-
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	//if comes here, it means all paths have been probed
 	list_for_each_entry(path, &pi_head, list)
 	{
