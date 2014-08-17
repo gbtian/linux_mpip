@@ -121,12 +121,29 @@ int ip_local_out(struct sk_buff *skb)
 
 	if (sysctl_mpip_enabled)
 	{
-		myskb = skb_copy(skb, GFP_ATOMIC);
+		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
+		{
+			myskb = skb_copy(skb, GFP_ATOMIC);
+			send_mpip_enable(myskb, true, false);
+
+			if (iph->protocol == IPPROTO_TCP)
+				send_mpip_enabled(myskb, true, false);
+
+			kfree_skb(myskb);
+		}
 
 		if (get_skb_port(skb, &sport, &dport))
 		{
 			if (is_mpip_enabled(iph->daddr, dport))
 			{
+				if (iph->protocol == IPPROTO_TCP && is_ack_pkt(skb))
+				{
+					send_pure_ack(skb);
+					struct tcphdr *tcph = tcp_hdr(skb);
+					tcph->ack = 0;
+					tcph->ack_seq = 0;
+				}
+
 				if (insert_mpip_cm(skb, iph->saddr, iph->daddr,
 						&new_saddr, &new_daddr, iph->protocol, 0, 0))
 				{
@@ -173,20 +190,17 @@ int ip_local_out(struct sk_buff *skb)
 		err = dst_output(skb);
 
 
-	if (sysctl_mpip_enabled && myskb)
-	{
-		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
-		{
-//			mpip_log("sending: %d, %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
-//			print_addr(iph->saddr);
-//			print_addr(iph->daddr);
-			send_mpip_enable(myskb, true, false);
-
-			if (iph->protocol == IPPROTO_TCP)
-				send_mpip_enabled(myskb, true, false);
-		}
-		kfree_skb(myskb);
-	}
+//	if (sysctl_mpip_enabled && myskb)
+//	{
+//		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
+//		{
+//			send_mpip_enable(myskb, true, false);
+//
+//			if (iph->protocol == IPPROTO_TCP)
+//				send_mpip_enabled(myskb, true, false);
+//		}
+//		kfree_skb(myskb);
+//	}
 
 	return err;
 }

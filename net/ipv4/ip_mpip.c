@@ -537,6 +537,62 @@ bool is_pure_ack_pkt(struct sk_buff *skb)
 	return false;
 }
 
+bool send_pure_ack(struct sk_buff *skb)
+{
+	struct sk_buff *myskb = NULL;
+	struct iphdr *iph = NULL;
+	__be32 new_saddr=0, new_daddr=0;
+	struct net_device *new_dst_dev = NULL;
+	int err = 0;
+	struct rtable *rt;
+
+	myskb = skb_copy(skb, GFP_ATOMIC);
+	iph = ip_hdr(myskb);
+
+
+	myskb->len = iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+	myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+
+	if (!insert_mpip_cm(myskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
+				iph->protocol, 0, 0))
+	{
+		kfree_skb(myskb);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	if (new_saddr != 0)
+	{
+		new_dst_dev = find_dev_by_addr(new_saddr);
+		if (new_dst_dev)
+		{
+			iph->saddr = new_saddr;
+			iph->daddr = new_daddr;
+		}
+	}
+
+	if (ip_route_out(myskb, iph->saddr, iph->daddr))
+	{
+		skb_dst(myskb)->dev = find_dev_by_addr(iph->saddr);
+		skb->dev = find_dev_by_addr(iph->saddr);
+
+		err = __ip_local_out(myskb);
+		if (likely(err == 1))
+			err = dst_output(myskb);
+
+		return true;
+	}
+	else
+	{
+		kfree_skb(myskb);
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+		return false;
+	}
+
+	return false;
+}
+
 void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
 {
 	struct iphdr *iph = NULL;
