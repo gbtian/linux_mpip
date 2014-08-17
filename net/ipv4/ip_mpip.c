@@ -549,6 +549,7 @@ bool send_pure_ack(struct sk_buff *skb)
 	myskb = skb_copy(skb, GFP_ATOMIC);
 	iph = ip_hdr(myskb);
 
+	printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 
 	myskb->len = iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
 	myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
@@ -571,15 +572,20 @@ bool send_pure_ack(struct sk_buff *skb)
 		}
 	}
 
+	printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 	if (ip_route_out(myskb, iph->saddr, iph->daddr))
 	{
+		printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		skb_dst(myskb)->dev = find_dev_by_addr(iph->saddr);
 		skb->dev = find_dev_by_addr(iph->saddr);
 
 		err = __ip_local_out(myskb);
+		printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		if (likely(err == 1))
+		{
 			err = dst_output(myskb);
-
+			printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
+		}
 		return true;
 	}
 	else
