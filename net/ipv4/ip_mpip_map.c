@@ -658,34 +658,42 @@ int update_path_info(unsigned char session_id, unsigned int len)
 		}
 	}
 
+	printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 	if (min_queuing_delay == -1)
+	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return 0;
-
+	}
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if (path_info->session_id != session_id)
 			continue;
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 		__s32 diff1 = calc_diff(path_info->queuing_delay, min_queuing_delay, false);
 
 		if (diff1 <= 0)
 			diff1 = 1;
+		printk("%d, %s, %s, %d\n", diff1, __FILE__, __FUNCTION__, __LINE__);
 
 		__s32 diff2 = calc_diff(path_info->delay, min_delay, true);
 
 		if (diff2 <= 0)
 			diff2 = 1;
+		printk("%d, %s, %s, %d\n", diff2, __FILE__, __FUNCTION__, __LINE__);
 
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
 			path_info->bw = path_info->bw / 5;
 		else
 		{
 			path_info->bw = len * max_queuing_delay / (diff1+sysctl_mpip_bw_4);
+			printk("%d, %d, %s, %s, %d\n", path_info->bw, len, __FILE__, __FUNCTION__, __LINE__);
 
 			if (max_delay < 0)
 				max_delay = -max_delay;
 
 			path_info->bw += (1500 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
+			printk("%d, %s, %s, %d\n", path_info->bw, __FILE__, __FUNCTION__, __LINE__);
 		}
 
 		if (path_info->bw > max_bw)

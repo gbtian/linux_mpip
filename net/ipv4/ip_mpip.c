@@ -1601,13 +1601,13 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 	send_cm[20] = (addr2>>16) & 0xff;
 	send_cm[21] = (addr2>>24) & 0xff;
 
-	if (get_addr_notified(dst_node_id))
-		send_mpip_cm.flags = send_cm[22] = 0;
-	else
-		send_mpip_cm.flags = send_cm[22] = 1;
+	send_mpip_cm.flags = send_cm[22] = 0;
 
 	if (flags > 1)
 		send_mpip_cm.flags = send_cm[22] = flags;
+
+	if (!get_addr_notified(dst_node_id))
+		send_mpip_cm.flags = send_cm[22] = 1;
 
 	checksum = calc_checksum(send_cm);
 
