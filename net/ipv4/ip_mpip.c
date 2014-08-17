@@ -517,8 +517,25 @@ bool is_ack_pkt(struct sk_buff *skb)
 	return false;
 }
 
+bool is_pure_ack_pkt(struct sk_buff *skb)
+{
+	struct tcphdr *tcph = NULL;
 
+	if (!skb)
+	{
+		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		return false;
+	}
 
+	tcph = tcp_hdr(skb);
+
+	if (!tcph->syn && tcph->ack && (skb->len < 150))
+	{
+		return true;
+	}
+
+	return false;
+}
 
 void send_mpip_enable(struct sk_buff *skb, bool sender, bool reverse)
 {
@@ -1559,7 +1576,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     	bool is_ack = false;
     	if (protocol == IPPROTO_TCP)
     	{
-    		is_ack = is_ack_pkt(skb);
+    		is_ack = is_pure_ack_pkt(skb);
     	}
 
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_sport, &new_dport,

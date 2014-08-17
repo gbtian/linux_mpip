@@ -692,7 +692,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 			if (max_delay < 0)
 				max_delay = -max_delay;
 
-			path_info->bw += (1500 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
+			path_info->bw += (1550 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
 			printk("%d, %s, %s, %d\n", path_info->bw, __FILE__, __FUNCTION__, __LINE__);
 		}
 
