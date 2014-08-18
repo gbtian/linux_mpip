@@ -549,7 +549,11 @@ bool send_pure_ack(struct sk_buff *skb)
 	myskb = skb_copy(skb, GFP_ATOMIC);
 	iph = ip_hdr(myskb);
 
+	#ifdef NET_SKBUFF_DATA_USES_OFFSET
 	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
+	#else
+	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
+	#endif
 
 	myskb->len = iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
 	myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
