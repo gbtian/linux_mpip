@@ -555,7 +555,6 @@ bool send_pure_ack(struct sk_buff *skb)
 	myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
 	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
 
-	printk("%d: %d, %d, %d, %s, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, __FILE__, __LINE__);
 	if (!insert_mpip_cm(myskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
 				iph->protocol, 0, 0))
 	{
