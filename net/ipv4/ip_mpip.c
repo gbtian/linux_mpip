@@ -549,15 +549,15 @@ bool send_pure_ack(struct sk_buff *skb)
 	myskb = skb_copy(skb, GFP_ATOMIC);
 	iph = ip_hdr(myskb);
 
-	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
-	int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
-	myskb->len -= diff;
-	#ifdef NET_SKBUFF_DATA_USES_OFFSET
-		myskb->tail = myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
-	#else
-		myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
-	#endif
-
+//	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
+//	int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
+//	myskb->len -= diff;
+//	#ifdef NET_SKBUFF_DATA_USES_OFFSET
+//		myskb->tail = myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+//	#else
+//		myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+//	#endif
+//
 	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
 
 	if (!insert_mpip_cm(myskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
