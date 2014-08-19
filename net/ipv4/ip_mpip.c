@@ -529,7 +529,7 @@ bool is_pure_ack_pkt(struct sk_buff *skb)
 
 	tcph = tcp_hdr(skb);
 
-	if (!tcph->syn && tcph->ack && (skb->len < 150))
+	if (!tcph->syn && tcph->ack && (skb->len < 200))
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return true;
