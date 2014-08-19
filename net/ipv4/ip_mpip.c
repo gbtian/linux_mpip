@@ -537,7 +537,7 @@ bool is_pure_ack_pkt(struct sk_buff *skb)
 	return false;
 }
 
-bool send_pure_ack(struct sk_buff *skb)
+bool send_pure_ack(struct sk_buff *old_skb)
 {
 	struct sk_buff *myskb = NULL;
 	struct iphdr *iph = NULL;
@@ -546,18 +546,21 @@ bool send_pure_ack(struct sk_buff *skb)
 	int err = 0;
 	struct rtable *rt;
 
-	myskb = skb_copy(skb, GFP_ATOMIC);
+	myskb = skb_copy(old_skb, GFP_ATOMIC);
 	iph = ip_hdr(myskb);
 
-//	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
-//	int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
-//	myskb->len -= diff;
-//	#ifdef NET_SKBUFF_DATA_USES_OFFSET
-//		myskb->tail = myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
-//	#else
-//		myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
-//	#endif
-//
+	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
+
+	#ifdef NET_SKBUFF_DATA_USES_OFFSET
+		int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
+		myskb->len -= diff;
+		myskb->tail = myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+	#else
+		int diff = myskb->tail - (myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
+		myskb->len -= diff;
+		myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+	#endif
+
 	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
 
 	if (!insert_mpip_cm(myskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
@@ -583,7 +586,7 @@ bool send_pure_ack(struct sk_buff *skb)
 	{
 		printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 		skb_dst(myskb)->dev = find_dev_by_addr(iph->saddr);
-		skb->dev = find_dev_by_addr(iph->saddr);
+		myskb->dev = find_dev_by_addr(iph->saddr);
 
 		err = __ip_local_out(myskb);
 		printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
