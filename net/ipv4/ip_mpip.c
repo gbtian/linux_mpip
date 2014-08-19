@@ -542,13 +542,15 @@ bool send_pure_ack(struct sk_buff *old_skb)
 {
 	struct sk_buff *myskb = NULL;
 	struct iphdr *iph = NULL;
+	struct tcphdr *tcph = NULL;
+	struct tcphdr *oldtcph = NULL;
 	__be32 new_saddr=0, new_daddr=0;
 	struct net_device *new_dst_dev = NULL;
 	int err = 0;
 	struct rtable *rt;
 
-	myskb = skb_copy(old_skb, GFP_ATOMIC);
-	iph = ip_hdr(myskb);
+//	myskb = skb_copy(old_skb, GFP_ATOMIC);
+//	iph = ip_hdr(myskb);
 
 //	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
 //
@@ -562,6 +564,26 @@ bool send_pure_ack(struct sk_buff *old_skb)
 //		myskb->tail -= diff;
 //	#endif
 
+	myskb = alloc_skb(255, GFP_ATOMIC );
+	if ( !myskb ) {
+		printk( "alloc_skb fail.\n" );
+		return false;
+	}
+
+	skb_reserve(myskb, MAX_TCP_HEADER);
+//
+//	skb_orphan(skb);
+
+	skb_push(myskb, sizeof(struct tcphdr));
+	skb_reset_transport_header(myskb);
+	memcpy(skb_transport_header(myskb), skb_transport_header(old_skb), sizeof(struct tcphdr));
+
+	skb_push(myskb, sizeof(struct iphdr));
+	skb_reset_network_header(myskb);
+	memcpy(skb_network_header(myskb), skb_network_header(old_skb), sizeof(struct iphdr));
+
+	iph = ip_hdr(myskb);
+
 	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
 
 	if (!insert_mpip_cm(myskb, iph->saddr, iph->daddr, &new_saddr, &new_daddr,
@@ -571,6 +593,8 @@ bool send_pure_ack(struct sk_buff *old_skb)
 		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
+
+	iph = ip_hdr(myskb);
 
 	if (new_saddr != 0)
 	{
