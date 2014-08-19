@@ -531,6 +531,7 @@ bool is_pure_ack_pkt(struct sk_buff *skb)
 
 	if (!tcph->syn && tcph->ack && (skb->len < 150))
 	{
+		mpip_log("pure ack packet: %s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return true;
 	}
 
@@ -554,11 +555,11 @@ bool send_pure_ack(struct sk_buff *old_skb)
 	#ifdef NET_SKBUFF_DATA_USES_OFFSET
 		int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
 		myskb->len -= diff;
-		myskb->tail = myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+		myskb->tail -= diff;
 	#else
 		int diff = myskb->tail - (myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
 		myskb->len -= diff;
-		myskb->tail = myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4;
+		myskb->tail -= diff;
 	#endif
 
 	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
