@@ -517,7 +517,7 @@ bool is_ack_pkt(struct sk_buff *skb)
 	return false;
 }
 
-bool is_pure_ack_pkt(struct sk_buff *skb)
+bool is_short_pkt(struct sk_buff *skb)
 {
 	if (!skb)
 	{
@@ -525,7 +525,8 @@ bool is_pure_ack_pkt(struct sk_buff *skb)
 		return false;
 	}
 
-	if (TCP_SKB_CB(skb)->tcp_flags == TCPHDR_ACK)
+	//if (TCP_SKB_CB(skb)->tcp_flags == TCPHDR_ACK)
+	if (skb->len < 200)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return true;
@@ -1665,15 +1666,15 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
 
     if ((!is_new || flags == 2) && new_saddr)
     {
-    	bool is_ack = false;
+    	bool is_short = false;
     	if ((protocol == IPPROTO_TCP) && (flags != 5))
     	{
-    		is_ack = is_pure_ack_pkt(skb);
+    		is_short = is_short_pkt(skb);
     	}
 
     	path_id = get_path_id(dst_node_id, new_saddr, new_daddr, &new_sport, &new_dport,
     							old_saddr, old_daddr, sport, dport,
-    							send_mpip_cm.session_id, protocol, skb->len, is_ack);
+    							send_mpip_cm.session_id, protocol, skb->len, is_short);
     }
 
     path_stat_id = get_path_stat_id(dst_node_id, &delay);
