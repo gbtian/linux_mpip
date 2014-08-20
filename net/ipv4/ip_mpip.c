@@ -1666,7 +1666,7 @@ bool insert_mpip_cm(struct sk_buff *skb, __be32 old_saddr, __be32 old_daddr,
     if ((!is_new || flags == 2) && new_saddr)
     {
     	bool is_ack = false;
-    	if (protocol == IPPROTO_TCP)
+    	if ((protocol == IPPROTO_TCP) && (flags != 5))
     	{
     		is_ack = is_pure_ack_pkt(skb);
     	}
