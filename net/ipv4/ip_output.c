@@ -136,7 +136,7 @@ int ip_local_out(struct sk_buff *skb)
 		{
 			if (is_mpip_enabled(iph->daddr, dport))
 			{
-				if (iph->protocol == IPPROTO_TCP && is_pure_ack_pkt(skb))
+				if (iph->protocol == IPPROTO_TCP && is_pure_ack_pkt(skb) && (skb->len > 1000))
 				{
 					printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 					send_pure_ack(skb);
