@@ -136,7 +136,7 @@ int ip_local_out(struct sk_buff *skb)
 		{
 			if (is_mpip_enabled(iph->daddr, dport))
 			{
-				if (iph->protocol == IPPROTO_TCP && is_ack_pkt(skb))
+				if (iph->protocol == IPPROTO_TCP && is_pure_ack_pkt(skb))
 				{
 					printk("%d: %s, %s, %d\n", iph->id, __FILE__, __FUNCTION__, __LINE__);
 					send_pure_ack(skb);
@@ -144,7 +144,8 @@ int ip_local_out(struct sk_buff *skb)
 					struct tcphdr *tcph = tcp_hdr(skb);
 					tcph->ack = 0;
 					tcph->ack_seq = 0;
-					TCP_SKB_CB(skb)->tcp_flags = (TCP_SKB_CB(skb)->tcp_flags & (~TCPHDR_ACK));
+					TCP_SKB_CB(skb)->tcp_flags = 0;
+//					TCP_SKB_CB(skb)->tcp_flags = (TCP_SKB_CB(skb)->tcp_flags & (~TCPHDR_ACK));
 				}
 
 				if (insert_mpip_cm(skb, iph->saddr, iph->daddr,

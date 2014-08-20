@@ -519,17 +519,13 @@ bool is_ack_pkt(struct sk_buff *skb)
 
 bool is_pure_ack_pkt(struct sk_buff *skb)
 {
-	struct tcphdr *tcph = NULL;
-
 	if (!skb)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return false;
 	}
 
-	tcph = tcp_hdr(skb);
-
-	if (!tcph->syn && tcph->ack && (skb->len < 200))
+	if (TCP_SKB_CB(skb)->tcp_flags == TCPHDR_ACK)
 	{
 		mpip_log("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		return true;
