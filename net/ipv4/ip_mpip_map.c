@@ -677,6 +677,8 @@ int update_path_info(unsigned char session_id, unsigned int len)
 		if (diff2 <= 0)
 			diff2 = 1;
 
+		len = 0;
+
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
 			path_info->bw = path_info->bw / 5;
 		else
