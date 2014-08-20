@@ -545,38 +545,38 @@ bool send_pure_ack(struct sk_buff *old_skb)
 	int err = 0;
 	struct rtable *rt;
 
-//	myskb = skb_copy(old_skb, GFP_ATOMIC);
-//	iph = ip_hdr(myskb);
+	myskb = skb_copy(old_skb, GFP_ATOMIC);
+	iph = ip_hdr(myskb);
 
-//	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
+	printk("%d: %d, %d, %d, %d, %s, %d\n", iph->id, myskb->end, myskb->tail, myskb->data, myskb->len, __FILE__, __LINE__);
+
+	#ifdef NET_SKBUFF_DATA_USES_OFFSET
+		int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
+		myskb->len -= diff;
+		myskb->tail -= diff;
+	#else
+		int diff = myskb->tail - (myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
+		myskb->len -= diff;
+		myskb->tail -= diff;
+	#endif
+
+//	myskb = alloc_skb(255, GFP_ATOMIC );
+//	if ( !myskb ) {
+//		printk( "alloc_skb fail.\n" );
+//		return false;
+//	}
 //
-//	#ifdef NET_SKBUFF_DATA_USES_OFFSET
-//		int diff = myskb->tail - (myskb->data - myskb->head + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
-//		myskb->len -= diff;
-//		myskb->tail -= diff;
-//	#else
-//		int diff = myskb->tail - (myskb->data + iph->ihl * 4 + tcp_hdr(myskb)->doff * 4);
-//		myskb->len -= diff;
-//		myskb->tail -= diff;
-//	#endif
-
-	myskb = alloc_skb(255, GFP_ATOMIC );
-	if ( !myskb ) {
-		printk( "alloc_skb fail.\n" );
-		return false;
-	}
-
-	skb_reserve(myskb, MAX_TCP_HEADER);
+//	skb_reserve(myskb, MAX_TCP_HEADER);
+////
+////	skb_orphan(skb);
 //
-//	skb_orphan(skb);
-
-	skb_push(myskb, sizeof(struct tcphdr));
-	skb_reset_transport_header(myskb);
-	memcpy(skb_transport_header(myskb), skb_transport_header(old_skb), sizeof(struct tcphdr));
-
-	skb_push(myskb, sizeof(struct iphdr));
-	skb_reset_network_header(myskb);
-	memcpy(skb_network_header(myskb), skb_network_header(old_skb), sizeof(struct iphdr));
+//	skb_push(myskb, sizeof(struct tcphdr));
+//	skb_reset_transport_header(myskb);
+//	memcpy(skb_transport_header(myskb), skb_transport_header(old_skb), sizeof(struct tcphdr));
+//
+//	skb_push(myskb, sizeof(struct iphdr));
+//	skb_reset_network_header(myskb);
+//	memcpy(skb_network_header(myskb), skb_network_header(old_skb), sizeof(struct iphdr));
 
 	iph = ip_hdr(myskb);
 
