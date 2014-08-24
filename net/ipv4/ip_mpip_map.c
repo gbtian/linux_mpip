@@ -513,22 +513,22 @@ int update_path_delay(unsigned char path_id, __s32 delay)
 			}
 			else
 			{
-				//path_info->delay = (9 * path_info->delay + delay) / 10;
-				path_info->delay = delay;
+				path_info->delay = (99 * path_info->delay + delay) / 100;
+				//path_info->delay = delay;
 			}
 
 			if (path_info->count < 500)
 			{
-				//path_info->min_delay = (9 * path_info->min_delay + delay) / 10;
-				path_info->min_delay = delay;
+				path_info->min_delay = (99 * path_info->min_delay + delay) / 100;
+				//path_info->min_delay = delay;
 				path_info->count += 1;
 			}
 			else
 			{
 				if (path_info->min_delay > path_info->delay)
 				{
-//					path_info->min_delay = (9 * path_info->min_delay + delay) / 10;
-					path_info->min_delay = delay;
+					path_info->min_delay = (99 * path_info->min_delay + delay) / 100;
+					//path_info->min_delay = delay;
 				}
 			}
 
@@ -677,18 +677,19 @@ int update_path_info(unsigned char session_id, unsigned int len)
 		if (diff2 <= 0)
 			diff2 = 1;
 
-		len = 0;
+//		len = 0;
 
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
 			path_info->bw = path_info->bw / 5;
 		else
 		{
-			path_info->bw = len * max_queuing_delay / (diff1+sysctl_mpip_bw_4);
+			int tmp = len * max_queuing_delay / (diff1+sysctl_mpip_bw_4);
 
 			if (max_delay < 0)
 				max_delay = -max_delay;
 
-			path_info->bw += (1550 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
+			tmp += (1550 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
+			path_info->bw = (99 * path_info->bw + tmp) / 100;
 		}
 
 		if (path_info->bw > max_bw)
