@@ -792,7 +792,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 				max_delay = -max_delay;
 
 			tmp += (1550 - len) * max_delay / (diff2+sysctl_mpip_bw_4);
-			path_info->bw = (99 * path_info->bw + tmp) / 100;
+			path_info->bw = (999 * path_info->bw + tmp) / 1000;
 		}
 
 		if (path_info->bw > max_bw)
