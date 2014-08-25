@@ -765,6 +765,12 @@ int update_path_info(unsigned char session_id, unsigned int len)
 	{
 		return 0;
 	}
+
+	if (max_queuing_delay <= 20)
+	{
+		max_queuing_delay = 100;
+	}
+
 	list_for_each_entry(path_info, &pi_head, list)
 	{
 		if (path_info->session_id != session_id)
