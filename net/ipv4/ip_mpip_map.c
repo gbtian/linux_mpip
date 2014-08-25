@@ -654,6 +654,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 
 	while(true)
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		struct path_info_table *min_path = NULL;
 		__s32 min_value = -1;
 		list_for_each_entry(path_info, &pi_head, list)
@@ -661,22 +662,27 @@ int update_path_info(unsigned char session_id, unsigned int len)
 			if (path_info->session_id != session_id)
 				continue;
 
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			if (!is_in_sorted_list(&sorted_list, path_info))
 			{
 				if (path_info->delay < min_value || min_value == -1)
 				{
 					min_value = path_info->delay;
 					min_path = path_info;
+					printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 				}
 			}
 		}
 
-		if (min_path != -1)
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		if (min_path != NULL)
 		{
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			struct sort_path *item = kzalloc(sizeof(struct sort_path),	GFP_ATOMIC);
 			if (!item)
 				break;
 
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			item->path_info = min_path;
 			INIT_LIST_HEAD(&(item->list));
 			list_add(&(item->list), &(sorted_list));
@@ -690,8 +696,10 @@ int update_path_info(unsigned char session_id, unsigned int len)
 	struct sort_path *next_sp = NULL;
 	if (count >= 2)
 	{
+		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 		list_for_each_entry(sp, &sorted_list, list)
 		{
+			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			next_sp = list_entry(sp->list.next, typeof(*sp), list);
 			if(next_sp)
 			{
@@ -702,6 +710,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 										(sp->path_info->max_queuing_delay + next_sp->path_info->max_queuing_delay) / 2;
 
 				sp = list_entry(sp->list.next->next, typeof(*sp), list);
+				printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			}
 		}
 	}
