@@ -127,8 +127,10 @@ struct path_info_table
 //	unsigned int 		protocol;
 	__s32 				min_delay;
 	__s32     			delay;
+	__s32     			ave_delay;
 	__s32     			queuing_delay;
 	__s32     			max_queuing_delay;
+	__s32     			ave_max_queuing_delay;
 	__u64				bw;  /* bandwidth */
 	unsigned long 		fbjiffies; /* last feedback time of this path */
 	unsigned char		count;
@@ -147,6 +149,12 @@ struct tcp_skb_buf
 	__u32				seq;
 	struct sk_buff *	skb;
 	unsigned long 		fbjiffies;
+	struct list_head 	list;
+};
+
+struct sort_path
+{
+	struct path_info_table *path_info;
 	struct list_head 	list;
 };
 

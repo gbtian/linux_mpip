@@ -620,6 +620,21 @@ __s32 calc_diff(__s32 value, __s32 min_value, bool is_delay)
 	return diff;
 }
 
+bool is_in_sorted_list(struct list_head *sorted_list, struct path_info_table *path_info)
+{
+	if (!sorted_list)
+		return false;
+
+	struct sort_path *sp = NULL;
+
+	list_for_each_entry(sp, sorted_list, list)
+	{
+		if (sp->path_info->path_id == path_info->path_id)
+			return true;
+	}
+	return false;
+
+}
 int update_path_info(unsigned char session_id, unsigned int len)
 {
 	struct path_info_table *path_info;
@@ -631,6 +646,73 @@ int update_path_info(unsigned char session_id, unsigned int len)
 
 	if (session_id <= 0)
 		return 0;
+
+	struct list_head sorted_list;
+	INIT_LIST_HEAD(&(sorted_list));
+	int count = 0;
+
+
+	while(true)
+	{
+		struct path_info_table *min_path = NULL;
+		__s32 min_value = -1;
+		list_for_each_entry(path_info, &pi_head, list)
+		{
+			if (path_info->session_id != session_id)
+				continue;
+
+			if (!is_in_sorted_list(&sorted_list, path_info))
+			{
+				if (path_info->delay < min_value || min_value == -1)
+				{
+					min_value = path_info->delay;
+					min_path = path_info;
+				}
+			}
+		}
+
+		if (min_path != -1)
+		{
+			struct sort_path *item = kzalloc(sizeof(struct sort_path),	GFP_ATOMIC);
+			if (!item)
+				break;
+
+			item->path_info = min_path;
+			INIT_LIST_HEAD(&(item->list));
+			list_add(&(item->list), &(sorted_list));
+			++count;
+		}
+		else
+			break;
+	}
+
+	struct sort_path *sp = NULL;
+	struct sort_path *next_sp = NULL;
+	if (count >= 2)
+	{
+		list_for_each_entry(sp, &sorted_list, list)
+		{
+			next_sp = list_entry(sp->list.next, typeof(*sp), list);
+			if(next_sp)
+			{
+				sp->path_info->ave_delay = next_sp->path_info->ave_delay =
+						(sp->path_info->delay + next_sp->path_info->delay) / 2;
+
+				sp->path_info->ave_max_queuing_delay = next_sp->path_info->ave_max_queuing_delay =
+										(sp->path_info->max_queuing_delay + next_sp->path_info->max_queuing_delay) / 2;
+
+				sp = list_entry(sp->list.next->next, typeof(*sp), list);
+			}
+		}
+	}
+
+
+	list_for_each_entry_safe(sp, next_sp, &sorted_list, list)
+	{
+		list_del(&(sp->list));
+		kfree(sp);
+	}
+
 
 	list_for_each_entry(path_info, &pi_head, list)
 	{
@@ -667,12 +749,12 @@ int update_path_info(unsigned char session_id, unsigned int len)
 		if (path_info->session_id != session_id)
 			continue;
 
-		__s32 diff1 = calc_diff(path_info->max_queuing_delay, min_queuing_delay, false);
+		__s32 diff1 = calc_diff(path_info->ave_max_queuing_delay, min_queuing_delay, false);
 
 		if (diff1 <= 0)
 			diff1 = 1;
 
-		__s32 diff2 = calc_diff(path_info->delay, min_delay, true);
+		__s32 diff2 = calc_diff(path_info->ave_delay, min_delay, true);
 
 		if (diff2 <= 0)
 			diff2 = 1;
@@ -1966,25 +2048,29 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-		printk("%d  ", path_info->sport);
-
-		printk("%d  ", path_info->dport);
+//		printk("%d  ", path_info->sport);
+//
+//		printk("%d  ", path_info->dport);
 
 		printk("%d  ", path_info->session_id);
 
-		printk("%d  ", path_info->min_delay);
+//		printk("%d  ", path_info->min_delay);
 
 		printk("%d  ", path_info->delay);
 
+		printk("%d  ", path_info->ave_delay);
+
 		printk("%d  ", path_info->max_queuing_delay);
 
-		printk("%d  ", path_info->queuing_delay);
+		printk("%d  ", path_info->ave_max_queuing_delay);
+
+//		printk("%d  ", path_info->queuing_delay);
 
 		printk("%llu  ", path_info->bw);
 
 		printk("%llu  ", path_info->pktcount);
 
-		printk("%d\n", path_info->status);
+//		printk("%d\n", path_info->status);
 
 	}
 
