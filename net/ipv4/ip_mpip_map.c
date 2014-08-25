@@ -2089,7 +2089,7 @@ asmlinkage long sys_mpip(void)
 
 		printk("%llu  ", path_info->bw);
 
-		printk("%llu  ", path_info->pktcount);
+		printk("%llu\n", path_info->pktcount);
 
 //		printk("%d\n", path_info->status);
 
