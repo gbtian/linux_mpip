@@ -724,7 +724,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 			sp->path_info->ave_delay = sp->path_info->delay;
 			sp->path_info->ave_max_queuing_delay = sp->path_info->max_queuing_delay;
 			printk("%d: %s, %s, %d\n", sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
-			}
+
 		}
 	}
 
