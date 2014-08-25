@@ -694,12 +694,12 @@ int update_path_info(unsigned char session_id, unsigned int len)
 
 	struct sort_path *sp = NULL;
 	struct sort_path *next_sp = NULL;
-	if (count >= 2)
+	if (count >= 4)
 	{
-		printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+		printk("%d: %s, %s, %d\n", count, __FILE__, __FUNCTION__, __LINE__);
 		list_for_each_entry(sp, &sorted_list, list)
 		{
-			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+			printk("%d: %s, %s, %d\n", sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
 			next_sp = list_entry(sp->list.next, typeof(*sp), list);
 			if(next_sp)
 			{
@@ -709,12 +709,24 @@ int update_path_info(unsigned char session_id, unsigned int len)
 				sp->path_info->ave_max_queuing_delay = next_sp->path_info->ave_max_queuing_delay =
 										(sp->path_info->max_queuing_delay + next_sp->path_info->max_queuing_delay) / 2;
 
+				printk("%d: %s, %s, %d\n", next_sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
+
 				sp = list_entry(sp->list.next->next, typeof(*sp), list);
-				printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+				printk("%d: %s, %s, %d\n", sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
 			}
 		}
 	}
-
+	else
+	{
+		list_for_each_entry(sp, &sorted_list, list)
+		{
+			sp->path_info->ave_delay = sp->path_info->delay;
+			sp->path_info->ave_max_queuing_delay = sp->path_info->max_queuing_delay;
+			printk("%d: %s, %s, %d\n", sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
+			}
+		}
+	}
 
 	list_for_each_entry_safe(sp, next_sp, &sorted_list, list)
 	{
