@@ -665,9 +665,9 @@ int update_path_info(unsigned char session_id, unsigned int len)
 //			printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 			if (!is_in_sorted_list(&sorted_list, path_info))
 			{
-				if (path_info->delay < min_value || min_value == -1)
+				if (path_info->max_queuing_delay < min_value || min_value == -1)
 				{
-					min_value = path_info->delay;
+					min_value = path_info->max_queuing_delay;
 					min_path = path_info;
 //					printk("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
 				}
@@ -780,7 +780,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 		if (diff2 <= 0)
 			diff2 = 1;
 
-//		len = 0;
+		len = 1550;
 
 		if ((path_info->delay == 0) && (path_info->pktcount > 5))
 			path_info->bw = path_info->bw / 5;
