@@ -711,7 +711,7 @@ int update_path_info(unsigned char session_id, unsigned int len)
 
 				printk("%d: %s, %s, %d\n", next_sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
 
-				sp = list_entry(sp->list.next->next, typeof(*sp), list);
+				sp = list_entry(sp->list.next, typeof(*sp), list);
 
 				printk("%d: %s, %s, %d\n", sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
 			}
