@@ -203,6 +203,8 @@ void print_node_id(unsigned char *node_id);
 
 void print_addr(__be32 addr);
 
+void print_addr_1(__be32 addr);
+
 __be32 convert_addr(char a1, char a2, char a3, char a4);
 
 char *in_ntoa(unsigned long in);
@@ -216,6 +218,8 @@ int		mpip_xmit(struct sk_buff *skb);
 struct net_device *find_dev_by_addr(__be32 addr);
 
 void print_mpip_cm(struct mpip_cm *cm);
+
+void print_mpip_cm_1(struct mpip_cm *cm, int id);
 
 bool ip_route_out( struct sk_buff *skb, __be32 saddr, __be32 daddr);
 
@@ -297,7 +301,7 @@ int update_path_stat_delay(unsigned char *node_id, unsigned char path_id, u32 de
 
 int update_path_delay(unsigned char path_id, __s32 delay);
 
-bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
+bool ready_path_info(int id, unsigned char *node_id, __be32 saddr, __be32 daddr,
 		__be16 sport, __be16 dport,	unsigned char session_id);
 
 int update_path_info(unsigned char session_id, unsigned int len);
@@ -329,7 +333,7 @@ int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr,
 		__be16 dport, unsigned char session_id, unsigned int protocol);
 
 
-int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+int add_path_info_tcp(int id, unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol);
 
 int add_path_info_udp(unsigned char *node_id, __be32 daddr, __be16 sport,

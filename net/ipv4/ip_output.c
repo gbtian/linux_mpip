@@ -123,13 +123,13 @@ int ip_local_out(struct sk_buff *skb)
 	{
 		if (check_bad_addr(iph->saddr) && check_bad_addr(iph->daddr))
 		{
-			myskb = skb_copy(skb, GFP_ATOMIC);
-			send_mpip_enable(myskb, true, false);
+//			myskb = skb_copy(skb, GFP_ATOMIC);
+			send_mpip_enable(skb, true, false);
 
 			if (iph->protocol == IPPROTO_TCP)
-				send_mpip_enabled(myskb, true, false);
+				send_mpip_enabled(skb, true, false);
 
-			kfree_skb(myskb);
+//			kfree_skb(myskb);
 		}
 
 		if (get_skb_port(skb, &sport, &dport))

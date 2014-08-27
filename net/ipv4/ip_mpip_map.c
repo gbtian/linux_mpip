@@ -68,6 +68,15 @@ void print_addr(__be32 addr)
 }
 
 
+void print_addr_1(__be32 addr)
+{
+	char *p = (char *) &addr;
+	printk( "%d.%d.%d.%d\n",
+			(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
+
+}
+
+
 __be32 convert_addr(char a1, char a2, char a3, char a4)
 {
 	__be32 addr;
@@ -574,6 +583,10 @@ __s32 calc_si_diff(bool is_delay)
 
 			if (max > diff)
 			{
+				if (max == -500)
+				{
+					max = -499;
+				}
 				sigma += (100 * diff) / (max + 500);
 				++K;
 			}
@@ -597,6 +610,10 @@ __s32 calc_si_diff(bool is_delay)
 
 			if (max > diff)
 			{
+				if (max == -500)
+				{
+					max = -499;
+				}
 				sigma += (100 * diff) / (max + 500);
 				++K;
 			}
@@ -614,7 +631,7 @@ __s32 calc_si_diff(bool is_delay)
 __s32 calc_diff(__s32 value, __s32 min_value, bool is_delay)
 {
 	__s32 diff = value - min_value;
-	__s32 si = calc_si_diff(is_delay);
+//	__s32 si = calc_si_diff(is_delay);
 	//printk("%d, %s, %d\n", si, __FILE__, __LINE__);
 //	return diff / si;
 	return diff;
@@ -694,9 +711,9 @@ int update_path_info(unsigned char session_id, unsigned int len)
 
 	struct sort_path *sp = NULL;
 	struct sort_path *next_sp = NULL;
-	if (count >= 4)
+//	printk("%d: %s, %s, %d\n", count, __FILE__, __FUNCTION__, __LINE__);
+	if (count == 4)
 	{
-//		printk("%d: %s, %s, %d\n", count, __FILE__, __FUNCTION__, __LINE__);
 		list_for_each_entry(sp, &sorted_list, list)
 		{
 //			printk("%d: %s, %s, %d\n", sp->path_info->path_id, __FILE__, __FUNCTION__, __LINE__);
@@ -1229,6 +1246,10 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 			{
 				if ((daddr2 != 0) && !find_path_info(local_addr->addr, daddr2, sport + 1, dport, session_id))
 				{
+					printk("%d, %d, %d: %s, %s, %d\n", session_id, sport + 1, dport, __FILE__, __FUNCTION__, __LINE__);
+					print_addr_1(local_addr->addr);
+					print_addr_1(daddr2);
+
 					send_mpip_syn(NULL, local_addr->addr, daddr2,
 							sport + 1, dport, true, false, session_id);
 				}
@@ -1237,6 +1258,10 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 			{
 				if ((daddr1 != 0) && !find_path_info(local_addr->addr, daddr1, sport + 1, dport, session_id))
 				{
+					printk("%d, %d, %d: %s, %s, %d\n", session_id, sport + 1, dport, __FILE__, __FUNCTION__, __LINE__);
+					print_addr_1(local_addr->addr);
+					print_addr_1(daddr1);
+
 					send_mpip_syn(NULL, local_addr->addr, daddr1,
 							sport + 1, dport, true, false, session_id);
 				}
@@ -1246,12 +1271,20 @@ bool init_mpip_tcp_connection(__be32 daddr1, __be32 daddr2,
 		{
 			if ((daddr1 != 0) && !find_path_info(local_addr->addr, daddr1, sport + 2, dport, session_id))
 			{
+				printk("%d, %d, %d: %s, %s, %d\n", session_id, sport + 2, dport, __FILE__, __FUNCTION__, __LINE__);
+				print_addr_1(local_addr->addr);
+				print_addr_1(daddr1);
+
 				send_mpip_syn(NULL, local_addr->addr, daddr1,
 						sport + 2, dport, true, false, session_id);
 			}
 
 			if ((daddr2 != 0) && !find_path_info(local_addr->addr, daddr2, sport + 3, dport, session_id))
 			{
+				printk("%d, %d, %d: %s, %s, %d\n", session_id, sport + 3, dport, __FILE__, __FUNCTION__, __LINE__);
+				print_addr_1(local_addr->addr);
+				print_addr_1(daddr2);
+
 				send_mpip_syn(NULL, local_addr->addr, daddr2,
 						sport + 3, dport, true, false, session_id);
 			}
@@ -1335,7 +1368,7 @@ int add_origin_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr,
 }
 
 
-int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
+int add_path_info_tcp(int id, unsigned char *node_id, __be32 saddr, __be32 daddr, __be16 sport,
 		__be16 dport, unsigned char session_id, unsigned int protocol)
 {
 	struct path_info_table *item = NULL;
@@ -1376,6 +1409,11 @@ int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16
 	item->path_id = (static_path_id > 250) ? 1 : ++static_path_id;
 	item->status = 0;
 
+	printk("%d, %d, %d, %d: %s, %s, %d\n", id, session_id, sport, dport, __FILE__, __FUNCTION__, __LINE__);
+//	print_addr_1(saddr);
+//	print_addr_1(daddr);
+
+
 //	if (is_original_path(node_id, item->saddr, item->daddr,
 //			item->sport, item->dport, session_id) || (protocol != IPPROTO_TCP))
 //	{
@@ -1393,7 +1431,7 @@ int add_path_info_tcp(unsigned char *node_id, __be32 saddr, __be32 daddr, __be16
 }
 
 
-bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
+bool ready_path_info(int id, unsigned char *node_id, __be32 saddr, __be32 daddr,
 		__be16 sport, __be16 dport,	unsigned char session_id)
 {
 	struct path_info_table *path_info = find_path_info(saddr, daddr,
@@ -1407,7 +1445,7 @@ bool ready_path_info(unsigned char *node_id, __be32 saddr, __be32 daddr,
 	}
 	else
 	{
-		if (add_path_info_tcp(node_id, saddr, daddr, sport, dport, session_id, IPPROTO_TCP))
+		if (add_path_info_tcp(id, node_id, saddr, daddr, sport, dport, session_id, IPPROTO_TCP))
 			return true;
 	}
 
@@ -2075,9 +2113,9 @@ asmlinkage long sys_mpip(void)
 		printk( "%d.%d.%d.%d  ",
 				(p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
 
-//		printk("%d  ", path_info->sport);
-//
-//		printk("%d  ", path_info->dport);
+		printk("%d  ", path_info->sport);
+
+		printk("%d  ", path_info->dport);
 
 		printk("%d  ", path_info->session_id);
 
