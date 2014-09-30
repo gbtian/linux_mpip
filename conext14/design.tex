@@ -91,20 +91,20 @@ ${IP}_{2}$ & ${P}_{2}$ & False & $5$ \\
 \end{table}
 
 
-When a node sends out a packet, it checks locally whether the relative IP address is MPIP enabled in Table~\ref{tb.me}. If not, it 
-copies the current packet before sending it out. Besides sending out the original packet, the system inserts the CM block into the copied packet with \emph{CM Flags} of $3$. This value is used for MPIP query. When this packet is received by a MPIP enabled node, the receiver adds the sender into Table~\ref{tb.me}, then sends back the confirmation to the sender with \emph{CM Flags} of $4$. But the time to send back this confirmation message depends on the protocol of the connection, specifically, for TCP and non-TCP, we have different process. 
+When a node sends out a packet, it checks locally whether the target node is MPIP enabled in Table~\ref{tb.me}. If not, it 
+copies the current packet. Besides sending out the original packet, the system inserts the CM block into the copied packet with \emph{CM Flags} of $MPIP_ENABLE_FLAGS$. This value is used for MPIP query. When this packet is received by a MPIP enabled node, the receiver adds the sender's IP address and port number into Table~\ref{tb.me}, then sends back the confirmation to the sender with \emph{CM Flags} of $MPIP_ENABLED_FLAGS$.
 
 For any protocol rather than TCP, we populate a new packet, fill all header fields with the correct information, and insert the CM block at the end, then send back to the sender right away. But for TCP, we add the confirmation request into a waiting list, and piggyback the confirmation when next TCP message is sent out to that specific node. There are two reasons to do this different process. 
 
 \begin{enumerate}
 \item For protocols rather than TCP, like UDP, because they don't have built-in feedback loop, which means that all traffic can be of only one direction. In this situation, we can't wait until there are packets available to send back 
 
-\item For the protocol of TCP, we don't simply populate a new TCP packet and send back because the sequence numbers of each direction are different. Through our experiments, some NAT devices will refuse to transfer this packet if the sequence number messes up for the same TCP connection. We can manage to maintain the right sequence numbers to fill them into the confirmation packet, but by considering the whole design of our system, we choose to add the request into a waiting list, when there is TCP packet available to send back, we make a copy of the packet and insert the CM block with \emph{CM Flags} of $4$. In this case, there will be two consecutive TCP packets that go through the path with the same sequence number. The NAT devices will simply consider that they are retransmission.
+\item For the protocol of TCP, we don't simply populate a new TCP packet and send back because the sequence numbers of each direction are different. Through our experiments, some NAT devices will refuse to transfer this packet if the sequence number messes up for the same TCP connection. We can manage to maintain the right sequence numbers to fill them into the confirmation packet, but by considering the whole design of our system, we choose to add the request into a waiting list, when there is TCP packet available to send back, we make a copy of the packet and insert the CM block with \emph{CM Flags} of $MPIP_ENABLED_FLAGS$. In this case, there will be two consecutive TCP packets that go through the path with the same sequence number. The NAT devices will simply consider that they are retransmission instead of dropping them.
 \end{enumerate}
 
-For both the MPIP query packet and MPIP confirmation packet, we populate new packets based on the original packets. These two packets won't be passed to the upper layers because they are generated at the network layer and stop there too, they don't mean anything to upper layers. The network layer drops all MPIP packets with \emph{CM Flags} of $3$ and $4$ after processing them.
+For both the MPIP query packet and MPIP confirmation packet, we populate new packets based on the original packets by making copies. All manually copied packets won't be passed to the upper layers because they are generated at the network layer and stop there too, they don't mean anything to upper layers. The network layer drops all MPIP packets with \emph{CM Flags} of $MPIP_ENABLE_FLAGS$ and $MPIP_ENABLED_FLAGS$ after processing them.
 
-With the handshake flow above, the smallest number of query packet that will be sent for the whole process is $1$. But sometimes because of packet loss or synchronization issues, there can be multiple query packet sent out at both ends. This is not a problem because the design of the system allows receiving more than on query packet and send back the confirmation. For nodes that don\textquoteright t support MPIP, we can\textquoteright t send out query messages forever. In Table~\ref{tb.me}, the column \emph{Query Count} maintains how many query messages have been sent out to relative IP addresses. If the number is larger than a threshold value, it assumes that IP address doesn\textquoteright t support MPIP. Considering that packet loss is rare event in Internet nowadays, we set this value to $5$ in our system, this is more than enough to make sure a MPIP enabled node can receive and reply this message with successful transmission. In a connection will only one-way traffic, if the receiver is MPIP enabled while the sender isn't, then no query packet will be sent out at all.
+With the handshake flow above, the smallest number of query packet that will be sent for the whole process is only one. But sometimes because of packet loss or synchronization issues, there can be multiple query packet sent out at both ends. This is not a problem because the design of the system allows receiving more than one query packet and confirmation packet. For nodes that don\textquoteright t support MPIP, we can\textquoteright t send out query messages forever. In Table~\ref{tb.me}, the column \emph{Query Count} maintains how many query messages have been sent out to relative IP addresses. If the number is larger than a threshold value, it assumes that IP address doesn\textquoteright t support MPIP. Considering that packet loss is rare event in Internet nowadays, we set this value to $5$ in our system, this is more than enough to make sure a MPIP enabled node can receive and reply this message with successful transmission. In a connection will only one-way traffic, if the receiver is MPIP enabled while the sender isn't, then no query packet will be sent out at all.
 
 Generally, for MPIP enabled nodes, they can have more than one IP address. In this situation, multiple synchronization messages will be transmitted for the same node.
 
@@ -142,36 +142,7 @@ Also, if some addresses of the server in the IP address list are not public addr
 \subsection{Path Management}
 \label{sec:path}
 
-As shown in Figure~\ref{fig.arch}, given $M$ and $N$ interfaces at each end, there are totally $M*N$ possible paths on the connection. On each end of one connection, the same number of paths with the opposite direction will be maintained.
-
-\subsubsection{Delay-Based Solution}
-
-When the system tries to send a packet, it will have to choose the most suitable one among all the available paths. To achieve this goal, we need to have some parameters to notate the capability of each path. Generally, there are two ways to notate the character of one path, the first is loss based and the second is delay based. Nowadays, packet losses in networks are rare events, this makes loss rate estimation is difficult and coarse in accuracy. But delay estimation can be accurate enough with a proper measurement.
-
-For network delay, it consists of following $4$ parts.
-
-\begin{enumerate}
-\item Processing delay. Time routers take to process the packet header
-\item Queuing delay. Time the packet spends in routing queues
-\item Transmission delay. Time it takes to push the packet onto the link
-\item Propagation delay. Time for a signal to reach its destination
-\end{enumerate}
-
-Among the $4$ parts above, processing delay, transmission delay and propagation delay are fixed value for one path, they can be treated as constant $C$. But for queuing delay $Q$, it will change as the traffic that passes through the router changes. igure~\ref{fig.delay} shows the trend of network delay as of the traffic on the path changes.
-
-\begin{figure}
-\centering
-\includegraphics[width=0.8\linewidth]{fig/delay.eps}
-\caption{Network delay trend as throughput increases}
-\label{fig.delay}
-\end{figure}
-
-We can see that the queue in the router starts to accumulate at point $C$, but still, there is no loss. Starting from point $L$, the queue size overflows. The minimum and maximum network delay for the path can be measured at point $C$ and point $L$. By comparing the real-time delay with minimum and maximum network delay, we can deduce the remaining capability of the path, and do relative adjustment of the characters.
-
-
-\subsubsection{Path Maintenance}
-
-In our system, we maintain all available paths through Table~\ref{tb.pi}.
+As shown in Figure~\ref{fig.arch}, given $M$ and $N$ interfaces at each end, there are totally $M*N$ possible paths on the connection. On each end of one connection, the same number of paths with the opposite direction will be maintained. In our system, we maintain all available paths through Table~\ref{tb.pi}.
 
 \begin{table*}
 \small
@@ -197,7 +168,7 @@ Node ID is used to identify the sender globally. In all packets sent out from th
 
 Path ID is used to identify one path. It is maintained at each end, we set it as locally unique Arab numbers starting from $1$. This value is generated only when adding new paths into Table~\ref{tb.pi}. 
 
-Because of NAT mapping, the same node can have different IP address and port number that will be seen on the other side at different time or for different application. That's why the column \emph{Session ID} needs to be added into Table~\ref{tb.pi}. When sending out one packet, the final path will only be chosen from the ones that have the correct session id. The detail of session is explained in Section~\ref{sec:session}. Here we just consider a session is the synonym of one connection.
+Because of NAT mapping, the same node can have different IP address and port number that will be seen on the other side at different time or even for different application. That's why the column \emph{Session ID} needs to be added into Table~\ref{tb.pi}. When sending out one packet, the final path will only be chosen from the ones that have the correct session id. The detail of session is explained in Section~\ref{sec:session}. Here we just consider a session is the synonym of one connection.
 
 As the names show, source IP, source port, destination IP and destination port show the address information of the path. Because of the existence of NAT devices, IP address is not enough to identify the address information. Also, the IP addresses can be different on the two nodes even if they represent the same physical path because NAT devices change IP addresses. For the same pair of nodes, one instance of Table~\ref{tb.pi} is maintained at each side, the IP addresses here are the addresses that are seen by the node that maintain the instance of Table~\ref{tb.pi}.
 
@@ -224,7 +195,7 @@ ${ID}_{2}$&${IP}_{22}$&${P}_{22}$ \\
 \end{table}
 
 
-\subsubsection{Feedback Loop}
+\subsection{Feedback Loop}
 
 Unlike multipath TCP, which has built-in congestion control algorithms, in the Network layer, to be able to detect the capability of each path, we need some kind of feedback information like in TCP. But we don\textquoteright t need the same complicated congestion control algorithms. Instead, we just roughly estimate capability of each path to make a choice.
 
@@ -268,69 +239,154 @@ In Table~\ref{tb.pi}, except the column \emph{Real-Time Network Delay}, other th
 \end{enumerate}
 
 
-\subsubsection{Periodical Heartbeat}
+\subsection{Periodical Heartbeat}
 
 For protocols like TCP, during the whole lifetime of the connection, both sides are sending packets to each other at a high frequency, then at both sides, column \emph{Feedback Time} of Table~\ref{tb.pi} can be updated way before the path becomes obsolete. But there are protocols that don\textquoteright t have this built-in feedback mechanism, like UDP. In some UDP applications, all traffic is one way, there aren\textquoteright t any acknowledgements, which means that the sender can\textquoteright t get feedback information through piggybacked control messages. Under this situation, the sender won\textquoteright t be able to properly add new entries into Table~\ref{tb.pi}, then multipath feature can\textquoteright t be applied at all. 
 
 To solve this problem, in our system, we add periodical heartbeat message on one connection. At each side, when the node receives packets, the system checks Table~\ref{tb.ps} for the specific node, if it finds that the entry with the earliest feedback time is close to the obsolete value, it makes a copy of the received packet, switches the source/destination address information, and sends back the packet with CM block attached. The path to send this heartbeat message will be chosen through the same algorithm as regular IP packet as in Section~\ref{sec:selection}. Through the heartbeat message, we can effectively maintain the active paths between two nodes, and safely remove obsolete paths from Table~\ref{tb.pi}. 
 
-All heartbeat packets have value $2$ for \emph{CM Flags} in the CM block. These packets will be dropped after being processed at network layer.
+All heartbeat packets have a special flags value $MPIP_HB_FLAGS$ in the CM block. These packets will be dropped after being processed at network layer.
 
 
-\subsubsection{Path Selection}
+\subsection{Path Selection}
 \label{sec:selection}
 
-Every time one node needs to send out packets, it chooses the most suitable path from Table~\ref{tb.pi}. As mentioned above, the candidate paths should have the correction session id for the target connection. The criterion of choosing the best path is on the column of \emph{Path Weight}. Given certain values of the is column for each path, we don\textquoteright t simply choose the path that has the largest path weight which may overuse the path and starve other paths at meantime, instead, we choose the path by random number. For one specific path $k$, the probability $P$ it will be chosen is calculated in Equation~\ref{eq.choose}. By balancing the percentage of packets on each path, system fluctuation can be effectively avoided.
+Every time one node needs to send out packets, it chooses the most suitable path from Table~\ref{tb.pi}. Depends on the requirement of throughput and responsiveness, we have different considerations of the standard to choose the target path.
+
+\subsubsection{Throughput-based Path Selection}
+In the current Internet, there are many high delay-bandwidth product connections. These connections generally have high delay and high bandwidth. For applications that want to achieve high throughput, we propose following mechanism to achieve the requirement.
+
+
+As mentioned above, the candidate paths should have the correction session id for the target connection. The criterion of choosing the best path is on the column of \emph{Path Weight}. Given certain values of the is column for each path, we don\textquoteright t simply choose the path that has the largest path weight which may overuse the path and starve other paths at meantime, instead, we choose the path by random number. For one specific path $k$, the probability $P$ it will be chosen is calculated in Equation~\ref{eq.choose}. By balancing the percentage of packets on each path, system fluctuation can be effectively avoided.
 
 \be
 \label{eq.choose}
 P(k) = \frac{W_k}{\sum_{i=1}^{N}W_i}
 \ee
 
-From above, the path weight is the only criterion to choose the most suitable path, so the calculation of path weight $W$ is critical to the performance of the system. Wrong decision can result in catastrophic disaster. In our prototype, the value of $W$ is calculated by Equation~\ref{eq.bw}. 
+From above, the path weight is the only criterion to choose the most suitable path, so the calculation of path weight $W$ is critical to the performance of the system. Wrong decision can result in catastrophic disaster. In our prototype, by introducing 
+delay-based solution, we calculate the value of $W$ in an incremental pattern.
 
-In Equation~\ref{eq.bw}, we update the path weight by progressive increasing to make the trend of path weight smooth. The increment consists of two parts. In the first part, we calculate the weight with the total network delay. For applications that prefer low delay to high throughput, assigning high priority to this part will be of much benefit. In the second part, we calculate the weight with queuing delay. This is beneficial for high bandwidth-delay product links according to \cite{mptcp}. By assigning high priority for this part, we can achieve high throughput. 
+When the system tries to send a packet, it will have to choose the most suitable one among all the available paths. To achieve this goal, we need to have some parameters to notate the capability of each path. Generally, there are two ways to notate the character of one path, the first is loss based and the second is delay based. Nowadays, packet losses in networks are rare events, this makes loss rate estimation is difficult and coarse in accuracy. But delay estimation can be accurate enough with a proper measurement.
 
-The parameter $C$ is used to adjust the weight of each part. For packets of different size, we have different calculation of $C$. For packets of small size, we can try more to send it out with a path with lower delay. On the other side, for packets of large size, we need to choose a path with less queuing delay which means lower congestion to send it out. To achieve this goal, the parameter $C$ is calculated through Equation~\ref{eq.c} where $L$ is the packet size and $MTU$ is the Maximum Transmission Unit of the NIC card. Applications like Skype have separate audio and video streaming, and users are more sensitive on audio delay. Generally voice packets have smaller length than video packets. According to Equation~\ref{eq.c}, when routing an audio packet, the delay-based routing calculation will get higher priority, and the packet will more likely be sent out through the interface that has low delay.
+For network delay, it consists of following $4$ parts.
+
+\begin{enumerate}
+\item Processing delay. Time routers take to process the packet header
+\item Queuing delay. Time the packet spends in routing queues
+\item Transmission delay. Time it takes to push the packet onto the link
+\item Propagation delay. Time for a signal to reach its destination
+\end{enumerate}
+
+Among the $4$ parts above, processing delay, transmission delay and propagation delay are fixed value for one path, they can be treated as constant $C$. But for queuing delay $Q$, it will change as the traffic that passes through the router changes. igure~\ref{fig.delay} shows the trend of network delay as of the traffic on the path changes.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\linewidth]{fig/delay.eps}
+\caption{Network delay trend as throughput increases}
+\label{fig.delay}
+\end{figure}
+
+We can see that the queue in the router starts to accumulate at point $C$, but still, there is no loss. Starting from point $L$, the queue size overflows. The minimum and maximum network delay for the path can be measured at point $C$ and point $L$. The difference between the real-time delay and minimum can be treated as the approximate queuing delay $Q$ which represents congestion situation on the related path. By observing the real-time queuing delay of each path, we can adjust the weight of each path to properly assign future packets.
+
+During our experiments, we found that calculating the weight of each path independently according to queuing delay can result in high fluctuation. So instead, we couple all the paths together and do micro adjustment to the weight of each path periodically. The detailed mechanism is shown in Algorithm~\ref{alg.bw}.
+
+\begin{algorithm}
+\caption{Path Weight Incremental Adjustment.}
+\label{alg.bw}
+\begin{algorithmic}[1]
+\STATE  $Q_{avg}= \frac{\sum_{i=1}^{N}Q_i}{N}$;
+\IF {$Q_i\le Q_{avg}$}
+    \STATE $W_i=W_i+S$;
+    \IF {$W_i>1000$}
+	    \STATE $W_i=1000$;
+	\ENDIF
+\ELSE
+    \STATE $W_i=W_i-S$;
+    \IF {$W_i<1$}
+	    \STATE $W_i=1$;
+	\ENDIF
+\ENDIF
+\STATE return;
+\end{algorithmic}
+\end{algorithm}
+
+In Algorithm~\ref{alg.bw}, $N$ is the number of paths that belongs to one specific connection, $Q_i$ is the queuing delay of path $i$, $W_i$ is the path weight of path $i$, and $S$ is the adjustment granularity. Initially, every path has the same path weight of $\frac{1000}{N}$, in each loop, the path weight increases or decreases by the granularity value $S$. The maximum value of the weight is $1000$. The minimum value is $1$ because we try to keep all the paths alive in case the congestion on a bad path has huge relief.
+
+Algorithm~\ref{alg.bw} is executed periodically, the length of of period is defined as a configurable system variable $T$. So here, we have two configurable parameters which are the granularity $S$ and the period $T$. There is a trade-off here. Larger $S$ and shorter $T$ can generate higher fluctuation but faster convergence while smaller $S$ and longer $T$ can result in slow convergence and lower fluctuation. In our system, according to the path weight range ($1~1000$), we set $S$ to $10$ and $T$ to $10$ milliseconds. In our evaluation, this configuration can converge fast with low fluctuation.
+
+\subsubsection{Customized Path Selection Framework}
+
+In practice, maybe high throughput can represent most user requirements, but in some special use cases, responsiveness can be of the first priority. 
+
+A typical example is Skype calls. When we make a Skype call, beside audio calls, we can also have video calls by enabling the camera. For Skype, audio packets and video packets are transmitted independently. In most scenarios, with responsive audio quality, real-time video streaming can be a bonus. But large delay in audio streaming can be a nightmare for a Skype call. In this case, obviously, audio packets and video packets have different priorities. During our study of Skype packets, although video packets can also be small, audio packets generally have substantially shorter length comparing to video packet. This provides a chance to define specific rules for Skype audio packets.
+
+Also, in a TCP connection with multipath, ACK packets are generally very small. On the other hand, delay in ACK packets can trigger TCP congestion control at the sender side. This will result in unnecessary degradation of performance. By sending small ACK packets on the path with lowest delay, unnecessary congestion control can be avoided, and further improve the overall performance of the connection.
+
+To address the requirement above, we enable the users to define their customized path selection policy based on the destination and  length of packets. This customization provides a fundamental framework for more advanced path selection algorithms.
+
+In our prototype, we define a dedicate MPIP routing table as shown in Table~\ref{tb.route}.
+
+\begin{table}[htbp]
+\caption{\label{tb.route}MPIP routing table}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ IP   		&   Port      & Protocol      & Start  & End    & Routing       \\
+ Address    &  Number     &               & Length & Length & Priority       \\
+\hline
+$*$&$23$&$TCP$&$0$&$200$&$0$   \\
+\hline
+$192.168.1.2$&$80$&$TCP$&$200$&$*$&$1$   \\
+\hline
+$192.168.1.3$&$5221$&$UDP$&$100$&$200$&$0$  \\
+\hline
+\end{tabular}
+\end{table}
 
 
-$SI_q$ and $SI_d$ are the smooth index of queuing delay $Q$ and network delay $D$ of all paths calculated in Equation~\ref{eq.siq}  and Equation~\ref{eq.sid} where $N$ is the total number of paths in Table~\ref{tb.pi}. Please be noted that $Q_{max}$, $Q_{min}$ mean the maximum and minimum queuing delay out of all paths, while $D_{max}$, $D_{min}$ mean the maximum and minimum network delay in Equation~\ref{eq.bw}, Equation~\ref{eq.siq} and Equation~\ref{eq.sid}.
+%In Equation~\ref{eq.bw}, we update the path weight by progressive increasing to make the trend of path weight smooth. The increment consists of two parts. In the first part, we calculate the weight with the total network delay. For applications that prefer low delay to high throughput, assigning high priority to this part will be of much benefit. In the second part, we calculate the weight with queuing delay. This is beneficial for high bandwidth-delay product links according to \cite{mptcp}. By assigning high priority for this part, we can achieve high throughput. 
+%
+%The parameter $C$ is used to adjust the weight of each part. For packets of different size, we have different calculation of $C$. For packets of small size, we can try more to send it out with a path with lower delay. On the other side, for packets of large size, we need to choose a path with less queuing delay which means lower congestion to send it out. To achieve this goal, the parameter $C$ is calculated through Equation~\ref{eq.c} where $L$ is the packet size and $MTU$ is the Maximum Transmission Unit of the NIC card. Applications like Skype have separate audio and video streaming, and users are more sensitive on audio delay. Generally voice packets have smaller length than video packets. According to Equation~\ref{eq.c}, when routing an audio packet, the delay-based routing calculation will get higher priority, and the packet will more likely be sent out through the interface that has low delay.
+%
+%
+%$SI_q$ and $SI_d$ are the smooth index of queuing delay $Q$ and network delay $D$ of all paths calculated in Equation~\ref{eq.siq}  and Equation~\ref{eq.sid} where $N$ is the total number of paths in Table~\ref{tb.pi}. Please be noted that $Q_{max}$, $Q_{min}$ mean the maximum and minimum queuing delay out of all paths, while $D_{max}$, $D_{min}$ mean the maximum and minimum network delay in Equation~\ref{eq.bw}, Equation~\ref{eq.siq} and Equation~\ref{eq.sid}.
+%%
+%%\begin{eqnarray}
+%%p'(4, 2, S_{4}) &=& \left. \frac{c_{c}(S_{4})}{4} + w(1 - \min(1, \frac{2}{12})2\rho(4))\right. \nonumber \\
+%%&=& \left. \frac{c_{c}(S_{4})}{4} + w(1 - \frac{1}{3}\rho(4))\right. \label{schemeINotGroup4PeersPeer4}
+%%\end{eqnarray}
 %
 %\begin{eqnarray}
-%p'(4, 2, S_{4}) &=& \left. \frac{c_{c}(S_{4})}{4} + w(1 - \min(1, \frac{2}{12})2\rho(4))\right. \nonumber \\
-%&=& \left. \frac{c_{c}(S_{4})}{4} + w(1 - \frac{1}{3}\rho(4))\right. \label{schemeINotGroup4PeersPeer4}
+%\label{eq.bw}
+%W(k+1) = W(k) + \frac{C*D_{max}(k)}{\frac{D(k)-D_{min}(k)}{SI_d(k)}+1} \nonumber \\
+%\left.		  + \frac{(100-C)*Q_{max}(k)}{\frac{Q(k)-Q_{min}(k)}{SI_q(k)}+1} \right. 
 %\end{eqnarray}
-
-\begin{eqnarray}
-\label{eq.bw}
-W(k+1) = W(k) + \frac{C*D_{max}(k)}{\frac{D(k)-D_{min}(k)}{SI_d(k)}+1} \nonumber \\
-\left.		  + \frac{(100-C)*Q_{max}(k)}{\frac{Q(k)-Q_{min}(k)}{SI_q(k)}+1} \right. 
-\end{eqnarray}
-
-\be
-\label{eq.sid}
-SI_d(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|D(i) - D(i-1)|}{D_{max}})
-\ee
-
-\be
-\label{eq.siq}
-SI_q(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|Q(i) - Q(i-1)|}{Q_{max}})
-\ee
-
-\be
-\label{eq.c}
-C = \frac{100 * L}{MTU}
-\ee
-
-Here we only explain the first part of Equation~\ref{eq.bw}, because the second part is almost the same.
-
-Given the path that has the minimum queuing delay $Q_{min}$, we calculate the difference of queuing delay of all paths with $Q_{min}$, and the path weight increases progressively with the inverse ratio of the difference. To avoid divide-by-zero error, factor $1$ is added to the difference.
-
-From Equation~\ref{eq.siq}, the calculated smooth index $SI_q$ is between $0$ and $100$, larger value of $SI_q$ means smoother queuing delay array which means that the current congestion status of each path is more similar, then it is safer to add larger weight value to each path. In the case of small $SI_q$, then congestion of each path has large variation, we need to take extra care to avoid fluctuations, so we reduce the added weight to each path.
-
-Because Linux kernel doesn\textquoteright t have good support of floating point calculation, $Q_{max}$ is set as the denominator to make sure denominator is larger than numerator to avoid zero increment. When the largest path weight in Tabel~\ref{tb.pi} hits a threshold value, all weight values will be normalized to the threshold value.
-
-For each path, when it is added into Table~\ref{tb.pi}, the same initial value will be assigned, after the system has achieved stability, each path will have a proper path weight value that reflects its capability. 
+%
+%\be
+%\label{eq.sid}
+%SI_d(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|D(i) - D(i-1)|}{D_{max}})
+%\ee
+%
+%\be
+%\label{eq.siq}
+%SI_q(k) = 100*(1-\frac{1}{N-1}\sum_{i=k-N+1}^{k-1}\frac{|Q(i) - Q(i-1)|}{Q_{max}})
+%\ee
+%
+%\be
+%\label{eq.c}
+%C = \frac{100 * L}{MTU}
+%\ee
+%
+%Here we only explain the first part of Equation~\ref{eq.bw}, because the second part is almost the same.
+%
+%Given the path that has the minimum queuing delay $Q_{min}$, we calculate the difference of queuing delay of all paths with $Q_{min}$, and the path weight increases progressively with the inverse ratio of the difference. To avoid divide-by-zero error, factor $1$ is added to the difference.
+%
+%From Equation~\ref{eq.siq}, the calculated smooth index $SI_q$ is between $0$ and $100$, larger value of $SI_q$ means smoother queuing delay array which means that the current congestion status of each path is more similar, then it is safer to add larger weight value to each path. In the case of small $SI_q$, then congestion of each path has large variation, we need to take extra care to avoid fluctuations, so we reduce the added weight to each path.
+%
+%Because Linux kernel doesn\textquoteright t have good support of floating point calculation, $Q_{max}$ is set as the denominator to make sure denominator is larger than numerator to avoid zero increment. When the largest path weight in Tabel~\ref{tb.pi} hits a threshold value, all weight values will be normalized to the threshold value.
+%
+%For each path, when it is added into Table~\ref{tb.pi}, the same initial value will be assigned, after the system has achieved stability, each path will have a proper path weight value that reflects its capability. 
 
 %As shown in Figure~\ref{fig.weight}.
 %
